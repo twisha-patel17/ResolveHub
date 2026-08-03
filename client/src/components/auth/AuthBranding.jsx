@@ -7,9 +7,9 @@ const AuthBranding = () => {
 
       <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
 
-      {/* Content */}
+     
       <div className="relative z-10 flex h-full flex-col justify-center px-20 text-white">
-        {/* Logo */}
+    
         <div className="mb-14 flex items-center gap-4">
           <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
             <Shield size={28} />
@@ -20,13 +20,11 @@ const AuthBranding = () => {
           </h1>
         </div>
 
-        {/* Quote */}
-        <p className="mt-6 max-w-md text-lg leading-8 text-orange-50">
+      <p className="mt-6 max-w-md text-lg leading-8 text-orange-50">
           Every complaint deserves to be heard,
           tracked, and resolved.
         </p>
 
-        {/* Features */}
         <div className="mt-12 space-y-5">
           <div className="flex items-center gap-3">
             <span className="text-2xl">✓</span>
@@ -44,7 +42,6 @@ const AuthBranding = () => {
           </div>
         </div>
 
-        {/* Bottom Quote */}
         <p className="mt-16 border-l-4 border-white/40 pl-4 text-sm italic text-orange-100">
           "One platform. Every complaint. Complete transparency."
         </p>
