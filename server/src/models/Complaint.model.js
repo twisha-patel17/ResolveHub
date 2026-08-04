@@ -27,8 +27,10 @@ const complaintSchema = new mongoose.Schema(
         "Water Supply",
         "Garbage",
         "Drainage",
+        "Street Light",
         "Public Property",
         "Traffic",
+        "Healthcare",
         "Other",
       ],
       required: true,
@@ -58,30 +60,25 @@ const complaintSchema = new mongoose.Schema(
 
     images: [
       {
-        url: String,
-        public_id: String,
+        url: {
+          type: String,
+        },
+
+        public_id: {
+          type: String,
+        },
       },
     ],
 
     location: {
-      address: {
-        type: String,
-        trim: true,
-      },
+      address: String,
+      city: String,
+      state: String,
+      pincode: String,
 
-      city: {
-        type: String,
-        trim: true,
-      },
-
-      state: {
-        type: String,
-        trim: true,
-      },
-
-      pincode: {
-        type: String,
-        trim: true,
+      coordinates: {
+        lat: Number,
+        lng: Number,
       },
     },
 
@@ -91,6 +88,12 @@ const complaintSchema = new mongoose.Schema(
       required: true,
     },
 
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
     replies: [
       {
         sender: {
@@ -98,10 +101,7 @@ const complaintSchema = new mongoose.Schema(
           enum: ["user", "admin"],
         },
 
-        message: {
-          type: String,
-          trim: true,
-        },
+        message: String,
 
         createdAt: {
           type: Date,
@@ -112,9 +112,9 @@ const complaintSchema = new mongoose.Schema(
 
     statusHistory: [
       {
-        status: {
-          type: String,
-        },
+        status: String,
+
+        message: String,
 
         updatedBy: {
           type: mongoose.Schema.Types.ObjectId,
@@ -127,11 +127,22 @@ const complaintSchema = new mongoose.Schema(
         },
       },
     ],
+
+    resolution: {
+      type: String,
+      default: "",
+      trim: true,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+complaintSchema.index({ createdBy: 1 });
+complaintSchema.index({ status: 1 });
+complaintSchema.index({ category: 1 });
+complaintSchema.index({ createdAt: -1 });
 
 const Complaint = mongoose.model(
   "Complaint",

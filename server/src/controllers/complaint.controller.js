@@ -1,0 +1,320 @@
+import Complaint from "../models/Complaint.model.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
+import ApiResponse from "../utils/ApiResponse.js";
+
+export const createComplaint = asyncHandler(
+  async (req, res) => {
+    const {
+      title,
+      description,
+      category,
+      priority,
+      location,
+    } = req.body;
+
+    if (!title || !description || !category) {
+      throw new ApiError(
+        400,
+        "Title, description and category are required"
+      );
+    }
+
+    const complaint = await Complaint.create({
+      complaintId: `RH${Date.now()}`,
+      title,
+      description,
+      category,
+      priority,
+      location,
+      createdBy: req.user._id,
+    });
+
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        complaint,
+        "Complaint created successfully"
+      )
+    );
+  }
+);
+
+export const getMyComplaints = asyncHandler(
+  async (req, res) => {
+    const complaints = await Complaint.find({
+      createdBy: req.user._id,
+    }).sort({ createdAt: -1 });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        complaints,
+        "Complaints fetched successfully"
+      )
+    );
+  }
+);
+
+export const getComplaintById = asyncHandler(
+  async (req, res) => {
+    const complaint = await Complaint.findById(
+      req.params.id
+    ).populate(
+      "createdBy",
+      "name email"
+    );
+
+    if (!complaint) {
+      throw new ApiError(
+        404,
+        "Complaint not found"
+      );
+    }
+
+    if (
+      complaint.createdBy._id.toString() !==
+        req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      throw new ApiError(
+        403,
+        "Access denied"
+      );
+    }
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        complaint,
+        "Complaint fetched successfully"
+      )
+    );
+  }
+);
+
+export const updateComplaint = asyncHandler(
+  async (req, res) => {
+    const complaint = await Complaint.findById(
+      req.params.id
+    );
+
+    if (!complaint) {
+      throw new ApiError(404, "Complaint not found");
+    }
+
+    if (
+      complaint.createdBy.toString() !==
+        req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      throw new ApiError(403, "Access denied");
+    }
+
+    if (complaint.status !== "Pending") {
+      throw new ApiError(
+        400,
+        "Only pending complaints can be updated"
+      );
+    }
+
+    Object.assign(complaint, req.body);
+
+    await complaint.save();
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        complaint,
+        "Complaint updated successfully"
+      )
+    );
+  }
+);
+
+export const deleteComplaint = asyncHandler(
+  async (req, res) => {
+    const complaint = await Complaint.findById(
+      req.params.id
+    );
+
+    if (!complaint) {
+      throw new ApiError(404, "Complaint not found");
+    }
+
+    if (
+      complaint.createdBy.toString() !==
+        req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      throw new ApiError(403, "Access denied");
+    }
+
+    if (complaint.status !== "Pending") {
+      throw new ApiError(
+        400,
+        "Only pending complaints can be deleted"
+      );
+    }
+
+    await complaint.deleteOne();
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        null,
+        "Complaint deleted successfully"
+      )
+    );
+  }
+);
+
+export const getAllComplaints = asyncHandler(
+  async (req, res) => {
+    const {
+      status,
+      category,
+      priority,
+      search,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const query = {};
+
+    if (status) query.status = status;
+    if (category) query.category = category;
+    if (priority) query.priority = priority;
+
+    if (search) {
+      query.$or = [
+        {
+          title: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          description: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+      ];
+    }
+
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+
+    const [complaints, total] = await Promise.all([
+      Complaint.find(query)
+        .populate("createdBy", "name email")
+        .sort({ createdAt: -1 })
+        .skip((pageNumber - 1) * limitNumber)
+        .limit(limitNumber),
+
+      Complaint.countDocuments(query),
+    ]);
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          complaints,
+          page: pageNumber,
+          limit: limitNumber,
+          total,
+          totalPages: Math.ceil(total / limitNumber),
+        },
+        "Complaints fetched successfully"
+      )
+    );
+  }
+);
+
+export const updateComplaintStatus = asyncHandler(
+  async (req, res) => {
+    const { status } = req.body;
+
+    const allowedStatus = [
+      "Pending",
+      "In Progress",
+      "Resolved",
+      "Rejected",
+    ];
+
+    if (!allowedStatus.includes(status)) {
+      throw new ApiError(400, "Invalid status");
+    }
+
+    const complaint = await Complaint.findById(
+      req.params.id
+    );
+
+    if (!complaint) {
+      throw new ApiError(404, "Complaint not found");
+    }
+
+    complaint.status = status;
+
+    complaint.statusHistory.push({
+      status,
+      updatedBy: req.user._id,
+    });
+
+    await complaint.save();
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        complaint,
+        "Complaint status updated successfully"
+      )
+    );
+  }
+);
+
+export const getDashboardStats = asyncHandler(
+  async (req, res) => {
+    const stats = await Complaint.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const data = {
+      total: 0,
+      pending: 0,
+      inProgress: 0,
+      resolved: 0,
+      rejected: 0,
+    };
+
+    stats.forEach((item) => {
+      data.total += item.count;
+
+      if (item._id === "Pending")
+        data.pending = item.count;
+
+      if (item._id === "In Progress")
+        data.inProgress = item.count;
+
+      if (item._id === "Resolved")
+        data.resolved = item.count;
+
+      if (item._id === "Rejected")
+        data.rejected = item.count;
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        data,
+        "Dashboard statistics fetched successfully"
+      )
+    );
+  }
+);

@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import errorHandler from "./middleware/error.middleware.js";
 
 import authRoutes from "./routes/auth.routes.js";
+import complaintRoutes from "./routes/complaint.routes.js";
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/complaints", complaintRoutes);
 
 app.get("/", (req, res) => {
   res.json({
