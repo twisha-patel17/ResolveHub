@@ -3,6 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import generateAccessAndRefreshTokens from "../utils/generateTokens.js";
+import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const cookieOptions = {
     httpOnly: true,
@@ -58,7 +59,7 @@ export const loginUser = asyncHandler(async (req, res) => {
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
-    return res.status(200).cookie("accessToken", accessToken, cookieOptions).cookie("refreshToken", refreshToken, cookieOptions).json(new ApiResponse(200, loggedInUser, "User logged in successfully"));
+    return res.status(200).cookie("accessToken", accessToken, cookieOptions).cookie("refreshToken", refreshToken, cookieOptions).json(new ApiResponse(200, { user: loggedInUser, accessToken}, "User logged in successfully"));
 });
 
 export const logoutUser = asyncHandler(async (req, res) => {
@@ -84,7 +85,16 @@ export const logoutUser = asyncHandler(async (req, res) => {
     };
 
     return res.status(200).clearCookie("accessToken", cookieOptions).clearCookie("refreshToken", cookieOptions).json(new ApiResponse(200, null, "User logged out successfully"));
-})
+});
 
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      req.user,
+      "Current user fetched successfully"
+    )
+  );
+});
 
 

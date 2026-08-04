@@ -28,18 +28,15 @@ const LoginForm = () => {
     mutationFn: loginUser,
 
     onSuccess: (response) => {
-      login(response.data.data);
+      login(response.data.user);
+
+      localStorage.setItem("accessToken", response.data.accessToken);
+
+      localStorage.setItem("user", JSON.stringify(response.data.user));
 
       toast.success(
-        response.data?.message || "Login Successful 🎉"
+        response.message || "Login Successful 🎉"
       );
-
-      // Uncomment when backend returns tokens
-      // localStorage.setItem(
-      //   "accessToken",
-      //   response.data.data.accessToken
-      // );
-
       navigate("/dashboard");
     },
 
