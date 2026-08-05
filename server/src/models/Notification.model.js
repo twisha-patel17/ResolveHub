@@ -6,11 +6,13 @@ const notificationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     complaint: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Complaint",
+      default: null,
     },
 
     title: {
@@ -38,6 +40,11 @@ const notificationSchema = new mongoose.Schema(
     isRead: {
       type: Boolean,
       default: false,
+    },
+
+    readAt: {
+      type: Date,
+      default: null,
     },
   },
   {

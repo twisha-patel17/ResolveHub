@@ -1,6 +1,6 @@
 import express from "express";
 
-import { createComplaint, getComplaintById, getMyComplaints, updateComplaint, deleteComplaint, getAllComplaints, updateComplaintStatus, getDashboardStats } from "../controllers/complaint.controller.js";
+import { createComplaint, getComplaintById, getMyComplaints, updateComplaint, deleteComplaint, getAllComplaints, updateComplaintStatus, getDashboardStats, addReply } from "../controllers/complaint.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
 
@@ -16,10 +16,16 @@ router.delete(
   deleteComplaint
 );
 router.get(
-  "/",
+  "/:id/status",
   verifyJWT,
   authorizeRoles("admin"),
   getAllComplaints
+);
+router.post(
+  "/:id/reply",
+  verifyJWT,
+  authorizeRoles("admin"),
+  addReply
 );
 
 export default router;

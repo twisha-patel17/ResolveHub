@@ -2,6 +2,7 @@ import Complaint from "../models/Complaint.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import createNotification from "../utils/createNotification.js";
 
 export const createComplaint = asyncHandler(
   async (req, res) => {
@@ -232,47 +233,40 @@ export const getAllComplaints = asyncHandler(
   }
 );
 
-export const updateComplaintStatus = asyncHandler(
-  async (req, res) => {
-    const { status } = req.body;
+export const updateComplaintStatus = asyncHandler(async (req, res) => {
+  const { status } = req.body;
 
-    const allowedStatus = [
-      "Pending",
-      "In Progress",
-      "Resolved",
-      "Rejected",
-    ];
+  const complaint = await Complaint.findById(req.params.id);
 
-    if (!allowedStatus.includes(status)) {
-      throw new ApiError(400, "Invalid status");
-    }
-
-    const complaint = await Complaint.findById(
-      req.params.id
-    );
-
-    if (!complaint) {
-      throw new ApiError(404, "Complaint not found");
-    }
-
-    complaint.status = status;
-
-    complaint.statusHistory.push({
-      status,
-      updatedBy: req.user._id,
-    });
-
-    await complaint.save();
-
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        complaint,
-        "Complaint status updated successfully"
-      )
-    );
+  if (!complaint) {
+    throw new ApiError(404, "Complaint not found");
   }
-);
+
+  complaint.status = status;
+
+  complaint.statusHistory.push({
+    status,
+    updatedBy: req.user._id,
+  });
+
+  await complaint.save();
+
+  await createNotification({
+    recipient: complaint.createdBy,
+    complaint: complaint._id,
+    title: "Complaint Status Updated",
+    message: `Your complaint "${complaint.title}" is now ${status}.`,
+    type: "status",
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      complaint,
+      "Complaint status updated successfully"
+    )
+  );
+});
 
 export const getDashboardStats = asyncHandler(
   async (req, res) => {
@@ -318,3 +312,40 @@ export const getDashboardStats = asyncHandler(
     );
   }
 );
+
+export const addReply = asyncHandler(async (req, res) => {
+  const { message } = req.body;
+
+  if (!message) {
+    throw new ApiError(400, "Reply message is required");
+  }
+
+  const complaint = await Complaint.findById(req.params.id);
+
+  if (!complaint) {
+    throw new ApiError(404, "Complaint not found");
+  }
+
+  complaint.replies.push({
+    sender: req.user.role,
+    message,
+  });
+
+  await complaint.save();
+
+  await createNotification({
+    recipient: complaint.createdBy,
+    complaint: complaint._id,
+    title: "New Reply",
+    message: "An administrator replied to your complaint.",
+    type: "reply",
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      complaint,
+      "Reply added successfully"
+    )
+  );
+});
