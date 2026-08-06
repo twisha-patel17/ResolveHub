@@ -73,25 +73,22 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       <aside
         className={`
-          fixed left-0 top-0 z-50
+          fixed inset-y-0 left-0 z-50
           flex h-screen w-72 flex-col
           bg-slate-800 text-white shadow-xl
           transition-transform duration-300
-
           ${
             isOpen
               ? "translate-x-0"
               : "-translate-x-full"
           }
-
-          lg:static
           lg:translate-x-0
         `}
       >
         {/* Logo */}
         <div className="flex items-center justify-between border-b border-slate-700 px-6 py-7">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-orange-500 p-3 text-white">
+            <div className="rounded-xl bg-orange-500 p-3">
               <Shield size={22} />
             </div>
 
@@ -106,7 +103,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             </div>
           </div>
 
-          {/* Mobile Close */}
           <button
             onClick={() => setIsOpen(false)}
             className="lg:hidden"
@@ -116,7 +112,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-2 px-4 py-6">
+        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;
 

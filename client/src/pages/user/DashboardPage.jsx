@@ -1,76 +1,135 @@
+import {
+  Activity,
+  CircleCheckBig,
+  Clock3,
+  FileText,
+} from "lucide-react";
+
 import DashboardLayout from "../../layouts/DashboardLayout";
-import { useAuth } from "../../context/AuthContext";
+import DashboardHeader from "../../components/dashboard/DashboardHeader";
+import StatCard from "../../components/dashboard/StatCard";
+import RecentComplaints from "../../components/dashboard/RecentComplaints";
+import ActivityFeed from "../../components/dashboard/ActivityFeed";
+import LiveNotification from "../../components/dashboard/LiveNotification";
 
 const DashboardPage = () => {
-  const { user } = useAuth();
+  // Temporary Dummy Data
+  const complaints = [
+    {
+      _id: "1",
+      complaintId: "RH-2049",
+      title: "Street light not working",
+      priority: "High",
+      status: "In Progress",
+      updatedAt: new Date(),
+    },
+    {
+      _id: "2",
+      complaintId: "RH-2048",
+      title: "Garbage not collected",
+      priority: "Medium",
+      status: "Pending",
+      updatedAt: new Date(),
+    },
+    {
+      _id: "3",
+      complaintId: "RH-2047",
+      title: "Water leakage",
+      priority: "Low",
+      status: "Resolved",
+      updatedAt: new Date(),
+    },
+  ];
+
+  const activities = [
+    {
+      id: 1,
+      type: "resolved",
+      title: "Complaint Resolved",
+      description: "Street light issue has been fixed.",
+      time: "10 mins ago",
+    },
+    {
+      id: 2,
+      type: "reply",
+      title: "Admin Replied",
+      description: "Inspection scheduled for tomorrow.",
+      time: "35 mins ago",
+    },
+    {
+      id: 3,
+      type: "pending",
+      title: "Complaint Submitted",
+      description: "Garbage complaint received.",
+      time: "1 hour ago",
+    },
+  ];
+
+  const notification = {
+    title: "Complaint Updated",
+    message: "Your complaint RH-2049 has been marked as In Progress.",
+    time: "2 minutes ago",
+  };
 
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Welcome Section */}
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">
-            Welcome back, {user?.name || "User"} 👋
-          </h1>
 
-          <p className="mt-2 text-slate-500">
-            Here's an overview of your complaints and recent activity.
-          </p>
-        </div>
+        <DashboardHeader />
 
-        {/* Stats Cards */}
+        {/* Stats */}
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-500">
-              Total Complaints
-            </p>
+          <StatCard
+            title="Total Complaints"
+            value={18}
+            subtitle="All complaints"
+            icon={FileText}
+            iconBg="bg-orange-100"
+            iconColor="text-orange-500"
+          />
 
-            <h2 className="mt-2 text-3xl font-bold text-slate-900">
-              18
-            </h2>
-          </div>
+          <StatCard
+            title="Pending"
+            value={5}
+            subtitle="Awaiting review"
+            icon={Clock3}
+            iconBg="bg-yellow-100"
+            iconColor="text-yellow-600"
+          />
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-500">
-              Pending
-            </p>
+          <StatCard
+            title="In Progress"
+            value={7}
+            subtitle="Currently active"
+            icon={Activity}
+            iconBg="bg-blue-100"
+            iconColor="text-blue-600"
+          />
 
-            <h2 className="mt-2 text-3xl font-bold text-yellow-500">
-              5
-            </h2>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-500">
-              In Progress
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold text-blue-500">
-              7
-            </h2>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-500">
-              Resolved
-            </p>
-
-            <h2 className="mt-2 text-3xl font-bold text-green-500">
-              6
-            </h2>
-          </div>
+          <StatCard
+            title="Resolved"
+            value={6}
+            subtitle="Completed"
+            icon={CircleCheckBig}
+            iconBg="bg-green-100"
+            iconColor="text-green-600"
+          />
         </div>
 
-        {/* Placeholder */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900">
-            Recent Complaints
-          </h2>
+        {/* Complaints + Activity */}
+        <div className="grid gap-6 lg:grid-cols-3">
 
-          <p className="mt-3 text-slate-500">
-            Your recent complaints will appear here.
-          </p>
+          <div className="lg:col-span-2">
+            <RecentComplaints complaints={complaints} />
+          </div>
+
+          <ActivityFeed activities={activities} />
+
         </div>
+
+        {/* Live Notification */}
+        <LiveNotification notification={notification} />
+
       </div>
     </DashboardLayout>
   );
