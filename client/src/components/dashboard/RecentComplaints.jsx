@@ -39,7 +39,7 @@ const RecentComplaints = ({ complaints = [] }) => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[700px]">
+        <table className="w-full min-w-175">
 
           <thead>
             <tr className="border-b border-slate-200 text-left text-sm uppercase tracking-wide text-slate-500">

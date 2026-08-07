@@ -97,4 +97,31 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
   );
 });
 
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+    const incomingRefreshToken = req.cookies.refreshToken;
+
+    if(!incomingRefreshToken) {
+        throw new ApiError(401, "Refresh token missing");
+    }
+
+    const decoded = jwt.verify(
+        incomingRefreshToken,
+        process.env.REFRESH_TOKEN_SECRET
+    );
+    
+    const user = await User.findById(decoded.id);
+
+    if(!user) {
+        throw new ApiError(401, "Invalid refresh token");
+    }
+
+    if(incomingRefreshToken !== user.refreshToken) {
+        throw new ApiError(401, "Refresh token expired");
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+    return res.status(200).cookie("accessToken", accessToken, cookieOptions).cookie("refreshToken", refreshToken, cookieOptions).json(new ApiResponse(200, { accessToken }, "Access token refreshed successfully"));
+})
+
 

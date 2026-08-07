@@ -13,7 +13,7 @@ import ActivityFeed from "../../components/dashboard/ActivityFeed";
 import LiveNotification from "../../components/dashboard/LiveNotification";
 
 const DashboardPage = () => {
-  // Temporary Dummy Data
+  
   const complaints = [
     {
       _id: "1",
@@ -77,7 +77,6 @@ const DashboardPage = () => {
 
         <DashboardHeader />
 
-        {/* Stats */}
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             title="Total Complaints"
@@ -116,7 +115,6 @@ const DashboardPage = () => {
           />
         </div>
 
-        {/* Complaints + Activity */}
         <div className="grid gap-6 lg:grid-cols-3">
 
           <div className="lg:col-span-2">
@@ -127,7 +125,6 @@ const DashboardPage = () => {
 
         </div>
 
-        {/* Live Notification */}
         <LiveNotification notification={notification} />
 
       </div>
