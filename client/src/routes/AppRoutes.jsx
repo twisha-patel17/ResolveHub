@@ -5,6 +5,7 @@ import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import DashboardPage from "../pages/user/DashboardPage";
 import CreateComplaintPage from "./../pages/user/CreateComplaintPage";
+import MyComplaintsPage from "../pages/user/MyComplaintsPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
@@ -28,6 +29,11 @@ const AppRoutes = () => {
         <Route
           path="/complaints/create"
           element={<CreateComplaintPage />}
+        />
+
+        <Route
+          path="/complaints"
+          element={<MyComplaintsPage />}
         />
       </Route>
     </Routes>
