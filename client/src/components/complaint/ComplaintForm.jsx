@@ -6,11 +6,60 @@ import {
   CircleCheck,
   X,
 } from "lucide-react";
+import { useState } from "react";
 
 const ComplaintForm = () => {
-  return (
-    <div className="space-y-8">
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [priority, setPriority] = useState("");
+  const [location, setLocation] = useState("");
+  const [images, setImages] = useState([]);
 
+  const handleImageUpload = (e) => {
+  const files = Array.from(e.target.files);
+
+  const validFiles = files.filter((file) => {
+    const validTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    const maxSize = 10 * 1024 * 1024;
+
+    return (
+      validTypes.includes(file.type) &&
+      file.size <= maxSize
+    );
+  });
+
+  setImages((prev) => [
+    ...prev,
+    ...validFiles,
+  ].slice(0, 5));
+};
+
+  const removeImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const submitHandler = (e) => {
+    e.preventDefault();
+
+    console.log({
+      title,
+      description,
+      category,
+      priority,
+      location,
+      images,
+    });
+  };
+
+  return (
+    <form onSubmit={submitHandler}>
+  
       <div>
         <h1 className="text-4xl font-bold text-slate-900">
           Create complaint
@@ -22,10 +71,9 @@ const ComplaintForm = () => {
         </p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[2.3fr_1fr]">
+      <div className="mt-8 grid gap-6 xl:grid-cols-[2.3fr_1fr]">
 
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-
           <div>
             <label className="mb-2 block font-semibold text-slate-800">
               Complaint title
@@ -33,6 +81,8 @@ const ComplaintForm = () => {
 
             <input
               type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Leaking pipe near main entrance"
               className="w-full rounded-xl border border-slate-300 px-5 py-4 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
             />
@@ -45,6 +95,8 @@ const ComplaintForm = () => {
 
             <textarea
               rows={6}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe what happened, where, and when..."
               className="w-full resize-none rounded-xl border border-slate-300 p-5 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
             />
@@ -57,13 +109,20 @@ const ComplaintForm = () => {
                 Category
               </label>
 
-              <select className="w-full rounded-xl border border-slate-300 px-5 py-4 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100">
-                <option>Road</option>
-                <option>Electricity</option>
-                <option>Garbage</option>
-                <option>Water Supply</option>
-                <option>Traffic</option>
-                <option>Other</option>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-5 py-4 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+              >
+                <option value="">Select category</option>
+                <option value="Road">Road</option>
+                <option value="Electricity">Electricity</option>
+                <option value="Garbage">Garbage</option>
+                <option value="Water Supply">
+                  Water Supply
+                </option>
+                <option value="Traffic">Traffic</option>
+                <option value="Other">Other</option>
               </select>
             </div>
 
@@ -72,11 +131,16 @@ const ComplaintForm = () => {
                 Priority
               </label>
 
-              <select className="w-full rounded-xl border border-slate-300 px-5 py-4 outline-nonetransition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100">
-                <option>Low</option>
-                <option>Medium</option>
-                <option>High</option>
-                <option>Urgent</option>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-5 py-4 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+              >
+                <option value="">Select priority</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
               </select>
             </div>
 
@@ -88,16 +152,20 @@ const ComplaintForm = () => {
             </label>
 
             <div className="flex items-center rounded-xl border border-slate-300 px-4 transition-all duration-200 focus-within:border-orange-500 focus-within:ring-4 focus-within:ring-orange-100">
+
               <MapPin
                 size={18}
-                className="text-slate-400"
+                className="shrink-0 text-slate-400"
               />
 
               <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
                 type="text"
                 placeholder="Block, floor, or landmark"
                 className="w-full bg-transparent px-3 py-4 outline-none"
               />
+
             </div>
           </div>
 
@@ -107,7 +175,19 @@ const ComplaintForm = () => {
               Evidence photos
             </label>
 
-            <div className="flex h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 transition-all duration-300 hover:border-orange-500 hover:bg-orange-50 focus-within:border-orange-500 focus-within:bg-orange-50 focus-within:ring-4 focus-within:ring-orange-100">
+            <input
+              id="file-upload"
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp"
+              multiple
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+
+            <label
+              htmlFor="file-upload"
+              className="flex h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 transition-all duration-300 hover:border-orange-500 hover:bg-orange-50"
+            >
               <Upload
                 size={42}
                 className="text-orange-500"
@@ -119,7 +199,8 @@ const ComplaintForm = () => {
 
               <p className="text-slate-500">
                 or
-                <span className="ml-1 transition hover:text-orange-600 font-semibold text-orange-500">
+
+                <span className="ml-1 font-semibold text-orange-500 transition hover:text-orange-600">
                   browse
                 </span>
               </p>
@@ -127,28 +208,36 @@ const ComplaintForm = () => {
               <p className="mt-2 text-sm text-slate-400">
                 JPG, PNG, WEBP up to 10MB each
               </p>
+            </label>
 
-            </div>
+            {images.length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-3">
 
-            <div className="mt-5 flex gap-3">
+                {images.map((image, index) => (
+                  <div
+                    key={`${image.name}-${index}`}
+                    className="relative h-20 w-20 overflow-hidden rounded-xl bg-slate-100"
+                  >
 
-              <div className="relative h-20 w-20 rounded-xl bg-slate-100">
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt={image.name}
+                      className="h-full w-full object-cover"
+                    />
 
-                <button className="absolute -right-2 -top-2 rounded-full bg-slate-600 p-1 text-white">
-                  <X size={12} />
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute right-1 top-1 rounded-full bg-slate-700 p-1 text-white transition hover:bg-red-500"
+                    >
+                      <X size={14} />
+                    </button>
+
+                  </div>
+                ))}
 
               </div>
-
-              <div className="relative h-20 w-20 rounded-xl bg-slate-100">
-
-                <button className="absolute -right-2 -top-2 rounded-full bg-slate-600 p-1 text-white">
-                  <X size={12} />
-                </button>
-
-              </div>
-
-            </div>
+            )}
 
           </div>
 
@@ -156,7 +245,7 @@ const ComplaintForm = () => {
 
             <Shield
               size={22}
-              className="text-slate-500"
+              className="shrink-0 text-slate-500"
             />
 
             <p className="text-sm text-slate-600">
@@ -167,13 +256,19 @@ const ComplaintForm = () => {
 
           </div>
 
-          <div className="mt-8 flex gap-4">
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
 
-            <button className="rounded-xl bg-orange-500 px-8 py-4 font-semibold text-white transition hover:bg-orange-600">
+            <button
+              type="submit"
+              className="rounded-xl bg-orange-500 px-8 py-4 font-semibold text-white transition hover:bg-orange-600"
+            >
               Submit complaint
             </button>
 
-            <button className="rounded-xl border border-slate-300 px-8 py-4 font-semibold">
+            <button
+              type="button"
+              className="rounded-xl border border-slate-300 px-8 py-4 font-semibold transition hover:border-orange-400 hover:bg-orange-50"
+            >
               Save as draft
             </button>
 
@@ -192,18 +287,33 @@ const ComplaintForm = () => {
             <div className="space-y-4">
 
               <div className="flex gap-3">
-                <CircleCheck className="text-green-500" />
-                <p>Be specific about location and time</p>
+                <CircleCheck
+                  className="shrink-0 text-green-500"
+                />
+
+                <p>
+                  Be specific about location and time
+                </p>
               </div>
 
               <div className="flex gap-3">
-                <CircleCheck className="text-green-500" />
-                <p>Attach clear photos where possible</p>
+                <CircleCheck
+                  className="shrink-0 text-green-500"
+                />
+
+                <p>
+                  Attach clear photos where possible
+                </p>
               </div>
 
               <div className="flex gap-3">
-                <CircleCheck className="text-green-500" />
-                <p>Avoid duplicate submissions</p>
+                <CircleCheck
+                  className="shrink-0 text-green-500"
+                />
+
+                <p>
+                  Avoid duplicate submissions
+                </p>
               </div>
 
             </div>
@@ -239,7 +349,9 @@ const ComplaintForm = () => {
 
             <div className="flex items-start gap-3">
 
-              <Clock3 className="mt-1 text-orange-500" />
+              <Clock3
+                className="mt-1 shrink-0 text-orange-500"
+              />
 
               <div>
 
@@ -250,6 +362,7 @@ const ComplaintForm = () => {
                 <p className="mt-3 text-slate-700">
                   Medium-priority complaints are
                   typically resolved within
+
                   <span className="font-semibold">
                     {" "}48–72 hours
                   </span>
@@ -265,8 +378,7 @@ const ComplaintForm = () => {
         </div>
 
       </div>
-
-    </div>
+    </form>
   );
 };
 

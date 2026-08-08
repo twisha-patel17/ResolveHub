@@ -1,5 +1,6 @@
 import User from "../models/User.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import jwt from "jsonwebtoken";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import generateAccessAndRefreshTokens from "../utils/generateTokens.js";
@@ -7,8 +8,8 @@ import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: false,
+    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 }
 
@@ -98,30 +99,49 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 export const refreshAccessToken = asyncHandler(async (req, res) => {
-    const incomingRefreshToken = req.cookies.refreshToken;
+  const incomingRefreshToken = req.cookies?.refreshToken;
 
-    if(!incomingRefreshToken) {
-        throw new ApiError(401, "Refresh token missing");
-    }
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Refresh token missing");
+  }
 
-    const decoded = jwt.verify(
-        incomingRefreshToken,
-        process.env.REFRESH_TOKEN_SECRET
+  let decoded;
+
+  try {
+    decoded = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
     );
-    
-    const user = await User.findById(decoded.id);
+  } catch (error) {
+    console.log("Refresh JWT error:", error.message);
+    throw new ApiError(401, "Invalid or expired refresh token");
+  }
 
-    if(!user) {
-        throw new ApiError(401, "Invalid refresh token");
-    }
+  const user = await User.findById(decoded.id);
 
-    if(incomingRefreshToken !== user.refreshToken) {
-        throw new ApiError(401, "Refresh token expired");
-    }
+  if (!user) {
+    throw new ApiError(401, "User not found");
+  }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+  if (incomingRefreshToken !== user.refreshToken) {
+    console.log("Refresh token does not match database");
+    throw new ApiError(401, "Invalid refresh token");
+  }
 
-    return res.status(200).cookie("accessToken", accessToken, cookieOptions).cookie("refreshToken", refreshToken, cookieOptions).json(new ApiResponse(200, { accessToken }, "Access token refreshed successfully"));
-})
+  const {
+    accessToken,
+    refreshToken,
+  } = await generateAccessAndRefreshTokens(user._id);
 
-
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .json(
+      new ApiResponse(
+        200,
+        { accessToken },
+        "Access token refreshed successfully"
+      )
+    );
+});

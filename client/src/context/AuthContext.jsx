@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }) => {
         setUser(response.data);
       // eslint-disable-next-line no-unused-vars
       } catch (error) {
+        console.log("Session expired");
         setUser(null);
       } finally {
         setLoading(false);
