@@ -12,6 +12,7 @@ import {
   Paperclip,
   Send,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const ComplaintDetails = () => {
   const timeline = [
@@ -47,24 +48,21 @@ const ComplaintDetails = () => {
     },
   ];
 
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
 
-      {/* Back */}
-      <button className="flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-orange-500">
+      <button type="button" onClick={() => navigate("/complaints")} className="flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-orange-500">
         <ArrowLeft size={17} />
         Back to my complaints
       </button>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,2.3fr)_310px]">
 
-        {/* LEFT COLUMN */}
         <div className="space-y-6">
 
-          {/* Complaint Overview */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-
-            {/* Top row */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
               <div className="flex flex-wrap items-center gap-2">
@@ -91,12 +89,10 @@ const ComplaintDetails = () => {
 
             </div>
 
-            {/* Title */}
             <h1 className="mt-4 text-2xl font-bold text-slate-900 sm:text-3xl">
               Leaking pipe near Block C entrance
             </h1>
 
-            {/* Description */}
             <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-600 sm:text-[15px]">
               There's a steady water leak coming from the pipe joint just
               outside the Block C entrance. It's been going on since this
@@ -104,7 +100,6 @@ const ComplaintDetails = () => {
               slipping hazard.
             </p>
 
-            {/* Meta */}
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 border-b border-slate-200 pb-5">
 
               <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -124,7 +119,7 @@ const ComplaintDetails = () => {
 
             </div>
 
-            {/* Evidence */}
+ 
             <div className="mt-5">
 
               <h2 className="mb-3 text-lg font-bold text-slate-900">
@@ -151,7 +146,6 @@ const ComplaintDetails = () => {
 
           </div>
 
-          {/* Timeline */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
 
             <h2 className="text-xl font-bold text-slate-900">
@@ -166,10 +160,9 @@ const ComplaintDetails = () => {
                   className="relative flex gap-4 pb-7 last:pb-0"
                 >
 
-                  {/* Vertical line */}
                   {index !== timeline.length - 1 && (
                     <div
-                      className={`absolute left-[12px] top-7 h-full w-px ${
+                      className={`absolute left-3 top-7 h-full w-px ${
                         item.type === "completed"
                           ? "bg-green-200"
                           : "bg-slate-200"
@@ -177,7 +170,6 @@ const ComplaintDetails = () => {
                     />
                   )}
 
-                  {/* Icon */}
                   <div
                     className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
                       item.type === "completed"
@@ -192,7 +184,6 @@ const ComplaintDetails = () => {
                     )}
                   </div>
 
-                  {/* Content */}
                   <div>
                     <p
                       className={`font-semibold ${
@@ -216,10 +207,8 @@ const ComplaintDetails = () => {
 
           </div>
 
-          {/* Conversation */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
 
-            {/* Header */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
               <h2 className="text-xl font-bold text-slate-900">
@@ -233,14 +222,12 @@ const ComplaintDetails = () => {
 
             </div>
 
-            {/* System message */}
             <div className="mt-5 flex justify-center">
               <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-medium text-slate-500">
                 ✓ Complaint marked In Progress · 10:40 AM
               </span>
             </div>
 
-            {/* Admin message */}
             <div className="mt-5 flex items-start gap-3">
 
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
@@ -264,7 +251,6 @@ const ComplaintDetails = () => {
 
             </div>
 
-            {/* User message */}
             <div className="mt-5 flex justify-end">
 
               <div className="flex items-end gap-3">
@@ -292,7 +278,6 @@ const ComplaintDetails = () => {
 
             </div>
 
-            {/* Reply */}
             <div className="mt-6 flex gap-2">
 
               <input
@@ -324,10 +309,8 @@ const ComplaintDetails = () => {
 
         </div>
 
-        {/* RIGHT COLUMN */}
         <div className="space-y-6">
 
-          {/* Reported By */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
             <h3 className="font-bold text-slate-900">
@@ -354,7 +337,6 @@ const ComplaintDetails = () => {
 
           </div>
 
-          {/* Assigned Admin */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
             <h3 className="font-bold text-slate-900">
@@ -382,7 +364,6 @@ const ComplaintDetails = () => {
 
           </div>
 
-          {/* Actions */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
             <div className="space-y-2">
