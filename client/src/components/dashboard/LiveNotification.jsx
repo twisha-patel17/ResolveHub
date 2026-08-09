@@ -1,75 +1,79 @@
-import { BellRing, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const LiveNotification = ({ notification }) => {
   if (!notification) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="rounded-xl bg-orange-100 p-3">
-            <BellRing size={22} className="text-orange-500" />
-          </div>
+      <div className="rounded-2xl bg-slate-800 p-6 text-white shadow-sm">
+        <div className="flex items-center gap-3">
 
-          <div>
-            <h2 className="font-bold text-slate-900">
-              Live Notification
-            </h2>
+          <span className="relative flex h-3 w-3">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500" />
+          </span>
 
-            <p className="text-sm text-slate-500">
-              You're all caught up 🎉
-            </p>
-          </div>
+          <h2 className="font-bold">
+            Live Notification
+          </h2>
         </div>
 
-        <p className="text-sm text-slate-500">
-          No new notifications available.
+        <p className="mt-3 text-sm text-slate-300">
+          You're all caught up 🎉
         </p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+    <div className="rounded-2xl bg-slate-800 p-6 text-white shadow-md">
+      
 
-      <div className="mb-5 flex items-center gap-3">
-        <div className="rounded-xl bg-orange-100 p-3">
-          <BellRing
-            size={22}
-            className="text-orange-500"
-          />
-        </div>
+      <div className="flex items-center gap-2">
+        
+        <span className="relative flex h-3 w-3">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+          <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500" />
+        </span>
 
-        <div>
-          <h2 className="font-bold text-slate-900">
-            Live Notification
-          </h2>
+        <h2 className="font-bold">
+          Live Notification
+        </h2>
 
-          <p className="text-sm text-slate-500">
-            Latest update
-          </p>
-        </div>
       </div>
 
-      <div className="space-y-3">
-        <h3 className="font-semibold text-slate-900">
+      <div className="mt-4">
+        
+        <p className="text-sm leading-6 text-slate-300">
           {notification.title}
-        </h3>
+        </p>
 
-        <p className="text-sm leading-6 text-slate-600">
+        <p className="mt-1 text-sm leading-6 text-white">
           {notification.message}
         </p>
 
-        <p className="text-xs text-slate-400">
-          {notification.time}
-        </p>
       </div>
 
       <Link
         to="/notifications"
-        className="mt-6 inline-flex items-center gap-2 font-semibold text-orange-500 transition hover:text-orange-600"
+        className="
+          mt-5
+          inline-flex
+          items-center
+          gap-2
+          rounded-xl
+          bg-orange-500
+          px-4
+          py-2.5
+          text-sm
+          font-semibold
+          text-white
+          shadow-sm
+          transition
+          hover:bg-orange-600
+        "
       >
-        View Notifications
-        <ArrowRight size={16} />
+        View update
+        <ArrowRight size={15} />
       </Link>
 
     </div>

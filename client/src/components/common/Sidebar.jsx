@@ -5,7 +5,6 @@ import {
   ClipboardList,
   Bell,
   User,
-  Settings,
   LogOut,
   X,
 } from "lucide-react";
@@ -50,12 +49,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       title: "Profile",
       icon: User,
       path: "/profile",
-      end: true
-    },
-    {
-      title: "Settings",
-      icon: Settings,
-      path: "/settings",
       end: true
     },
   ];

@@ -9,7 +9,11 @@ import {
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import api from "../../lib/axios";
@@ -36,19 +40,27 @@ const ComplaintDetails = ({ complaintId }) => {
       return response.data.data;
     },
 
-    enabled: !!complaintId,
+    enabled: Boolean(complaintId),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await api.delete(`/complaints/${complaintId}`);
+      await api.delete(
+        `/complaints/${complaintId}`
+      );
     },
 
     onSuccess: () => {
-      toast.success("Complaint deleted successfully");
+      toast.success(
+        "Complaint deleted successfully"
+      );
 
       queryClient.invalidateQueries({
         queryKey: ["complaints"],
+      });
+
+      queryClient.removeQueries({
+        queryKey: ["complaint", complaintId],
       });
 
       navigate("/complaints");
@@ -82,7 +94,9 @@ const ComplaintDetails = ({ complaintId }) => {
 
       setReply("");
 
-      toast.success("Reply sent successfully");
+      toast.success(
+        "Reply sent successfully"
+      );
     },
 
     onError: (error) => {
@@ -105,19 +119,70 @@ const ComplaintDetails = ({ complaintId }) => {
   };
 
   const handleDelete = () => {
-    if (!window.confirm(
-      "Are you sure you want to delete this complaint?"
-    )) {
-      return;
-    }
+  toast.custom(
+    (t) => (
+      <div
+        className={`w-90 rounded-2xl border border-red-200 bg-white p-5 shadow-xl transition-all ${
+          t.visible
+            ? "animate-enter"
+            : "animate-leave"
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+            <Trash2
+              size={19}
+              className="text-red-500"
+            />
+          </div>
 
-    deleteMutation.mutate();
-  };
+          <div className="flex-1">
+            <h3 className="font-bold text-slate-900">
+              Delete complaint?
+            </h3>
+
+            <p className="mt-1 text-sm leading-5 text-slate-500">
+              This action cannot be undone. Are you
+              sure you want to delete this complaint?
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => toast.dismiss(t.id)}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              toast.dismiss(t.id);
+              deleteMutation.mutate();
+            }}
+            className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ),
+    {
+      duration: Infinity,
+      position: "top-center",
+    }
+  );
+};
 
   if (isLoading) {
     return (
       <div className="flex min-h-100 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-orange-500" />
+        <p className="text-sm font-medium text-slate-500">
+          Loading complaint...
+        </p>
       </div>
     );
   }
@@ -125,7 +190,7 @@ const ComplaintDetails = ({ complaintId }) => {
   if (isError) {
     return (
       <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
-        <h2 className="font-semibold text-red-700">
+        <h2 className="text-lg font-bold text-red-700">
           Failed to load complaint
         </h2>
 
@@ -135,9 +200,13 @@ const ComplaintDetails = ({ complaintId }) => {
         </p>
 
         <button
+          type="button"
           onClick={() =>
             queryClient.invalidateQueries({
-              queryKey: ["complaint", complaintId],
+              queryKey: [
+                "complaint",
+                complaintId,
+              ],
             })
           }
           className="mt-4 rounded-xl bg-red-500 px-5 py-2.5 font-semibold text-white transition hover:bg-red-600"
@@ -161,6 +230,7 @@ const ComplaintDetails = ({ complaintId }) => {
         className="flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-orange-500"
       >
         <ArrowLeft size={17} />
+
         Back to my complaints
       </button>
 
@@ -175,7 +245,7 @@ const ComplaintDetails = ({ complaintId }) => {
             {complaint.title}
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-sm text-slate-500">
             Created{" "}
             {new Date(
               complaint.createdAt
@@ -194,11 +264,10 @@ const ComplaintDetails = ({ complaintId }) => {
           </span>
 
         </div>
-
       </div>
+
       <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
         <div className="space-y-6">
-
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
             <h2 className="text-xl font-bold text-slate-900">
@@ -209,35 +278,36 @@ const ComplaintDetails = ({ complaintId }) => {
               {complaint.description}
             </p>
 
-          </div>
+            <div className="mt-6 flex flex-wrap gap-6 text-sm text-slate-500">
 
-          {complaint.location && (
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center gap-2">
+                <MapPin
+                  size={18}
+                  className="text-orange-500"
+                />
 
-              <div className="flex items-center gap-3">
+                <span>
+                  {complaint.location?.address ||
+                    complaint.location?.city ||
+                    "Location not provided"}
+                </span>
+              </div>
 
-                <div className="rounded-xl bg-orange-100 p-3">
-                  <MapPin
-                    size={20}
-                    className="text-orange-500"
-                  />
-                </div>
+              <div className="flex items-center gap-2">
+                <Clock3
+                  size={18}
+                  className="text-orange-500"
+                />
 
-                <div>
-                  <h2 className="font-bold text-slate-900">
-                    Location
-                  </h2>
-
-                  <p className="text-sm text-slate-500">
-                    {complaint.location.address ||
-                      "Location provided"}
-                  </p>
-                </div>
-
+                <span>
+                  {new Date(
+                    complaint.createdAt
+                  ).toLocaleDateString()}
+                </span>
               </div>
 
             </div>
-          )}
+          </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
             <div className="flex items-center gap-2">
@@ -247,7 +317,7 @@ const ComplaintDetails = ({ complaintId }) => {
                 className="text-orange-500"
               />
 
-              <h2 className="text-xl font-bold">
+              <h2 className="text-xl font-bold text-slate-900">
                 Replies
               </h2>
 
@@ -256,37 +326,47 @@ const ComplaintDetails = ({ complaintId }) => {
             <div className="mt-6 space-y-4">
 
               {complaint.replies?.length > 0 ? (
-                complaint.replies.map((item, index) => (
-                  <div
-                    key={item._id || index}
-                    className="rounded-2xl bg-slate-50 p-4"
-                  >
-                    <div className="flex items-center justify-between">
 
-                      <span className="font-semibold text-slate-800">
-                        {item.sender === "admin"
-                          ? "Administrator"
-                          : "You"}
-                      </span>
+                complaint.replies.map(
+                  (item, index) => (
+                    <div
+                      key={
+                        item._id || index
+                      }
+                      className="rounded-2xl bg-slate-50 p-4"
+                    >
 
-                      <span className="text-xs text-slate-400">
-                        {new Date(
-                          item.createdAt
-                        ).toLocaleString()}
-                      </span>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+
+                        <span className="font-semibold text-slate-800">
+                          {item.sender ===
+                          "admin"
+                            ? "Administrator"
+                            : "You"}
+                        </span>
+
+                        <span className="text-xs text-slate-400">
+                          {new Date(
+                            item.createdAt
+                          ).toLocaleString()}
+                        </span>
+
+                      </div>
+
+                      <p className="mt-2 text-slate-600">
+                        {item.message}
+                      </p>
 
                     </div>
+                  )
+                )
 
-                    <p className="mt-2 text-slate-600">
-                      {item.message}
-                    </p>
-
-                  </div>
-                ))
               ) : (
+
                 <p className="text-sm text-slate-500">
                   No replies yet.
                 </p>
+
               )}
 
             </div>
@@ -294,6 +374,7 @@ const ComplaintDetails = ({ complaintId }) => {
             <div className="mt-6 flex gap-3">
 
               <input
+                type="text"
                 value={reply}
                 onChange={(e) =>
                   setReply(e.target.value)
@@ -312,8 +393,10 @@ const ComplaintDetails = ({ complaintId }) => {
 
               <button
                 type="button"
-                disabled={replyMutation.isPending}
                 onClick={handleReply}
+                disabled={
+                  replyMutation.isPending
+                }
                 className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Send size={17} />
@@ -330,6 +413,7 @@ const ComplaintDetails = ({ complaintId }) => {
         </div>
 
         <div className="space-y-6">
+
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
             <div className="flex items-center gap-3">
@@ -355,9 +439,9 @@ const ComplaintDetails = ({ complaintId }) => {
 
           </div>
 
-          {/* DELETE */}
+          {complaint.status ===
+            "Pending" && (
 
-          {complaint.status === "Pending" && (
             <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
 
               <h3 className="font-bold text-red-700">
@@ -365,15 +449,17 @@ const ComplaintDetails = ({ complaintId }) => {
               </h3>
 
               <p className="mt-2 text-sm text-red-600">
-                You can delete this complaint while
-                it is still pending.
+                You can delete this complaint
+                while it is still pending.
               </p>
 
               <button
                 type="button"
-                disabled={deleteMutation.isPending}
+                disabled={
+                  deleteMutation.isPending
+                }
                 onClick={handleDelete}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-3 font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-3 font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Trash2 size={17} />
 

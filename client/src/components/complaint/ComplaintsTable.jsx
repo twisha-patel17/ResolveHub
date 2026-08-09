@@ -6,79 +6,71 @@ import {
 
 import { useNavigate } from "react-router-dom";
 
-const complaints = [
-  {
-    id: "RH-2049",
-    title: "Leaking pipe near Block C entrance",
-    category: "Infrastructure",
-    priority: "High",
-    status: "In Progress",
-    created: "Aug 1, 2026",
-    updated: "2 min ago",
-  },
-  {
-    id: "RH-2048",
-    title: "Broken streetlight, Sector 9",
-    category: "Utilities",
-    priority: "Medium",
-    status: "Pending",
-    created: "Jul 31, 2026",
-    updated: "1 hr ago",
-  },
-  {
-    id: "RH-2044",
-    title: "Overflowing garbage bin, Park Rd",
-    category: "Sanitation",
-    priority: "Low",
-    status: "Pending",
-    created: "Jul 30, 2026",
-    updated: "5 hrs ago",
-  },
-  {
-    id: "RH-2041",
-    title: "Elevator noise, Tower B",
-    category: "Infrastructure",
-    priority: "Low",
-    status: "Resolved",
-    created: "Jul 27, 2026",
-    updated: "Yesterday",
-  },
-  {
-    id: "RH-2038",
-    title: "Unauthorized parking blocking exit",
-    category: "Security",
-    priority: "High",
-    status: "In Progress",
-    created: "Jul 25, 2026",
-    updated: "2 days ago",
-  },
-  {
-    id: "RH-2036",
-    title: "Water contamination report",
-    category: "Utilities",
-    priority: "Critical",
-    status: "Closed",
-    created: "Jul 20, 2026",
-    updated: "3 days ago",
-  },
-];
-
 const priorityStyles = {
   Low: "bg-slate-100 text-slate-600",
   Medium: "bg-orange-100 text-orange-600",
   High: "bg-orange-100 text-orange-600",
-  Critical: "bg-red-100 text-red-600",
+  Urgent: "bg-red-100 text-red-600",
 };
 
 const statusStyles = {
   Pending: "bg-yellow-100 text-yellow-700",
   "In Progress": "bg-blue-100 text-blue-700",
   Resolved: "bg-green-100 text-green-700",
-  Closed: "bg-slate-200 text-slate-600",
+  Rejected: "bg-red-100 text-red-700",
 };
 
-const ComplaintsTable = () => {
+const ComplaintsTable = ({
+  complaints = [],
+  totalComplaints = 0,
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange,
+  isLoading,
+  isError,
+  error,
+}) => {
   const navigate = useNavigate();
+
+  if (isLoading) {
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <p className="text-slate-500">
+          Loading complaints...
+        </p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-3xl border border-red-200 bg-red-50 p-8 text-center">
+        <h2 className="font-semibold text-red-700">
+          Failed to load complaints
+        </h2>
+
+        <p className="mt-1 text-sm text-red-600">
+          {error?.response?.data?.message ||
+            "Something went wrong"}
+        </p>
+      </div>
+    );
+  }
+
+
+  if (complaints.length === 0) {
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-800">
+          No complaints found
+        </h2>
+
+        <p className="mt-1 text-sm text-slate-500">
+          Try changing your search or filters.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -113,10 +105,6 @@ const ComplaintsTable = () => {
                 Created
               </th>
 
-              <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Updated
-              </th>
-
               <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Action
               </th>
@@ -127,13 +115,13 @@ const ComplaintsTable = () => {
           <tbody>
             {complaints.map((complaint) => (
               <tr
-                key={complaint.id}
-                className="border-b border-slate-100 transition-colors duration-200 hover:bg-orange-50/50"
+                key={complaint._id}
+                className="border-b border-slate-100 transition-colors hover:bg-orange-50/50"
               >
 
                 <td className="whitespace-nowrap px-5 py-5">
                   <span className="text-sm font-semibold text-slate-500">
-                    {complaint.id}
+                    {complaint.complaintId}
                   </span>
                 </td>
 
@@ -152,7 +140,10 @@ const ComplaintsTable = () => {
                 <td className="whitespace-nowrap px-5 py-5">
                   <span
                     className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                      priorityStyles[complaint.priority]
+                      priorityStyles[
+                        complaint.priority
+                      ] ||
+                      "bg-slate-100 text-slate-600"
                     }`}
                   >
                     {complaint.priority}
@@ -162,23 +153,23 @@ const ComplaintsTable = () => {
                 <td className="whitespace-nowrap px-5 py-5">
                   <span
                     className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
-                      statusStyles[complaint.status]
+                      statusStyles[
+                        complaint.status
+                      ] ||
+                      "bg-slate-100 text-slate-600"
                     }`}
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-current" />
+
                     {complaint.status}
                   </span>
                 </td>
 
                 <td className="whitespace-nowrap px-5 py-5">
                   <span className="text-sm text-slate-600">
-                    {complaint.created}
-                  </span>
-                </td>
-
-                <td className="whitespace-nowrap px-5 py-5">
-                  <span className="text-sm text-slate-600">
-                    {complaint.updated}
+                    {new Date(
+                      complaint.createdAt
+                    ).toLocaleDateString()}
                   </span>
                 </td>
 
@@ -186,7 +177,9 @@ const ComplaintsTable = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      navigate(`/complaints/${complaint._id}`)
+                      navigate(
+                        `/complaints/${complaint._id}`
+                      )
                     }
                     className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 transition-colors hover:text-orange-500"
                   >
@@ -207,45 +200,63 @@ const ComplaintsTable = () => {
         <p className="text-sm text-slate-500">
           Showing{" "}
           <span className="font-semibold text-slate-700">
-            1–6
+            {complaints.length}
           </span>{" "}
           of{" "}
           <span className="font-semibold text-slate-700">
-            12
-          </span>
+            {totalComplaints}
+          </span>{" "}
+          complaints
         </p>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
 
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400 transition hover:border-orange-400 hover:text-orange-500"
+            disabled={currentPage === 1}
+            onClick={() =>
+              onPageChange(currentPage - 1)
+            }
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-orange-400 hover:text-orange-500 disabled:cursor-not-allowed disabled:text-slate-300"
           >
             <ChevronLeft size={17} />
           </button>
 
-          <button
-            type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-sm"
-          >
-            1
-          </button>
+          {Array.from(
+            { length: totalPages },
+            (_, index) => index + 1
+          ).map((page) => (
+            <button
+              key={page}
+              type="button"
+              onClick={() =>
+                onPageChange(page)
+              }
+              className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-semibold transition ${
+                currentPage === page
+                  ? "bg-orange-500 text-white"
+                  : "border border-slate-200 text-slate-600 hover:border-orange-400 hover:text-orange-500"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
 
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-sm font-medium text-slate-600 transition hover:border-orange-400 hover:text-orange-500"
-          >
-            2
-          </button>
-
-          <button
-            type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400 transition hover:border-orange-400 hover:text-orange-500"
+            disabled={
+              currentPage === totalPages
+            }
+            onClick={() =>
+              onPageChange(currentPage + 1)
+            }
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-orange-400 hover:text-orange-500 disabled:cursor-not-allowed disabled:text-slate-300"
           >
             <ChevronRight size={17} />
           </button>
 
         </div>
+
       </div>
 
     </div>

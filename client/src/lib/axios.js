@@ -5,16 +5,18 @@ const api = axios.create({
   withCredentials: true,
 });
 
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 api.interceptors.response.use(
   (response) => response,
@@ -22,16 +24,23 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // If there is no request config, just reject
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
+    // Don't try to refresh the token for the refresh endpoint itself
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url.includes("/refresh-token")
+      !originalRequest.url.includes("/auth/refresh-token")
     ) {
       originalRequest._retry = true;
 
       try {
-
-        const response = await api.post("/refresh-token");
+        const response = await api.post(
+          "/auth/refresh-token"
+        );
 
         const newAccessToken =
           response.data.data.accessToken;
@@ -45,9 +54,7 @@ api.interceptors.response.use(
           `Bearer ${newAccessToken}`;
 
         return api(originalRequest);
-
       } catch (refreshError) {
-       
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
 
