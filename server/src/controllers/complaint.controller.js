@@ -26,9 +26,18 @@ export const createComplaint = asyncHandler(
       title,
       description,
       category,
-      priority,
+      priority: priority || "Medium",
       location,
       createdBy: req.user._id,
+
+      statusHistory: [
+        {
+          status: "Pending",
+          message: "Complaint submitted",
+          updatedBy: req.user._id,
+        },
+      ],
+
     });
 
     return res.status(201).json(
@@ -64,7 +73,7 @@ export const getComplaintById = asyncHandler(
     ).populate(
       "createdBy",
       "name email"
-    );
+    ).populate("statusHistory.updatedBy", "name");
 
     if (!complaint) {
       throw new ApiError(
@@ -233,40 +242,69 @@ export const getAllComplaints = asyncHandler(
   }
 );
 
-export const updateComplaintStatus = asyncHandler(async (req, res) => {
-  const { status } = req.body;
+export const updateComplaintStatus = asyncHandler(
+  async (req, res) => {
+    const { status } = req.body;
 
-  const complaint = await Complaint.findById(req.params.id);
+    if (req.user.role !== "admin") {
+      throw new ApiError(
+        403,
+        "Access denied"
+      );
+    }
 
-  if (!complaint) {
-    throw new ApiError(404, "Complaint not found");
+    const allowedStatuses = [
+      "Pending",
+      "In Progress",
+      "Resolved",
+      "Rejected",
+    ]
+
+    if (!allowedStatuses.includes(status)) {
+      throw new ApiError(
+        400,
+        "Invalid status"
+      );
+    }
+
+    const complaint = await Complaint.findById(
+      req.params.id
+    );
+
+    if (!complaint) {
+      throw new ApiError(
+        404,
+        "Complaint not found"
+      );
+    }
+
+    complaint.status = status;
+
+    complaint.statusHistory.push({
+      status,
+      message: `Complaint status changed to ${status}`,
+      updatedBy: req.user._id,
+    });
+
+    await complaint.save();
+
+    await createNotification({
+      recipient: complaint.createdBy,
+      complaint: complaint._id,
+      title: "Complaint Status Updated",
+      message: `Your complaint "${complaint.title}" is now ${status}.`,
+      type: "status",
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        complaint,
+        "Complaint status updated successfully"
+      )
+    );
   }
-
-  complaint.status = status;
-
-  complaint.statusHistory.push({
-    status,
-    updatedBy: req.user._id,
-  });
-
-  await complaint.save();
-
-  await createNotification({
-    recipient: complaint.createdBy,
-    complaint: complaint._id,
-    title: "Complaint Status Updated",
-    message: `Your complaint "${complaint.title}" is now ${status}.`,
-    type: "status",
-  });
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      complaint,
-      "Complaint status updated successfully"
-    )
-  );
-});
+);
 
 export const getDashboardStats = asyncHandler(
   async (req, res) => {
@@ -313,39 +351,57 @@ export const getDashboardStats = asyncHandler(
   }
 );
 
-export const addReply = asyncHandler(async (req, res) => {
-  const { message } = req.body;
+export const addReply = asyncHandler(
+  async (req, res) => {
+    const { message } = req.body;
 
-  if (!message) {
-    throw new ApiError(400, "Reply message is required");
+    if (req.user.role !== "admin") {
+      throw new ApiError(
+        403,
+        "Only admins can reply to complaints"
+      );
+    }
+
+    if (!message?.trim()) {
+      throw new ApiError(
+        400,
+        "Reply message is required"
+      );
+    }
+
+    const complaint = await Complaint.findById(
+      req.params.id
+    );
+
+    if (!complaint) {
+      throw new ApiError(
+        404,
+        "Complaint not found"
+      );
+    }
+
+    complaint.replies.push({
+      sender: "admin",
+      message: message.trim(),
+    });
+
+    await complaint.save();
+
+    await createNotification({
+      recipient: complaint.createdBy,
+      complaint: complaint._id,
+      title: "New Reply",
+      message:
+        "An administrator replied to your complaint.",
+      type: "reply",
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        complaint,
+        "Reply added successfully"
+      )
+    );
   }
-
-  const complaint = await Complaint.findById(req.params.id);
-
-  if (!complaint) {
-    throw new ApiError(404, "Complaint not found");
-  }
-
-  complaint.replies.push({
-    sender: req.user.role,
-    message,
-  });
-
-  await complaint.save();
-
-  await createNotification({
-    recipient: complaint.createdBy,
-    complaint: complaint._id,
-    title: "New Reply",
-    message: "An administrator replied to your complaint.",
-    type: "reply",
-  });
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      complaint,
-      "Reply added successfully"
-    )
-  );
-});
+);

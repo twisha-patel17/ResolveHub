@@ -83,11 +83,9 @@ const ComplaintsTable = () => {
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
 
-      {/* TABLE */}
       <div className="overflow-x-auto">
-        <table className="min-w-[1100px] w-full border-collapse">
+        <table className="min-w-275 w-full border-collapse">
 
-          {/* HEADER */}
           <thead className="bg-slate-50">
             <tr className="border-b border-slate-200">
 
@@ -126,7 +124,6 @@ const ComplaintsTable = () => {
             </tr>
           </thead>
 
-          {/* BODY */}
           <tbody>
             {complaints.map((complaint) => (
               <tr
@@ -134,28 +131,24 @@ const ComplaintsTable = () => {
                 className="border-b border-slate-100 transition-colors duration-200 hover:bg-orange-50/50"
               >
 
-                {/* ID */}
                 <td className="whitespace-nowrap px-5 py-5">
                   <span className="text-sm font-semibold text-slate-500">
                     {complaint.id}
                   </span>
                 </td>
 
-                {/* TITLE */}
-                <td className="max-w-[280px] px-5 py-5">
+                <td className="max-w-70 px-5 py-5">
                   <p className="truncate text-sm font-semibold text-slate-900">
                     {complaint.title}
                   </p>
                 </td>
 
-                {/* CATEGORY */}
                 <td className="whitespace-nowrap px-5 py-5">
                   <span className="text-sm text-slate-600">
                     {complaint.category}
                   </span>
                 </td>
 
-                {/* PRIORITY */}
                 <td className="whitespace-nowrap px-5 py-5">
                   <span
                     className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
@@ -166,7 +159,6 @@ const ComplaintsTable = () => {
                   </span>
                 </td>
 
-                {/* STATUS */}
                 <td className="whitespace-nowrap px-5 py-5">
                   <span
                     className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
@@ -178,26 +170,23 @@ const ComplaintsTable = () => {
                   </span>
                 </td>
 
-                {/* CREATED */}
                 <td className="whitespace-nowrap px-5 py-5">
                   <span className="text-sm text-slate-600">
                     {complaint.created}
                   </span>
                 </td>
 
-                {/* UPDATED */}
                 <td className="whitespace-nowrap px-5 py-5">
                   <span className="text-sm text-slate-600">
                     {complaint.updated}
                   </span>
                 </td>
 
-                {/* ACTION */}
                 <td className="px-5 py-5 text-center">
                   <button
                     type="button"
                     onClick={() =>
-                      navigate(`/complaints/${complaint.id}`)
+                      navigate(`/complaints/${complaint._id}`)
                     }
                     className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 transition-colors hover:text-orange-500"
                   >
@@ -213,7 +202,6 @@ const ComplaintsTable = () => {
         </table>
       </div>
 
-      {/* PAGINATION */}
       <div className="flex flex-col gap-4 border-t border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
 
         <p className="text-sm text-slate-500">
@@ -229,7 +217,6 @@ const ComplaintsTable = () => {
 
         <div className="flex items-center gap-2">
 
-          {/* PREVIOUS */}
           <button
             type="button"
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400 transition hover:border-orange-400 hover:text-orange-500"
@@ -237,7 +224,6 @@ const ComplaintsTable = () => {
             <ChevronLeft size={17} />
           </button>
 
-          {/* PAGE 1 */}
           <button
             type="button"
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-sm"
@@ -245,7 +231,6 @@ const ComplaintsTable = () => {
             1
           </button>
 
-          {/* PAGE 2 */}
           <button
             type="button"
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-sm font-medium text-slate-600 transition hover:border-orange-400 hover:text-orange-500"
@@ -253,7 +238,6 @@ const ComplaintsTable = () => {
             2
           </button>
 
-          {/* NEXT */}
           <button
             type="button"
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400 transition hover:border-orange-400 hover:text-orange-500"

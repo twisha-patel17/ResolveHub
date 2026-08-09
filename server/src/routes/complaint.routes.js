@@ -10,22 +10,9 @@ router.post("/",verifyJWT,createComplaint);
 router.get("/my",verifyJWT,getMyComplaints);
 router.get("/:id",verifyJWT,getComplaintById);
 router.put("/:id",verifyJWT, updateComplaint);
-router.delete(
-  "/:id",
-  verifyJWT,
-  deleteComplaint
-);
-router.get(
-  "/:id/status",
-  verifyJWT,
-  authorizeRoles("admin"),
-  getAllComplaints
-);
-router.post(
-  "/:id/reply",
-  verifyJWT,
-  authorizeRoles("admin"),
-  addReply
-);
+router.delete("/:id",verifyJWT,deleteComplaint);
+router.patch("/:id/status",verifyJWT,authorizeRoles("admin"),getAllComplaints);
+router.post("/:id/reply",verifyJWT,authorizeRoles("admin"),addReply);
+router.get("/dashboard/stats",verifyJWT, authorizeRoles("admin"),getDashboardStats);
 
 export default router;

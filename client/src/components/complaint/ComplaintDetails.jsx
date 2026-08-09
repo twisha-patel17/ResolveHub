@@ -1,405 +1,393 @@
 import {
   ArrowLeft,
-  Tag,
-  MapPin,
-  CalendarDays,
-  Image as ImageIcon,
-  CircleCheck,
   Clock3,
-  Edit3,
-  Download,
-  Trash2,
-  Paperclip,
+  MapPin,
+  MessageCircle,
   Send,
+  Trash2,
 } from "lucide-react";
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
-const ComplaintDetails = () => {
-  const timeline = [
-    {
-      title: "Complaint created",
-      description: "Aug 1, 9:02 AM by Twisha S.",
-      type: "completed",
-    },
-    {
-      title: "Marked Pending",
-      description: "Aug 1, 9:15 AM",
-      type: "completed",
-    },
-    {
-      title: "Assigned to Rohan Verma",
-      description: "Aug 1, 10:05 AM",
-      type: "completed",
-    },
-    {
-      title: "Marked In Progress",
-      description: "Aug 1, 10:40 AM",
-      type: "completed",
-    },
-    {
-      title: "Resolved",
-      description: "Pending",
-      type: "pending",
-    },
-    {
-      title: "Closed",
-      description: "Pending",
-      type: "pending",
-    },
-  ];
+import api from "../../lib/axios";
 
+const ComplaintDetails = ({ complaintId }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [reply, setReply] = useState("");
+
+  const {
+    data: complaint,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["complaint", complaintId],
+
+    queryFn: async () => {
+      const response = await api.get(
+        `/complaints/${complaintId}`
+      );
+
+      return response.data.data;
+    },
+
+    enabled: !!complaintId,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/complaints/${complaintId}`);
+    },
+
+    onSuccess: () => {
+      toast.success("Complaint deleted successfully");
+
+      queryClient.invalidateQueries({
+        queryKey: ["complaints"],
+      });
+
+      navigate("/complaints");
+    },
+
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete complaint"
+      );
+    },
+  });
+
+  const replyMutation = useMutation({
+    mutationFn: async (message) => {
+      const response = await api.post(
+        `/complaints/${complaintId}/reply`,
+        {
+          message,
+        }
+      );
+
+      return response.data.data;
+    },
+
+    onSuccess: (updatedComplaint) => {
+      queryClient.setQueryData(
+        ["complaint", complaintId],
+        updatedComplaint
+      );
+
+      setReply("");
+
+      toast.success("Reply sent successfully");
+    },
+
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to send reply"
+      );
+    },
+  });
+
+  const handleReply = () => {
+    const message = reply.trim();
+
+    if (!message) {
+      toast.error("Please enter a reply");
+      return;
+    }
+
+    replyMutation.mutate(message);
+  };
+
+  const handleDelete = () => {
+    if (!window.confirm(
+      "Are you sure you want to delete this complaint?"
+    )) {
+      return;
+    }
+
+    deleteMutation.mutate();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-100 items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-orange-500" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+        <h2 className="font-semibold text-red-700">
+          Failed to load complaint
+        </h2>
+
+        <p className="mt-2 text-sm text-red-600">
+          {error.response?.data?.message ||
+            "Something went wrong"}
+        </p>
+
+        <button
+          onClick={() =>
+            queryClient.invalidateQueries({
+              queryKey: ["complaint", complaintId],
+            })
+          }
+          className="mt-4 rounded-xl bg-red-500 px-5 py-2.5 font-semibold text-white transition hover:bg-red-600"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  if (!complaint) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
 
-      <button type="button" onClick={() => navigate("/complaints")} className="flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-orange-500">
+      <button
+        type="button"
+        onClick={() => navigate("/complaints")}
+        className="flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-orange-500"
+      >
         <ArrowLeft size={17} />
         Back to my complaints
       </button>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,2.3fr)_310px]">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
-        <div className="space-y-6">
+        <div>
+          <p className="text-sm font-semibold text-orange-500">
+            {complaint.complaintId}
+          </p>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="mt-1 text-3xl font-bold text-slate-900">
+            {complaint.title}
+          </h1>
 
-              <div className="flex flex-wrap items-center gap-2">
-
-                <span className="text-sm font-medium text-slate-500">
-                  #RH-2049
-                </span>
-
-                <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-600">
-                  High priority
-                </span>
-
-                <span className="flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
-                  In Progress
-                </span>
-
-              </div>
-
-              <span className="flex w-fit items-center gap-2 rounded-full bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
-                Live
-              </span>
-
-            </div>
-
-            <h1 className="mt-4 text-2xl font-bold text-slate-900 sm:text-3xl">
-              Leaking pipe near Block C entrance
-            </h1>
-
-            <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-600 sm:text-[15px]">
-              There's a steady water leak coming from the pipe joint just
-              outside the Block C entrance. It's been going on since this
-              morning and is starting to pool near the walkway — could be a
-              slipping hazard.
-            </p>
-
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 border-b border-slate-200 pb-5">
-
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <Tag size={17} />
-                Infrastructure
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <MapPin size={17} />
-                Block C, Ground Floor
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <CalendarDays size={17} />
-                Created Aug 1, 2026
-              </div>
-
-            </div>
-
- 
-            <div className="mt-5">
-
-              <h2 className="mb-3 text-lg font-bold text-slate-900">
-                Evidence
-              </h2>
-
-              <div className="flex flex-wrap gap-3">
-
-                {[1, 2, 3].map((item) => (
-                  <div
-                    key={item}
-                    className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl bg-slate-100 transition hover:ring-2 hover:ring-orange-400"
-                  >
-                    <ImageIcon
-                      size={24}
-                      className="text-slate-400"
-                    />
-                  </div>
-                ))}
-
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-
-            <h2 className="text-xl font-bold text-slate-900">
-              Timeline
-            </h2>
-
-            <div className="mt-6">
-
-              {timeline.map((item, index) => (
-                <div
-                  key={item.title}
-                  className="relative flex gap-4 pb-7 last:pb-0"
-                >
-
-                  {index !== timeline.length - 1 && (
-                    <div
-                      className={`absolute left-3 top-7 h-full w-px ${
-                        item.type === "completed"
-                          ? "bg-green-200"
-                          : "bg-slate-200"
-                      }`}
-                    />
-                  )}
-
-                  <div
-                    className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                      item.type === "completed"
-                        ? "bg-green-100 text-green-500"
-                        : "border border-slate-300 bg-white text-slate-400"
-                    }`}
-                  >
-                    {item.type === "completed" ? (
-                      <CircleCheck size={18} />
-                    ) : (
-                      <Clock3 size={15} />
-                    )}
-                  </div>
-
-                  <div>
-                    <p
-                      className={`font-semibold ${
-                        item.type === "completed"
-                          ? "text-slate-800"
-                          : "text-slate-500"
-                      }`}
-                    >
-                      {item.title}
-                    </p>
-
-                    <p className="mt-0.5 text-sm text-slate-500">
-                      {item.description}
-                    </p>
-                  </div>
-
-                </div>
-              ))}
-
-            </div>
-
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
-              <h2 className="text-xl font-bold text-slate-900">
-                Conversation
-              </h2>
-
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
-                Admin Rohan is typing...
-              </div>
-
-            </div>
-
-            <div className="mt-5 flex justify-center">
-              <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-medium text-slate-500">
-                ✓ Complaint marked In Progress · 10:40 AM
-              </span>
-            </div>
-
-            <div className="mt-5 flex items-start gap-3">
-
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
-                AR
-              </div>
-
-              <div>
-
-                <p className="text-xs font-semibold text-slate-800">
-                  Admin Rohan
-                  <span className="ml-2 font-normal text-slate-400">
-                    · 20 min ago
-                  </span>
-                </p>
-
-                <div className="mt-1 rounded-2xl rounded-tl-md bg-slate-100 px-4 py-3 text-sm text-slate-700">
-                  Sent a plumber to inspect — should be there within the hour.
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="mt-5 flex justify-end">
-
-              <div className="flex items-end gap-3">
-
-                <div>
-
-                  <p className="text-right text-xs font-semibold text-slate-800">
-                    You
-                    <span className="ml-2 font-normal text-slate-400">
-                      · 12 min ago
-                    </span>
-                  </p>
-
-                  <div className="mt-1 rounded-2xl rounded-tr-md bg-orange-100 px-4 py-3 text-sm text-slate-700">
-                    Thank you, appreciate the quick response!
-                  </div>
-
-                </div>
-
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-400 text-xs font-bold text-white">
-                  TS
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="mt-6 flex gap-2">
-
-              <input
-                type="text"
-                placeholder="Write a reply..."
-                className="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              />
-
-              <button
-                type="button"
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-orange-400 hover:bg-orange-50 hover:text-orange-500"
-              >
-                <Paperclip size={19} />
-              </button>
-
-              <button
-                type="button"
-                className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
-              >
-                <Send size={16} />
-                <span className="hidden sm:inline">
-                  Send
-                </span>
-              </button>
-
-            </div>
-
-          </div>
-
+          <p className="mt-2 text-slate-500">
+            Created{" "}
+            {new Date(
+              complaint.createdAt
+            ).toLocaleDateString()}
+          </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="flex flex-wrap gap-2">
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <span className="rounded-full bg-orange-100 px-4 py-2 text-sm font-semibold text-orange-600">
+            {complaint.priority}
+          </span>
 
-            <h3 className="font-bold text-slate-900">
-              Reported by
-            </h3>
-
-            <div className="mt-5 flex items-center gap-3">
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-400 font-bold text-white">
-                TS
-              </div>
-
-              <div>
-                <p className="font-semibold text-slate-900">
-                  Twisha Sharma
-                </p>
-
-                <p className="text-sm text-slate-500">
-                  Reporter
-                </p>
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
-            <h3 className="font-bold text-slate-900">
-              Assigned admin
-            </h3>
-
-            <div className="mt-5 flex items-center gap-3">
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-500 font-bold text-white">
-                AR
-              </div>
-
-              <div>
-                <p className="font-semibold text-slate-900">
-                  Rohan Verma
-                </p>
-
-                <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
-                  <span className="h-2 w-2 rounded-full bg-green-400" />
-                  Online now
-                </p>
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
-            <div className="space-y-2">
-
-              <button
-                type="button"
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-orange-400 hover:bg-orange-50 hover:text-orange-600"
-              >
-                <Edit3 size={16} />
-                Update status
-              </button>
-
-              <button
-                type="button"
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-orange-400 hover:bg-orange-50 hover:text-orange-600"
-              >
-                <Download size={16} />
-                Download report
-              </button>
-
-              <button
-                type="button"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-600"
-              >
-                <Trash2 size={16} />
-                Delete complaint
-              </button>
-
-            </div>
-
-          </div>
+          <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700">
+            {complaint.status}
+          </span>
 
         </div>
 
       </div>
+      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+        <div className="space-y-6">
 
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+            <h2 className="text-xl font-bold text-slate-900">
+              Complaint details
+            </h2>
+
+            <p className="mt-4 leading-7 text-slate-600">
+              {complaint.description}
+            </p>
+
+          </div>
+
+          {complaint.location && (
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+              <div className="flex items-center gap-3">
+
+                <div className="rounded-xl bg-orange-100 p-3">
+                  <MapPin
+                    size={20}
+                    className="text-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <h2 className="font-bold text-slate-900">
+                    Location
+                  </h2>
+
+                  <p className="text-sm text-slate-500">
+                    {complaint.location.address ||
+                      "Location provided"}
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+            <div className="flex items-center gap-2">
+
+              <MessageCircle
+                size={20}
+                className="text-orange-500"
+              />
+
+              <h2 className="text-xl font-bold">
+                Replies
+              </h2>
+
+            </div>
+
+            <div className="mt-6 space-y-4">
+
+              {complaint.replies?.length > 0 ? (
+                complaint.replies.map((item, index) => (
+                  <div
+                    key={item._id || index}
+                    className="rounded-2xl bg-slate-50 p-4"
+                  >
+                    <div className="flex items-center justify-between">
+
+                      <span className="font-semibold text-slate-800">
+                        {item.sender === "admin"
+                          ? "Administrator"
+                          : "You"}
+                      </span>
+
+                      <span className="text-xs text-slate-400">
+                        {new Date(
+                          item.createdAt
+                        ).toLocaleString()}
+                      </span>
+
+                    </div>
+
+                    <p className="mt-2 text-slate-600">
+                      {item.message}
+                    </p>
+
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">
+                  No replies yet.
+                </p>
+              )}
+
+            </div>
+
+            <div className="mt-6 flex gap-3">
+
+              <input
+                value={reply}
+                onChange={(e) =>
+                  setReply(e.target.value)
+                }
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "Enter" &&
+                    !replyMutation.isPending
+                  ) {
+                    handleReply();
+                  }
+                }}
+                placeholder="Write a reply..."
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+              />
+
+              <button
+                type="button"
+                disabled={replyMutation.isPending}
+                onClick={handleReply}
+                className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Send size={17} />
+
+                {replyMutation.isPending
+                  ? "Sending..."
+                  : "Send"}
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+            <div className="flex items-center gap-3">
+
+              <div className="rounded-xl bg-blue-100 p-3">
+                <Clock3
+                  size={20}
+                  className="text-blue-600"
+                />
+              </div>
+
+              <div>
+                <p className="text-sm text-slate-500">
+                  Current status
+                </p>
+
+                <p className="font-bold text-slate-900">
+                  {complaint.status}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* DELETE */}
+
+          {complaint.status === "Pending" && (
+            <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
+
+              <h3 className="font-bold text-red-700">
+                Delete complaint
+              </h3>
+
+              <p className="mt-2 text-sm text-red-600">
+                You can delete this complaint while
+                it is still pending.
+              </p>
+
+              <button
+                type="button"
+                disabled={deleteMutation.isPending}
+                onClick={handleDelete}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-3 font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
+              >
+                <Trash2 size={17} />
+
+                {deleteMutation.isPending
+                  ? "Deleting..."
+                  : "Delete complaint"}
+              </button>
+
+            </div>
+          )}
+
+        </div>
+
+      </div>
     </div>
   );
 };
