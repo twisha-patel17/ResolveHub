@@ -119,24 +119,21 @@ const ComplaintForm = () => {
       return;
     }
 
-    const complaintData = {
-      title: title.trim(),
+    const formData = new FormData();
 
-      description: description.trim(),
+    formData.append("title", title.trim());
+    formData.append("description", description.trim());
+    formData.append("category", category);
+    formData.append("priority", priority);
+    formData.append("location", JSON.stringify({
+      address: location.trim(),
+    }));
 
-      category,
+    images.forEach((image) => {
+      formData.append("images", image);
+    });
 
-      priority,
-
-      location: {
-        address: location.trim(),
-      },
-
-      // Images will be handled separately
-      images: [],
-    };
-
-    createMutation.mutate(complaintData);
+    createMutation.mutate(formData);
   };
 
   const loading = createMutation.isPending;

@@ -1,9 +1,9 @@
 import api from "../lib/axios";
 
-export const createComplaint = async (complaintData) => {
+export const createComplaint = async (formData) => {
   const response = await api.post(
     "/complaints",
-    complaintData
+    formData
   );
 
   return response.data;
@@ -16,7 +16,9 @@ export const getMyComplaints = async () => {
 };
 
 export const getComplaintById = async (id) => {
-  const response = await api.get(`/complaints/${id}`);
+  const response = await api.get(
+    `/complaints/${id}`
+  );
 
   return response.data;
 };

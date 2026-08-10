@@ -18,61 +18,66 @@ const ALLOWED_UPDATE_FIELDS = [
   "category",
   "priority",
   "location",
-  "images",
 ];
 
-export const createComplaint = asyncHandler(async (req, res) => {
-  const {
-    title,
-    description,
-    category,
-    priority,
-    location,
-    images,
-  } = req.body;
+export const createComplaint = asyncHandler(
+  async (req, res) => {
+    const {
+      title,
+      description,
+      category,
+      priority,
+      location,
+    } = req.body;
 
-  if (!title?.trim() || !description?.trim() || !category) {
-    throw new ApiError(
-      400,
-      "Title, description and category are required"
+    if (
+      !title?.trim() ||
+      !description?.trim() ||
+      !category
+    ) {
+      throw new ApiError(
+        400,
+        "Title, description and category are required"
+      );
+    }
+
+    const complaint = await Complaint.create({
+      complaintId: `RH-${Date.now()}`,
+
+      title: title.trim(),
+
+      description: description.trim(),
+
+      category,
+
+      priority: priority || "Medium",
+
+      location,
+
+      images: req.uploadedImages || [],
+
+      createdBy: req.user._id,
+
+      status: "Pending",
+
+      statusHistory: [
+        {
+          status: "Pending",
+          message: "Complaint submitted",
+          updatedBy: req.user._id,
+        },
+      ],
+    });
+
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        complaint,
+        "Complaint created successfully"
+      )
     );
   }
-
-  const complaint = await Complaint.create({
-    complaintId: `RH-${Date.now()}`,
-
-    title: title.trim(),
-    description: description.trim(),
-
-    category,
-
-    priority: priority || "Medium",
-
-    location,
-
-    images: images || [],
-
-    createdBy: req.user._id,
-
-    status: "Pending",
-
-    statusHistory: [
-      {
-        status: "Pending",
-        message: "Complaint submitted",
-        updatedBy: req.user._id,
-      },
-    ],
-  });
-
-  return res.status(201).json(
-    new ApiResponse(
-      201,
-      complaint,
-      "Complaint created successfully"
-    )
-  );
-});
+);
 
 export const getMyComplaints = asyncHandler(async (req, res) => {
   const complaints = await Complaint.find({

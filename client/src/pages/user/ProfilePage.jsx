@@ -27,11 +27,6 @@ const ProfilePage = () => {
   const [email] = useState(user?.email || "");
 
   const [isSaving, setIsSaving] = useState(false);
-
-  // =====================================================
-  // UPDATE PROFILE
-  // =====================================================
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -52,10 +47,6 @@ const ProfilePage = () => {
     }, 800);
   };
 
-  // =====================================================
-  // DELETE ACCOUNT
-  // =====================================================
-
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
       const response = await api.delete(
@@ -75,8 +66,6 @@ const ProfilePage = () => {
         response?.message ||
           "Account deleted successfully"
       );
-
-      // Redirect to login
       navigate("/login");
     },
 
@@ -99,10 +88,6 @@ const ProfilePage = () => {
 
     deleteAccountMutation.mutate();
   };
-
-  // =====================================================
-  // AVATAR INITIAL
-  // =====================================================
 
   const getInitial = () => {
     if (!name) {
@@ -247,10 +232,6 @@ const ProfilePage = () => {
                 </div>
 
               </div>
-
-
-              {/* Email */}
-
               <div>
 
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -290,10 +271,6 @@ const ProfilePage = () => {
                 </p>
 
               </div>
-
-
-              {/* Role */}
-
               <div>
 
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -314,10 +291,6 @@ const ProfilePage = () => {
                 </div>
 
               </div>
-
-
-              {/* Save */}
-
               <div className="flex justify-end pt-3">
 
                 <button
@@ -355,18 +328,7 @@ const ProfilePage = () => {
             </form>
 
           </div>
-
-
-          {/* ===================================================
-              RIGHT SIDEBAR
-          ==================================================== */}
-
           <div className="space-y-6">
-
-
-            {/* =================================================
-                ACCOUNT OVERVIEW
-            ================================================== */}
 
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
@@ -375,9 +337,6 @@ const ProfilePage = () => {
               </h2>
 
               <div className="mt-6 divide-y divide-slate-100">
-
-
-                {/* Role */}
 
                 <div className="py-4 first:pt-0">
 
@@ -407,10 +366,6 @@ const ProfilePage = () => {
                   </div>
 
                 </div>
-
-
-                {/* Status */}
-
                 <div className="py-4">
 
                   <div className="flex items-center gap-3">
@@ -440,9 +395,6 @@ const ProfilePage = () => {
 
                 </div>
 
-
-                {/* Complaints */}
-
                 <div className="py-4">
 
                   <div className="flex items-center gap-3">
@@ -471,9 +423,6 @@ const ProfilePage = () => {
                   </div>
 
                 </div>
-
-
-                {/* Member since */}
 
                 <div className="py-4 last:pb-0">
 
@@ -508,11 +457,6 @@ const ProfilePage = () => {
 
             </div>
 
-
-            {/* =================================================
-                SECURITY CARD
-            ================================================== */}
-
             <div className="rounded-3xl border border-orange-200 bg-orange-50 p-6">
 
               <div className="flex items-start gap-3">
@@ -543,11 +487,6 @@ const ProfilePage = () => {
               </div>
 
             </div>
-
-
-            {/* =================================================
-                DANGER ZONE
-            ================================================== */}
 
             <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
 
