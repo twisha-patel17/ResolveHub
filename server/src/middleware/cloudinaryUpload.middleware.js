@@ -4,35 +4,33 @@ import streamifier from "streamifier";
 const uploadToCloudinary = async (req, res, next) => {
   try {
     if (!req.files || req.files.length === 0) {
-      req.uploadedImages = [];
+      req.cloudinaryImages = [];
       return next();
     }
 
     const uploadedImages = [];
 
     for (const file of req.files) {
-      const result = await new Promise(
-        (resolve, reject) => {
-          const stream =
-            cloudinary.uploader.upload_stream(
-              {
-                folder: "resolvehub/complaints",
-                resource_type: "image",
-              },
-              (error, result) => {
-                if (error) {
-                  reject(error);
-                } else {
-                  resolve(result);
-                }
+      const result = await new Promise((resolve, reject) => {
+        const uploadStream =
+          cloudinary.uploader.upload_stream(
+            {
+              folder: "resolvehub/complaints",
+              resource_type: "image",
+            },
+            (error, result) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(result);
               }
-            );
+            }
+          );
 
-          streamifier
-            .createReadStream(file.buffer)
-            .pipe(stream);
-        }
-      );
+        streamifier
+          .createReadStream(file.buffer)
+          .pipe(uploadStream);
+      });
 
       uploadedImages.push({
         url: result.secure_url,
@@ -40,11 +38,17 @@ const uploadToCloudinary = async (req, res, next) => {
       });
     }
 
-    req.uploadedImages = uploadedImages;
+    req.cloudinaryImages = uploadedImages;
 
     next();
   } catch (error) {
-    next(error);
+    console.error("Cloudinary upload error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to upload complaint images",
+      error: error.message,
+    });
   }
 };
 

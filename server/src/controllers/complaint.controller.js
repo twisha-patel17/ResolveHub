@@ -3,6 +3,7 @@ import Complaint from "../models/Complaint.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import { getIO } from "../sockets/socket.js";
 import createNotification from "../utils/createNotification.js";
 
 const ALLOWED_STATUSES = [
@@ -52,9 +53,9 @@ export const createComplaint = asyncHandler(
 
       priority: priority || "Medium",
 
-      location,
+      location: location ? JSON.parse(location) : {},
 
-      images: req.uploadedImages || [],
+      images: req.cloudinaryImages || [],
 
       createdBy: req.user._id,
 
@@ -350,10 +351,7 @@ export const updateComplaintStatus = asyncHandler(
       );
     }
 
-    const {
-      status,
-      message,
-    } = req.body;
+    const { status, message } = req.body;
 
     if (!ALLOWED_STATUSES.includes(status)) {
       throw new ApiError(
@@ -382,23 +380,38 @@ export const updateComplaintStatus = asyncHandler(
 
     complaint.status = status;
 
+    const statusMessage =
+      message?.trim() ||
+      `Complaint status changed to ${status}`;
+
     complaint.statusHistory.push({
       status,
-      message:
-        message?.trim() ||
-        `Complaint status changed to ${status}`,
+      message: statusMessage,
       updatedBy: req.user._id,
     });
 
     await complaint.save();
 
-    await createNotification({
+    const notification = await createNotification({
       recipient: complaint.createdBy,
       complaint: complaint._id,
       title: "Complaint Status Updated",
       message: `Your complaint "${complaint.title}" is now ${status}.`,
       type: "status",
     });
+
+    try {
+      const io = getIO();
+
+      io.to(
+        `user:${complaint.createdBy.toString()}`
+      ).emit("notification:new", notification);
+    } catch (socketError) {
+      console.error(
+        "Socket notification error:",
+        socketError.message
+      );
+    }
 
     return res.status(200).json(
       new ApiResponse(
@@ -474,23 +487,35 @@ export const addReply = asyncHandler(async (req, res) => {
   const { message } = req.body;
 
   if (!message || !message.trim()) {
-    throw new ApiError(400, "Reply message is required");
+    throw new ApiError(
+      400,
+      "Reply message is required"
+    );
   }
 
-  const complaint = await Complaint.findById(req.params.id);
+  const complaint = await Complaint.findById(
+    req.params.id
+  );
 
   if (!complaint) {
-    throw new ApiError(404, "Complaint not found");
+    throw new ApiError(
+      404,
+      "Complaint not found"
+    );
   }
 
   const isOwner =
     complaint.createdBy.toString() ===
     req.user._id.toString();
 
-  const isAdmin = req.user.role === "admin";
+  const isAdmin =
+    req.user.role === "admin";
 
   if (!isOwner && !isAdmin) {
-    throw new ApiError(403, "Access denied");
+    throw new ApiError(
+      403,
+      "Access denied"
+    );
   }
 
   complaint.replies.push({
@@ -500,17 +525,41 @@ export const addReply = asyncHandler(async (req, res) => {
 
   await complaint.save();
 
-  await createNotification({
-    recipient: isAdmin
-      ? complaint.createdBy
-      : complaint.assignedTo,
-    complaint: complaint._id,
-    title: isAdmin ? "New Reply" : "New Complaint Reply",
-    message: isAdmin
-      ? "An administrator replied to your complaint."
-      : "The complainant replied to your complaint.",
-    type: "reply",
-  });
+  const recipient = isAdmin
+    ? complaint.createdBy
+    : complaint.assignedTo;
+
+  let notification = null;
+
+  if (recipient) {
+    notification = await createNotification({
+      recipient,
+      complaint: complaint._id,
+      title: isAdmin
+        ? "New Reply"
+        : "New Complaint Reply",
+      message: isAdmin
+        ? "An administrator replied to your complaint."
+        : "The complainant replied to your complaint.",
+      type: "reply",
+    });
+
+    try {
+      const io = getIO();
+
+      io.to(
+        `user:${recipient.toString()}`
+      ).emit(
+        "notification:new",
+        notification
+      );
+    } catch (socketError) {
+      console.error(
+        "Socket notification error:",
+        socketError.message
+      );
+    }
+  }
 
   return res.status(200).json(
     new ApiResponse(
