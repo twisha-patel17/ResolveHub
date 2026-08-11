@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import { getCurrentUser } from "../services/auth.service";
+import socket from "../sockets/socket";
 
 const AuthContext = createContext();
 
@@ -13,6 +14,21 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+  if (!user?._id) {
+    socket.disconnect();
+    return;
+  }
+
+  socket.connect();
+
+  socket.emit("join-user-room", user._id);
+
+  return () => {
+    socket.disconnect();
+  };
+}, [user?._id]);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {

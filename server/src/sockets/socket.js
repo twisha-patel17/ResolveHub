@@ -5,7 +5,8 @@ let io;
 export const initializeSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL,
+      origin: "http://localhost:5173",
+      methods: ["GET", "POST"],
       credentials: true,
     },
   });
@@ -13,7 +14,7 @@ export const initializeSocket = (httpServer) => {
   io.on("connection", (socket) => {
     console.log(`🔌 Socket connected: ${socket.id}`);
 
-    socket.on("join:user", (userId) => {
+    socket.on("join-user", (userId) => {
       if (!userId) return;
 
       socket.join(`user:${userId}`);

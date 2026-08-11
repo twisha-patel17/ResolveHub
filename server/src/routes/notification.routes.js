@@ -8,12 +8,12 @@ const router = express.Router();
 
 router.use(verifyJWT);
 
-router.get("/", getMyNotifications);
+router.get("/", verifyJWT ,getMyNotifications);
 
 router.patch("/read-all", markAllNotificationsAsRead );
 
-router.patch("/:id/read", markNotificationAsRead );
+router.patch("/:id/read",verifyJWT ,markNotificationAsRead );
 
-router.delete("/:id", deleteNotification );
+router.delete("/:id", verifyJWT ,deleteNotification );
 
 export default router;
