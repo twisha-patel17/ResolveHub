@@ -3,6 +3,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import authRoutes from "./routes/auth.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 import complaintRoutes from "./routes/complaint.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import errorHandler from "./middleware/error.middleware.js";
@@ -20,8 +22,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.json({

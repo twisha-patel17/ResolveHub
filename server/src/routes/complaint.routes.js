@@ -9,7 +9,9 @@ import {
   getAllComplaints,
   updateComplaintStatus,
   getDashboardStats,
+  getMyDashboardStats,
   addReply,
+  getMyRecentActivity,
 } from "../controllers/complaint.controller.js";
 import upload from "../middleware/upload.middleware.js";
 import uploadToCloudinary from "../middleware/cloudinaryUpload.middleware.js";
@@ -34,6 +36,12 @@ router.get(
 );
 
 router.get(
+  "/dashboard/stats",
+  verifyJWT,
+  getMyDashboardStats
+);
+
+router.get(
   "/:id",
   verifyJWT,
   getComplaintById
@@ -49,6 +57,12 @@ router.delete(
   "/:id",
   verifyJWT,
   deleteComplaint
+);
+
+router.get(
+  "/activity/recent",
+  verifyJWT,
+  getMyRecentActivity
 );
 
 // ADMIN
@@ -74,7 +88,7 @@ router.post(
 );
 
 router.get(
-  "/dashboard/stats",
+  "/admin/dashboard/stats",
   verifyJWT,
   authorizeRoles("admin"),
   getDashboardStats

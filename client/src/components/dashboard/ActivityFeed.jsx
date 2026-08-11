@@ -65,38 +65,59 @@ const ActivityFeed = ({ activities = [] }) => {
         Recent Activity
       </h2>
 
-      <div className="space-y-5">
-
-        {activities.map((activity) => (
-          <div
-            key={activity.id}
-            className="flex items-start gap-4"
-          >
-            <div
-              className={`flex h-11 w-11 items-center justify-center rounded-full ${getIconBg(
-                activity.type
-              )}`}
-            >
-              {getIcon(activity.type)}
-            </div>
-
-            <div className="flex-1">
-              <p className="font-semibold text-slate-800">
-                {activity.title}
-              </p>
-
-              <p className="mt-1 text-sm text-slate-500">
-                {activity.description}
-              </p>
-
-              <span className="mt-2 block text-xs text-slate-400">
-                {activity.time}
-              </span>
-            </div>
+      {activities.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <div className="mb-3 rounded-full bg-slate-100 p-4">
+            <Bell
+              size={22}
+              className="text-slate-400"
+            />
           </div>
-        ))}
 
-      </div>
+          <p className="font-medium text-slate-700">
+            No recent activity
+          </p>
+
+          <p className="mt-1 text-sm text-slate-400">
+            Your complaint activity will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-5">
+
+          {activities.map((activity) => (
+            <div
+              key={activity.id}
+              className="flex items-start gap-4"
+            >
+              <div
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${getIconBg(
+                  activity.type
+                )}`}
+              >
+                {getIcon(activity.type)}
+              </div>
+
+              <div className="min-w-0 flex-1">
+
+                <p className="font-semibold text-slate-800">
+                  {activity.title}
+                </p>
+
+                <p className="mt-1 text-sm leading-5 text-slate-500">
+                  {activity.description}
+                </p>
+
+                <span className="mt-2 block text-xs text-slate-400">
+                  {activity.time}
+                </span>
+
+              </div>
+            </div>
+          ))}
+
+        </div>
+      )}
 
     </div>
   );

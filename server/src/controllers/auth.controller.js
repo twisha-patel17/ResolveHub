@@ -69,9 +69,7 @@ export const logoutUser = asyncHandler(async (req, res) => {
     if (refreshToken) {
         await User.findOneAndUpdate({ refreshToken },
             {
-                $unset: {
-                    refreshToken: 1,
-                },
+                $unset: {refreshToken: 1,},
             },
             {
                 new: true,
@@ -145,3 +143,41 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       )
     );
 });
+
+export const loginAdmin = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw new ApiError(400, "Email and password are required");
+  }
+
+  const user = await User.findOne({ email }).select("+password");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if(user.role !== "admin") {
+    throw new ApiError(403, "You are not authorized to access this resource");
+  }
+
+  if(!user.isActive) {
+    throw new ApiError(403, "You are not authorized to access this resource");
+  }
+
+  const isPasswordValid = await user.comparePassword(password);
+
+  if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid credentials");
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+  const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .json(new ApiResponse(200, { user: loggedInUser, accessToken }, "Admin logged in successfully"));
+})

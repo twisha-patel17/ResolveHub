@@ -569,3 +569,114 @@ export const addReply = asyncHandler(async (req, res) => {
     )
   );
 });
+
+export const getMyDashboardStats = asyncHandler(
+  async (req, res) => {
+    const stats = await Complaint.aggregate([
+      {
+        $match: {
+          createdBy: new mongoose.Types.ObjectId(
+            req.user._id
+          ),
+        },
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+    ]);
+    const data = {
+      total: 0,
+      pending: 0,
+      inProgress: 0,
+      resolved: 0,
+      rejected: 0,
+    };
+    stats.forEach((item) => {
+      data.total += item.count;
+
+      switch (item._id) {
+        case "Pending":
+          data.pending = item.count;
+          break;
+        case "In Progress":
+          data.inProgress = item.count;
+          break;
+        case "Resolved":
+          data.resolved = item.count;
+          break;
+        case "Rejected":
+          data.rejected = item.count;
+          break;
+      }
+    });
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        data,
+        "User dashboard statistics fetched successfully"
+      )
+    );
+  }
+);
+export const getMyRecentActivity = asyncHandler(async (req, res) => {
+  const complaints = await Complaint.find({
+    createdBy: req.user._id,
+  })
+    .select(
+      "complaintId title status replies statusHistory createdAt updatedAt"
+    )
+    .sort({ updatedAt: -1 })
+    .limit(10);
+
+  const activities = [];
+
+  complaints.forEach((complaint) => {
+    complaint.statusHistory?.forEach((history) => {
+      activities.push({
+        id: history._id,
+        type:
+          history.status === "Resolved"
+            ? "resolved"
+            : history.status === "Pending"
+            ? "pending"
+            : "status",
+        title: `Complaint ${history.status}`,
+        description: history.message,
+        time: history.updatedAt,
+        complaintId: complaint.complaintId,
+      });
+    });
+
+    complaint.replies?.forEach((reply) => {
+      activities.push({
+        id: reply._id,
+        type: "reply",
+        title:
+          reply.sender === "admin"
+            ? "Admin Replied"
+            : "You Replied",
+        description: reply.message,
+        time: reply.createdAt,
+        complaintId: complaint.complaintId,
+      });
+    });
+  });
+
+  activities.sort(
+    (a, b) =>
+      new Date(b.time) - new Date(a.time)
+  );
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      activities.slice(0, 5),
+      "Recent activity fetched successfully"
+    )
+  );
+});
