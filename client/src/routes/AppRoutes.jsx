@@ -11,8 +11,13 @@ import ComplaintDetailPage from "../pages/user/ComplaintDetailPage";
 import NotificationsPage from "../pages/user/NotificationsPage";
 import ProfilePage from "../pages/user/ProfilePage";
 
+import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import AdminLoginPage from "../pages/admin/AdminLoginPage";
+
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
+import AdminProtectedRoute from "./AdminProtectedRoute";
+import AdminPublicRoutes from "./AdminPublicRoutes";
 
 const AppRoutes = () => {
   return (
@@ -66,6 +71,20 @@ const AppRoutes = () => {
           element={<ProfilePage />}
         />
 
+      </Route>
+
+      <Route element={<AdminPublicRoutes />}>
+        <Route
+          path="/admin/login"
+          element={<AdminLoginPage />}
+        />
+      </Route>
+
+      <Route element={<AdminProtectedRoute />}>
+        <Route
+          path="/admin/dashboard"
+          element={<AdminDashboardPage />}
+        />
       </Route>
 
     </Routes>

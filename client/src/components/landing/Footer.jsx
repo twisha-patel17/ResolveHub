@@ -1,10 +1,5 @@
 import { Link } from "react-router-dom";
-import {
-  Shield,
-  Mail,
-  Phone,
-  MapPin,
-} from "lucide-react";
+import { Shield } from "lucide-react";
 
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 
@@ -22,10 +17,6 @@ const Footer = () => {
       name: "FAQ",
       href: "#faq",
     },
-    {
-      name: "Contact",
-      href: "#footer",
-    },
   ];
 
   return (
@@ -34,8 +25,9 @@ const Footer = () => {
       className="bg-slate-900 text-white"
     >
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
 
+          {/* Brand */}
           <div>
             <Link
               to="/"
@@ -50,13 +42,14 @@ const Footer = () => {
               </span>
             </Link>
 
-            <p className="mt-6 leading-7 text-slate-400">
+            <p className="mt-6 max-w-md leading-7 text-slate-400">
               A modern complaint management platform with real-time
               tracking, secure authentication, and transparent
               communication between users and administrators.
             </p>
           </div>
 
+          {/* Quick Links */}
           <div>
             <h3 className="text-lg font-semibold">
               Quick Links
@@ -73,32 +66,19 @@ const Footer = () => {
                   </a>
                 </li>
               ))}
+
+              <li>
+                <Link
+                  to="/admin/login"
+                  className="font-medium text-slate-400 transition hover:text-orange-400"
+                >
+                  Admin Portal
+                </Link>
+              </li>
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold">
-              Contact
-            </h3>
-
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center gap-3 text-slate-400">
-                <Mail size={18} />
-                support@resolvehub.io
-              </div>
-
-              <div className="flex items-center gap-3 text-slate-400">
-                <Phone size={18} />
-                +91 98765 43210
-              </div>
-
-              <div className="flex items-center gap-3 text-slate-400">
-                <MapPin size={18} />
-                Gujarat, India
-              </div>
-            </div>
-          </div>
-
+          {/* Follow Us */}
           <div>
             <h3 className="text-lg font-semibold">
               Follow Us
@@ -107,6 +87,7 @@ const Footer = () => {
             <div className="mt-6 flex gap-4">
               <a
                 href="#"
+                aria-label="GitHub"
                 className="rounded-xl bg-slate-800 p-3 transition hover:bg-orange-500"
               >
                 <FaGithub size={22} />
@@ -114,19 +95,21 @@ const Footer = () => {
 
               <a
                 href="#"
+                aria-label="LinkedIn"
                 className="rounded-xl bg-slate-800 p-3 transition hover:bg-orange-500"
               >
                 <FaLinkedin size={22} />
               </a>
             </div>
 
-            <p className="mt-6 text-sm leading-6 text-slate-400">
+            <p className="mt-6 max-w-sm text-sm leading-6 text-slate-400">
               Built using MERN Stack, JWT Authentication, Socket.IO,
               Cloudinary, and MongoDB.
             </p>
           </div>
         </div>
 
+        {/* Bottom */}
         <div className="mt-14 border-t border-slate-800 pt-8">
           <div className="flex flex-col items-center justify-between gap-4 text-sm text-slate-400 md:flex-row">
             <p>
