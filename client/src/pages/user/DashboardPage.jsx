@@ -16,16 +16,26 @@ import api from "../../lib/axios";
 
 const DashboardPage = () => {
   const [complaints, setComplaints] = useState([]);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await api.get("/complaints/my");
+        const [complaintsResponse, activityResponse] =
+          await Promise.all([
+            api.get("/complaints/my"),
+            api.get("/complaints/activity/recent"),
+          ]);
 
-        const userComplaints = response.data.data || [];
+        const userComplaints =
+          complaintsResponse.data.data || [];
+
+        const userActivities =
+          activityResponse.data.data || [];
 
         setComplaints(userComplaints);
+        setActivities(userActivities.slice(0, 3));
       } catch (error) {
         console.error(
           "Failed to fetch dashboard data:",
@@ -39,7 +49,6 @@ const DashboardPage = () => {
     fetchDashboardData();
   }, []);
 
-  // Calculate statistics from user's complaints
   const stats = {
     total: complaints.length,
 
@@ -60,20 +69,13 @@ const DashboardPage = () => {
     ).length,
   };
 
-  // Only show the latest 3 complaints
   const recentComplaints = complaints.slice(0, 3);
-
-  // We'll connect this to real activity later
-  const activities = [];
 
   return (
     <DashboardLayout>
       <div className="space-y-8">
 
-        {/* Header */}
         <DashboardHeader />
-
-        {/* Statistics */}
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
 
           <StatCard
@@ -114,7 +116,6 @@ const DashboardPage = () => {
 
         </div>
 
-        {/* Recent Complaints + Activity */}
         <div className="grid gap-6 lg:grid-cols-3">
 
           <div className="lg:col-span-2">

@@ -422,17 +422,14 @@ export const updateComplaintStatus = asyncHandler(
     );
   }
 );
-
-export const getDashboardStats = asyncHandler(
+export const getMyDashboardStats = asyncHandler(
   async (req, res) => {
-    if (req.user.role !== "admin") {
-      throw new ApiError(
-        403,
-        "Access denied"
-      );
-    }
-
     const stats = await Complaint.aggregate([
+      {
+        $match: {
+          createdBy: new mongoose.Types.ObjectId(req.user._id),
+        },
+      },
       {
         $group: {
           _id: "$status",
@@ -477,12 +474,11 @@ export const getDashboardStats = asyncHandler(
       new ApiResponse(
         200,
         data,
-        "Dashboard statistics fetched successfully"
+        "User dashboard statistics fetched successfully"
       )
     );
   }
 );
-
 export const addReply = asyncHandler(async (req, res) => {
   const { message } = req.body;
 
@@ -570,65 +566,12 @@ export const addReply = asyncHandler(async (req, res) => {
   );
 });
 
-export const getMyDashboardStats = asyncHandler(
-  async (req, res) => {
-    const stats = await Complaint.aggregate([
-      {
-        $match: {
-          createdBy: new mongoose.Types.ObjectId(
-            req.user._id
-          ),
-        },
-      },
-      {
-        $group: {
-          _id: "$status",
-          count: {
-            $sum: 1,
-          },
-        },
-      },
-    ]);
-    const data = {
-      total: 0,
-      pending: 0,
-      inProgress: 0,
-      resolved: 0,
-      rejected: 0,
-    };
-    stats.forEach((item) => {
-      data.total += item.count;
-
-      switch (item._id) {
-        case "Pending":
-          data.pending = item.count;
-          break;
-        case "In Progress":
-          data.inProgress = item.count;
-          break;
-        case "Resolved":
-          data.resolved = item.count;
-          break;
-        case "Rejected":
-          data.rejected = item.count;
-          break;
-      }
-    });
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        data,
-        "User dashboard statistics fetched successfully"
-      )
-    );
-  }
-);
 export const getMyRecentActivity = asyncHandler(async (req, res) => {
   const complaints = await Complaint.find({
     createdBy: req.user._id,
   })
     .select(
-      "complaintId title status replies statusHistory createdAt updatedAt"
+      "complaintId title createdAt status statusHistory replies"
     )
     .sort({ updatedAt: -1 })
     .limit(10);
@@ -636,42 +579,58 @@ export const getMyRecentActivity = asyncHandler(async (req, res) => {
   const activities = [];
 
   complaints.forEach((complaint) => {
-    complaint.statusHistory?.forEach((history) => {
-      activities.push({
-        id: history._id,
-        type:
-          history.status === "Resolved"
-            ? "resolved"
-            : history.status === "Pending"
-            ? "pending"
-            : "status",
-        title: `Complaint ${history.status}`,
-        description: history.message,
-        time: history.updatedAt,
-        complaintId: complaint.complaintId,
-      });
+    activities.push({
+      id: `${complaint._id}-created`,
+      type: "pending",
+      title: "Complaint Submitted",
+      description: `${complaint.title} was submitted.`,
+      time: complaint.createdAt,
+      createdAt: complaint.createdAt,
     });
 
-    complaint.replies?.forEach((reply) => {
+    complaint.statusHistory?.forEach((history, index) => {
+      let type = "pending";
+      let title = "Complaint Updated";
+
+      if (history.status === "Resolved") {
+        type = "resolved";
+        title = "Complaint Resolved";
+      } else if (history.status === "In Progress") {
+        type = "reply";
+        title = "Complaint In Progress";
+      } else if (history.status === "Rejected") {
+        type = "default";
+        title = "Complaint Rejected";
+      }
+
       activities.push({
-        id: reply._id,
-        type: "reply",
-        title:
-          reply.sender === "admin"
-            ? "Admin Replied"
-            : "You Replied",
-        description: reply.message,
-        time: reply.createdAt,
-        complaintId: complaint.complaintId,
+        id: `${complaint._id}-status-${index}`,
+        type,
+        title,
+        description:
+          history.message ||
+          `Complaint ${complaint.complaintId} status changed to ${history.status}.`,
+        time: history.updatedAt,
+        createdAt: history.updatedAt,
       });
+    });
+    complaint.replies?.forEach((reply, index) => {
+      if (reply.sender === "admin") {
+        activities.push({
+          id: `${complaint._id}-reply-${index}`,
+          type: "reply",
+          title: "Admin Replied",
+          description: reply.message,
+          time: reply.createdAt,
+          createdAt: reply.createdAt,
+        });
+      }
     });
   });
-
   activities.sort(
     (a, b) =>
-      new Date(b.time) - new Date(a.time)
+      new Date(b.createdAt) - new Date(a.createdAt)
   );
-
   return res.status(200).json(
     new ApiResponse(
       200,

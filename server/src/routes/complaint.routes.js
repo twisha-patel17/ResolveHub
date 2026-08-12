@@ -8,11 +8,11 @@ import {
   deleteComplaint,
   getAllComplaints,
   updateComplaintStatus,
-  getDashboardStats,
   getMyDashboardStats,
   addReply,
   getMyRecentActivity,
 } from "../controllers/complaint.controller.js";
+
 import upload from "../middleware/upload.middleware.js";
 import uploadToCloudinary from "../middleware/cloudinaryUpload.middleware.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -20,14 +20,17 @@ import { authorizeRoles } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
-// USER
+/* =========================
+   USER ROUTES
+========================= */
+
 router.post(
   "/",
   verifyJWT,
   upload.array("images", 5),
   uploadToCloudinary,
   createComplaint
-); 
+);
 
 router.get(
   "/my",
@@ -39,6 +42,12 @@ router.get(
   "/dashboard/stats",
   verifyJWT,
   getMyDashboardStats
+);
+
+router.get(
+  "/activity/recent",
+  verifyJWT,
+  getMyRecentActivity
 );
 
 router.get(
@@ -59,13 +68,10 @@ router.delete(
   deleteComplaint
 );
 
-router.get(
-  "/activity/recent",
-  verifyJWT,
-  getMyRecentActivity
-);
+/* =========================
+   ADMIN ROUTES
+========================= */
 
-// ADMIN
 router.get(
   "/admin/all",
   verifyJWT,
@@ -85,13 +91,6 @@ router.post(
   verifyJWT,
   authorizeRoles("admin"),
   addReply
-);
-
-router.get(
-  "/admin/dashboard/stats",
-  verifyJWT,
-  authorizeRoles("admin"),
-  getDashboardStats
 );
 
 export default router;
