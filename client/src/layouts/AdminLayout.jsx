@@ -8,6 +8,7 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+
       {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:block">
         <AdminSidebar />
@@ -16,13 +17,11 @@ const AdminLayout = ({ children }) => {
       {/* Mobile Sidebar */}
       {isSidebarOpen && (
         <>
-          {/* Overlay */}
           <div
             className="fixed inset-0 z-40 bg-black/40 lg:hidden"
             onClick={() => setIsSidebarOpen(false)}
           />
 
-          {/* Sidebar */}
           <div className="fixed inset-y-0 left-0 z-50 lg:hidden">
             <AdminSidebar />
           </div>
@@ -30,18 +29,18 @@ const AdminLayout = ({ children }) => {
       )}
 
       {/* Main Area */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-72">
+
         {/* Topbar */}
         <AdminTopbar
-          onMenuClick={() =>
-            setIsSidebarOpen(true)
-          }
+          onMenuClick={() => setIsSidebarOpen(true)}
         />
 
         {/* Page Content */}
         <main className="p-5 sm:p-6 lg:p-8">
           {children}
         </main>
+
       </div>
     </div>
   );

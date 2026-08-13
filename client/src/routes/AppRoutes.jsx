@@ -13,6 +13,7 @@ import ProfilePage from "../pages/user/ProfilePage";
 
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import AdminLoginPage from "../pages/admin/AdminLoginPage";
+import AdminComplaintsPage from "../pages/admin/AdminComplaintsPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
@@ -85,6 +86,7 @@ const AppRoutes = () => {
           path="/admin/dashboard"
           element={<AdminDashboardPage />}
         />
+        <Route path="/admin/complaints" element={<AdminComplaintsPage />} />
       </Route>
 
     </Routes>

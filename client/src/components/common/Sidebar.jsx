@@ -67,7 +67,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         className={`
           fixed inset-y-0 left-0 z-50
           flex h-screen w-72 flex-col
-          bg-slate-800 text-white shadow-xl
+          bg-slate-900 text-white shadow-xl
           transition-transform duration-300
           ${
             isOpen
