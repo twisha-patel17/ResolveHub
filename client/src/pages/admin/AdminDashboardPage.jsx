@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity,
   CircleCheckBig,
   Clock3,
   FileText,
-  Users,
-  AlertTriangle,
+  XCircle,
 } from "lucide-react";
 
 import AdminLayout from "../../layouts/AdminLayout";
@@ -59,21 +58,13 @@ const AdminDashboardPage = () => {
     fetchAdminDashboard();
   }, []);
 
-  const highPriorityCount = useMemo(() => {
-    return complaints.filter(
-      (complaint) =>
-        complaint.priority === "High" ||
-        complaint.priority === "Urgent" ||
-        complaint.priority === "Critical"
-    ).length;
-  }, [complaints]);
-
   const recentComplaints = complaints.slice(0, 4);
 
   return (
     <AdminLayout>
       <div className="mx-auto w-full max-w-7xl space-y-6 sm:space-y-8">
 
+        {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl lg:text-4xl">
             Admin Dashboard
@@ -84,67 +75,69 @@ const AdminDashboardPage = () => {
           </p>
         </div>
 
-        {/* Statistics */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {/* =========================
+            STATISTICS
+        ========================= */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
 
           <StatCard
             title="Total Complaints"
             value={loading ? "..." : stats.total}
-            subtitle="Across platform"
+            subtitle="All submitted complaints"
             icon={FileText}
             iconBg="bg-orange-100"
             iconColor="text-orange-500"
+            accentColor="bg-orange-500"
           />
 
           <StatCard
             title="Pending"
             value={loading ? "..." : stats.pending}
-            subtitle="Awaiting review"
+            subtitle="Waiting for review"
             icon={Clock3}
             iconBg="bg-yellow-100"
             iconColor="text-yellow-600"
+            accentColor="bg-yellow-500"
           />
 
           <StatCard
             title="In Progress"
             value={loading ? "..." : stats.inProgress}
-            subtitle="Currently active"
+            subtitle="Currently being handled"
             icon={Activity}
             iconBg="bg-blue-100"
             iconColor="text-blue-600"
-          />
-
-          <StatCard
-            title="High Priority"
-            value={loading ? "..." : highPriorityCount}
-            subtitle="Recent complaints"
-            icon={AlertTriangle}
-            iconBg="bg-orange-100"
-            iconColor="text-orange-600"
+            accentColor="bg-blue-500"
           />
 
           <StatCard
             title="Resolved"
             value={loading ? "..." : stats.resolved}
-            subtitle="Completed"
+            subtitle="Successfully completed"
             icon={CircleCheckBig}
             iconBg="bg-green-100"
             iconColor="text-green-600"
+            accentColor="bg-green-500"
           />
 
           <StatCard
-            title="Total Users"
-            value="—"
-            subtitle="Coming soon"
-            icon={Users}
-            iconBg="bg-purple-100"
-            iconColor="text-purple-600"
+            title="Rejected"
+            value={loading ? "..." : stats.rejected}
+            subtitle="Rejected complaints"
+            icon={XCircle}
+            iconBg="bg-red-100"
+            iconColor="text-red-600"
+            accentColor="bg-red-500"
           />
 
         </div>
 
+        {/* =========================
+            CHARTS
+        ========================= */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
+          {/* Monthly Complaints */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
 
             <div className="mb-6">
@@ -189,6 +182,7 @@ const AdminDashboardPage = () => {
 
           </div>
 
+          {/* Resolution Trend */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
 
             <div className="mb-6">
@@ -237,9 +231,9 @@ const AdminDashboardPage = () => {
 
         </div>
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6">
 
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm xl:col-span-2">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-5 sm:px-6">
 
@@ -255,7 +249,7 @@ const AdminDashboardPage = () => {
 
               <button
                 type="button"
-                className="text-sm font-semibold text-orange-500 hover:text-orange-600"
+                className="text-sm font-semibold text-orange-500 transition hover:text-orange-600"
               >
                 View all
               </button>
@@ -273,6 +267,7 @@ const AdminDashboardPage = () => {
 
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+
                       <th className="px-5 py-4 sm:px-6">
                         ID
                       </th>
@@ -292,6 +287,7 @@ const AdminDashboardPage = () => {
                       <th className="px-5 py-4">
                         Status
                       </th>
+
                     </tr>
                   </thead>
 
@@ -307,8 +303,7 @@ const AdminDashboardPage = () => {
                         </td>
 
                         <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
-                          {complaint.createdBy?.name ||
-                            "Unknown"}
+                          {complaint.createdBy?.name || "Unknown"}
                         </td>
 
                         <td className="max-w-[240px] px-5 py-4">
@@ -320,7 +315,6 @@ const AdminDashboardPage = () => {
                         <td className="whitespace-nowrap px-5 py-4">
                           <span
                             className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                              complaint.priority === "Urgent" ||
                               complaint.priority === "Critical"
                                 ? "bg-red-100 text-red-700"
                                 : complaint.priority === "High"
@@ -339,8 +333,7 @@ const AdminDashboardPage = () => {
                             className={`rounded-full px-3 py-1 text-xs font-semibold ${
                               complaint.status === "Pending"
                                 ? "bg-yellow-100 text-yellow-700"
-                                : complaint.status ===
-                                  "In Progress"
+                                : complaint.status === "In Progress"
                                 ? "bg-blue-100 text-blue-700"
                                 : complaint.status === "Resolved"
                                 ? "bg-green-100 text-green-700"
@@ -359,41 +352,6 @@ const AdminDashboardPage = () => {
               )}
 
             </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
-            <div className="mb-5">
-              <h2 className="text-lg font-bold text-slate-900">
-                Newest Users
-              </h2>
-
-              <p className="mt-1 text-sm text-slate-500">
-                Recently registered users.
-              </p>
-            </div>
-
-            <div className="flex min-h-[220px] items-center justify-center rounded-xl bg-slate-50">
-
-              <div className="text-center">
-
-                <Users
-                  size={32}
-                  className="mx-auto mb-3 text-slate-300"
-                />
-
-                <p className="text-sm font-medium text-slate-500">
-                  User statistics coming soon
-                </p>
-
-                <p className="mt-1 text-xs text-slate-400">
-                  Connect the users API to display this section.
-                </p>
-
-              </div>
-
-            </div>
-
           </div>
 
         </div>

@@ -20,10 +20,6 @@ import { authorizeRoles } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
-/* =========================
-   USER ROUTES
-========================= */
-
 router.post(
   "/",
   verifyJWT,
@@ -67,10 +63,6 @@ router.delete(
   verifyJWT,
   deleteComplaint
 );
-
-/* =========================
-   ADMIN ROUTES
-========================= */
 
 router.get(
   "/admin/all",

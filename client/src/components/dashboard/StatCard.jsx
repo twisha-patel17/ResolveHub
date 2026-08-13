@@ -1,33 +1,49 @@
+import { ArrowUpRight } from "lucide-react";
+
 const StatCard = ({
   title,
   value,
   subtitle,
   icon: Icon,
-  iconBg = "bg-orange-100",
-  iconColor = "text-orange-500",
+  iconBg,
+  iconColor,
+  accentColor,
 }) => {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
-      
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+      {/* Accent */}
       <div
-        className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl ${iconBg}`}
-      >
-        <Icon size={24} className={iconColor} />
+        className={`absolute left-0 top-0 h-full w-1 ${accentColor}`}
+      />
+
+      <div className="flex items-start justify-between">
+        {/* Icon */}
+        <div
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconBg}`}
+        >
+          <Icon size={21} className={iconColor} />
+        </div>
+
+        {/* Small arrow */}
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 transition group-hover:bg-slate-100">
+          <ArrowUpRight size={16} />
+        </div>
       </div>
 
-      <h2 className="text-4xl font-bold text-slate-900">
-        {value}
-      </h2>
+      {/* Content */}
+      <div className="mt-5">
+        <p className="text-sm font-medium text-slate-500">
+          {title}
+        </p>
 
-      <p className="mt-2 text-lg font-semibold text-slate-700">
-        {title}
-      </p>
+        <p className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
+          {value}
+        </p>
 
-      {subtitle && (
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-xs font-medium text-slate-400">
           {subtitle}
         </p>
-      )}
+      </div>
     </div>
   );
 };
