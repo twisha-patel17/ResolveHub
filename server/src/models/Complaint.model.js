@@ -113,14 +113,11 @@ const complaintSchema = new mongoose.Schema(
     statusHistory: [
       {
         status: String,
-
         message: String,
-
         updatedBy: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
         },
-
         updatedAt: {
           type: Date,
           default: Date.now,

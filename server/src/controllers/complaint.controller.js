@@ -639,3 +639,207 @@ export const getMyRecentActivity = asyncHandler(async (req, res) => {
     )
   );
 });
+export const getAdminDashboardStats = asyncHandler(
+  async (req, res) => {
+    if (req.user.role !== "admin") {
+      throw new ApiError(403, "Access denied");
+    }
+
+    const stats = await Complaint.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+    ]);
+
+    const data = {
+      total: 0,
+      pending: 0,
+      inProgress: 0,
+      resolved: 0,
+      rejected: 0,
+    };
+
+    stats.forEach((item) => {
+      data.total += item.count;
+
+      switch (item._id) {
+        case "Pending":
+          data.pending = item.count;
+          break;
+
+        case "In Progress":
+          data.inProgress = item.count;
+          break;
+
+        case "Resolved":
+          data.resolved = item.count;
+          break;
+
+        case "Rejected":
+          data.rejected = item.count;
+          break;
+      }
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        data,
+        "Admin dashboard statistics fetched successfully"
+      )
+    );
+  }
+);
+export const getAdminDashboardCharts = asyncHandler(
+  async (req, res) => {
+    if (req.user.role !== "admin") {
+      throw new ApiError(403, "Access denied");
+    }
+
+    const now = new Date();
+
+    const startDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - 6,
+      1
+    );
+
+    const [monthlyData, resolutionData] =
+      await Promise.all([
+        Complaint.aggregate([
+          {
+            $match: {
+              createdAt: {
+                $gte: startDate,
+              },
+            },
+          },
+          {
+            $group: {
+              _id: {
+                year: { $year: "$createdAt" },
+                month: { $month: "$createdAt" },
+              },
+              complaints: {
+                $sum: 1,
+              },
+            },
+          },
+        ]),
+
+        Complaint.aggregate([
+          {
+            $match: {
+              createdAt: {
+                $gte: startDate,
+              },
+            },
+          },
+          {
+            $unwind: "$statusHistory",
+          },
+          {
+            $match: {
+              "statusHistory.status": "Resolved",
+            },
+          },
+          {
+            $group: {
+              _id: {
+                year: {
+                  $year: "$statusHistory.updatedAt",
+                },
+                month: {
+                  $month: "$statusHistory.updatedAt",
+                },
+              },
+              resolved: {
+                $sum: 1,
+              },
+            },
+          },
+        ]),
+      ]);
+
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    const getValue = (data, year, month, field) => {
+      const item = data.find(
+        (entry) =>
+          entry._id.year === year &&
+          entry._id.month === month
+      );
+
+      return item?.[field] || 0;
+    };
+
+    const months = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(
+        now.getFullYear(),
+        now.getMonth() - i,
+        1
+      );
+
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+
+      months.push({
+        month: monthNames[month - 1],
+        complaints: getValue(
+          monthlyData,
+          year,
+          month,
+          "complaints"
+        ),
+        resolved: getValue(
+          resolutionData,
+          year,
+          month,
+          "resolved"
+        ),
+      });
+    }
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          monthlyComplaints: months.map(
+            ({ month, complaints }) => ({
+              month,
+              complaints,
+            })
+          ),
+
+          resolutionTrend: months.map(
+            ({ month, resolved }) => ({
+              month,
+              resolved,
+            })
+          ),
+        },
+        "Admin dashboard charts fetched successfully"
+      )
+    );
+  }
+);
