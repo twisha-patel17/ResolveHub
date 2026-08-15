@@ -24,10 +24,6 @@ const ComplaintForm = () => {
   const [location, setLocation] = useState("");
   const [images, setImages] = useState([]);
 
-  // =========================
-  // IMAGE SELECTION
-  // =========================
-
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
 
@@ -62,11 +58,6 @@ const ComplaintForm = () => {
       prev.filter((_, i) => i !== index)
     );
   };
-
-  // =========================
-  // CREATE COMPLAINT MUTATION
-  // =========================
-
   const createMutation = useMutation({
     mutationFn: createComplaint,
 
@@ -86,11 +77,6 @@ const ComplaintForm = () => {
       );
     },
   });
-
-  // =========================
-  // SUBMIT
-  // =========================
-
   const submitHandler = (e) => {
     e.preventDefault();
 
@@ -140,8 +126,6 @@ const ComplaintForm = () => {
 
   return (
     <form onSubmit={submitHandler}>
-      {/* HEADER */}
-
       <div>
         <h1 className="text-4xl font-bold text-slate-900">
           Create complaint
@@ -154,14 +138,7 @@ const ComplaintForm = () => {
       </div>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[2.3fr_1fr]">
-
-        {/* =========================
-            LEFT SIDE
-        ========================= */}
-
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-
-          {/* TITLE */}
 
           <div>
             <label className="mb-2 block font-semibold text-slate-800">
@@ -180,8 +157,6 @@ const ComplaintForm = () => {
             />
           </div>
 
-          {/* DESCRIPTION */}
-
           <div className="mt-6">
             <label className="mb-2 block font-semibold text-slate-800">
               Description
@@ -198,8 +173,6 @@ const ComplaintForm = () => {
               className="w-full resize-none rounded-xl border border-slate-300 p-5 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
             />
           </div>
-
-          {/* CATEGORY + PRIORITY */}
 
           <div className="mt-6 grid gap-5 md:grid-cols-2">
 
@@ -298,9 +271,6 @@ const ComplaintForm = () => {
             </div>
 
           </div>
-
-          {/* LOCATION */}
-
           <div className="mt-6">
 
             <label className="mb-2 block font-semibold">
@@ -328,8 +298,6 @@ const ComplaintForm = () => {
             </div>
 
           </div>
-
-          {/* IMAGES */}
 
           <div className="mt-6">
 
@@ -403,8 +371,6 @@ const ComplaintForm = () => {
 
           </div>
 
-          {/* PRIVACY */}
-
           <div className="mt-8 flex items-center gap-3 rounded-2xl bg-slate-100 p-5">
 
             <Shield
@@ -419,8 +385,6 @@ const ComplaintForm = () => {
             </p>
 
           </div>
-
-          {/* BUTTONS */}
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
 
@@ -445,10 +409,6 @@ const ComplaintForm = () => {
           </div>
 
         </div>
-
-        {/* =========================
-            RIGHT SIDE
-        ========================= */}
 
         <div className="space-y-6">
 

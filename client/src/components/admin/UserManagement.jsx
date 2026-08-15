@@ -5,10 +5,6 @@ import {
   UserX,
   FileText,
   Eye,
-  X,
-  Mail,
-  CalendarDays,
-  ShieldCheck,
 } from "lucide-react";
 
 const UserManagement = ({
@@ -22,24 +18,24 @@ const UserManagement = ({
   clearFilters,
   page,
   setPage,
-  selectedUser,
   setSelectedUser,
 }) => {
   const totalUsers = pagination?.totalUsers || 0;
   const totalPages = pagination?.totalPages || 1;
 
-  const activeUsers = users.filter(
-    (user) => user.status === "Active"
-  ).length;
-
-  const inactiveUsers = users.filter(
-    (user) => user.status === "Inactive"
-  ).length;
-
+  const activeUsers = users.filter((u) => u.status === "Active").length;
+  const inactiveUsers = users.filter((u) => u.status === "Inactive").length;
   const totalComplaints = users.reduce(
-    (total, user) => total + user.complaints,
+    (sum, user) => sum + user.complaints,
     0
   );
+
+  const stats = [
+    ["Total Users", totalUsers, "Registered users", Users, "orange"],
+    ["Active Users", activeUsers, "Currently active", UserCheck, "green"],
+    ["Inactive Users", inactiveUsers, "Currently inactive", UserX, "red"],
+    ["Total Complaints", totalComplaints, "Submitted by users", FileText, "blue"],
+  ];
 
   return (
     <>
@@ -54,12 +50,7 @@ const UserManagement = ({
 
       {/* Stats */}
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          ["Total Users", totalUsers, "Registered users", Users, "orange"],
-          ["Active Users", activeUsers, "Currently active", UserCheck, "green"],
-          ["Inactive Users", inactiveUsers, "Currently inactive", UserX, "red"],
-          ["Total Complaints", totalComplaints, "Submitted by users", FileText, "blue"],
-        ].map(([title, value, text, Icon, color]) => (
+        {stats.map(([title, value, text, Icon, color]) => (
           <div
             key={title}
             className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
@@ -95,6 +86,7 @@ const UserManagement = ({
           </div>
 
           <button
+            type="button"
             onClick={clearFilters}
             className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100"
           >
@@ -136,7 +128,7 @@ const UserManagement = ({
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px]">
+          <table className="w-full min-w-212.5">
             <thead>
               <tr className="border-b bg-slate-50">
                 {["User", "User ID", "Status", "Complaints", "Joined", "Action"].map(
@@ -199,6 +191,7 @@ const UserManagement = ({
 
                     <td className="px-5 py-4 text-right">
                       <button
+                        type="button"
                         onClick={() => setSelectedUser(user)}
                         className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium text-slate-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
                       >
@@ -210,7 +203,7 @@ const UserManagement = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-5 py-12 text-center">
+                  <td colSpan={6} className="px-5 py-12 text-center">
                     <Users size={35} className="mx-auto text-slate-300" />
                     <p className="mt-3 font-semibold text-slate-600">
                       No users found
@@ -238,8 +231,9 @@ const UserManagement = ({
 
           <div className="flex items-center gap-2">
             <button
+              type="button"
               disabled={page === 1}
-              onClick={() => setPage(page - 1)}
+              onClick={() => setPage((p) => p - 1)}
               className="rounded-lg border bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
             >
               Previous
@@ -250,8 +244,9 @@ const UserManagement = ({
             </span>
 
             <button
+              type="button"
               disabled={page >= totalPages}
-              onClick={() => setPage(page + 1)}
+              onClick={() => setPage((p) => p + 1)}
               className="rounded-lg border bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
             >
               Next
@@ -259,97 +254,6 @@ const UserManagement = ({
           </div>
         </div>
       </div>
-
-      {/* Modal */}
-      {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100">
-                  <ShieldCheck size={20} className="text-orange-500" />
-                </div>
-
-                <div>
-                  <h2 className="font-bold text-slate-900">User Details</h2>
-                  <p className="text-xs text-slate-400">
-                    {selectedUser.id}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="rounded-lg p-2 text-slate-400 hover:bg-slate-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-5">
-              <div className="flex items-center gap-4 rounded-xl bg-slate-50 p-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-lg font-bold text-orange-600">
-                  {selectedUser.name.charAt(0).toUpperCase()}
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-slate-900">
-                    {selectedUser.name}
-                  </h3>
-                  <p className="text-sm text-slate-500">
-                    {selectedUser.email}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-xl border p-4">
-                  <Mail size={16} className="text-slate-400" />
-                  <p className="mt-2 break-all font-medium">
-                    {selectedUser.email}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border p-4">
-                  <CalendarDays size={16} className="text-slate-400" />
-                  <p className="mt-2 font-medium">
-                    {selectedUser.joined}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border p-4">
-                  <FileText size={16} className="text-slate-400" />
-                  <p className="mt-2 font-bold">
-                    {selectedUser.complaints}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border p-4">
-                  <UserCheck size={16} className="text-slate-400" />
-                  <p
-                    className={`mt-2 font-semibold ${
-                      selectedUser.status === "Active"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {selectedUser.status}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t bg-slate-50 px-5 py-4 text-right">
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="rounded-xl border px-4 py-2.5 text-sm font-semibold"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };
