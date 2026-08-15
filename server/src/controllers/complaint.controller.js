@@ -843,3 +843,283 @@ export const getAdminDashboardCharts = asyncHandler(
     );
   }
 );
+export const getAdminAnalytics = asyncHandler(
+  async (req, res) => {
+    if (req.user.role !== "admin") {
+      throw new ApiError(403, "Access denied");
+    }
+
+    const now = new Date();
+
+    const startDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - 6,
+      1
+    );
+
+    const [
+      totalComplaints,
+      statusData,
+      categoryData,
+      priorityData,
+      monthlyData,
+      resolutionData,
+    ] = await Promise.all([
+      // Total complaints
+      Complaint.countDocuments(),
+
+      // Status distribution
+      Complaint.aggregate([
+        {
+          $group: {
+            _id: "$status",
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $sort: { count: -1 },
+        },
+      ]),
+
+      // Category distribution
+      Complaint.aggregate([
+        {
+          $group: {
+            _id: "$category",
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $sort: { count: -1 },
+        },
+      ]),
+
+      // Priority distribution
+      Complaint.aggregate([
+        {
+          $group: {
+            _id: "$priority",
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $sort: { count: -1 },
+        },
+      ]),
+
+      // Monthly complaint trend
+      Complaint.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: startDate,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" },
+            },
+            complaints: {
+              $sum: 1,
+            },
+          },
+        },
+        {
+          $sort: {
+            "_id.year": 1,
+            "_id.month": 1,
+          },
+        },
+      ]),
+
+      // Resolution time
+      Complaint.aggregate([
+        {
+          $match: {
+            status: "Resolved",
+          },
+        },
+        {
+          $project: {
+            createdAt: 1,
+            resolvedHistory: {
+              $arrayElemAt: [
+                {
+                  $filter: {
+                    input: "$statusHistory",
+                    as: "history",
+                    cond: {
+                      $eq: [
+                        "$$history.status",
+                        "Resolved",
+                      ],
+                    },
+                  },
+                },
+                0,
+              ],
+            },
+          },
+        },
+        {
+          $match: {
+            "resolvedHistory.updatedAt": {
+              $exists: true,
+            },
+          },
+        },
+        {
+          $project: {
+            resolutionTime: {
+              $divide: [
+                {
+                  $subtract: [
+                    "$resolvedHistory.updatedAt",
+                    "$createdAt",
+                  ],
+                },
+                1000 * 60 * 60,
+              ],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            averageHours: {
+              $avg: "$resolutionTime",
+            },
+            resolvedCount: {
+              $sum: 1,
+            },
+          },
+        },
+      ]),
+    ]);
+
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    const monthlyMap = new Map();
+
+    monthlyData.forEach((item) => {
+      const key = `${item._id.year}-${item._id.month}`;
+
+      monthlyMap.set(key, item.complaints);
+    });
+
+    const complaintTrend = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(
+        now.getFullYear(),
+        now.getMonth() - i,
+        1
+      );
+
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+
+      const key = `${year}-${month}`;
+
+      complaintTrend.push({
+        month: monthNames[month - 1],
+        year,
+        complaints: monthlyMap.get(key) || 0,
+      });
+    }
+    const statusDistribution = statusData.map(
+      (item) => ({
+        name: item._id,
+        value: item.count,
+      })
+    );
+
+    const categoryDistribution =
+      categoryData.map((item) => ({
+        name: item._id,
+        value: item.count,
+      }));
+
+    const priorityDistribution =
+      priorityData.map((item) => ({
+        name: item._id,
+        value: item.count,
+      }));
+    const resolvedCount =
+      statusData.find(
+        (item) => item._id === "Resolved"
+      )?.count || 0;
+
+    const rejectedCount =
+      statusData.find(
+        (item) => item._id === "Rejected"
+      )?.count || 0;
+
+    const resolutionRate =
+      totalComplaints > 0
+        ? Number(
+            (
+              (resolvedCount / totalComplaints) *
+              100
+            ).toFixed(1)
+          )
+        : 0;
+
+    const rejectionRate =
+      totalComplaints > 0
+        ? Number(
+            (
+              (rejectedCount / totalComplaints) *
+              100
+            ).toFixed(1)
+          )
+        : 0;
+
+    const averageHours =
+      resolutionData[0]?.averageHours || 0;
+
+    const avgResolutionTime =
+      Number(averageHours.toFixed(1));
+
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          totalComplaints,
+
+          resolutionRate,
+
+          rejectionRate,
+
+          avgResolutionTime,
+
+          complaintTrend,
+
+          statusDistribution,
+
+          categoryDistribution,
+
+          priorityDistribution,
+        },
+        "Admin analytics fetched successfully"
+      )
+    );
+  }
+);

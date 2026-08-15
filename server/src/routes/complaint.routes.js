@@ -12,7 +12,8 @@ import {
   addReply,
   getMyRecentActivity,
   getAdminDashboardStats,
-  getAdminDashboardCharts
+  getAdminDashboardCharts,
+  getAdminAnalytics,
 } from "../controllers/complaint.controller.js";
 
 import upload from "../middleware/upload.middleware.js";
@@ -99,6 +100,13 @@ router.get(
   verifyJWT,
   authorizeRoles("admin"),
   getAdminDashboardCharts
+);
+
+router.get(
+  "/admin/analytics",
+  verifyJWT,
+  authorizeRoles("admin"),
+  getAdminAnalytics
 );
 
 export default router;
