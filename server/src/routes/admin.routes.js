@@ -1,6 +1,10 @@
 import { Router } from "express";
 
-import { getAdminDashboard } from "../controllers/admin.controller.js";
+import {
+  getAdminDashboard,
+  getAllUsers,
+  getUserById,
+} from "../controllers/admin.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
 
@@ -12,5 +16,20 @@ router.get(
   authorizeRoles("admin"),
   getAdminDashboard
 );
+
+router.get(
+  "/users",
+  verifyJWT,
+  authorizeRoles("admin"),
+  getAllUsers
+);
+
+router.get(
+  "/users/:id",
+  verifyJWT,
+  authorizeRoles("admin"),
+  getUserById
+);
+
 
 export default router;

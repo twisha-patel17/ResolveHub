@@ -6,26 +6,20 @@ import validator from "validator";
 const userSchema = new mongoose.Schema(
     {
         name: { type: String, required: [true, "Name is required"], trim: true },
-
         email: {
             type: String, required: [true, "Email is required"], unique: true, trim: true, lowercase: true, validate: [validator.isEmail, "Please enter a valid email"], 
         },
-
         password: { type: String, required: [true, "Password is required"], minlength: 6, select: false },
-
         role: {
             type: String,
             enum: ["user", "admin"],
             default: "user",
         },
-
         avatar: {
             url : { type: String, default: "",},
             public_id: { type: String, default: "",},
         },
-
         isActive: { type: Boolean, default: true },
-
         refreshToken: { type: String, default: "" },
     },
     {
