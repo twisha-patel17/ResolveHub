@@ -12,22 +12,37 @@ export const initializeSocket = (httpServer) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(`🔌 Socket connected: ${socket.id}`);
+    console.log(`🔌 Connected: ${socket.id}`);
 
     socket.on("join-user", (userId) => {
       if (!userId) return;
 
       socket.join(`user:${userId}`);
+      console.log(`User joined: ${userId}`);
+    });
 
-      console.log(
-        `👤 User ${userId} joined room user:${userId}`
-      );
+    socket.on("join-admin", (adminId) => {
+      if (!adminId) return;
+
+      socket.join(`admin:${adminId}`);
+      console.log(`Admin joined: ${adminId}`);
+    });
+
+    socket.on("join-complaint", (complaintId) => {
+      if (!complaintId) return;
+
+      socket.join(`complaint:${complaintId}`);
+      console.log(`Joined complaint: ${complaintId}`);
+    });
+
+    socket.on("leave-complaint", (complaintId) => {
+      if (!complaintId) return;
+
+      socket.leave(`complaint:${complaintId}`);
     });
 
     socket.on("disconnect", () => {
-      console.log(
-        `🔌 Socket disconnected: ${socket.id}`
-      );
+      console.log(`🔌 Disconnected: ${socket.id}`);
     });
   });
 
@@ -38,9 +53,7 @@ export const initializeSocket = (httpServer) => {
 
 export const getIO = () => {
   if (!io) {
-    throw new Error(
-      "Socket.IO has not been initialized"
-    );
+    throw new Error("Socket.IO has not been initialized");
   }
 
   return io;

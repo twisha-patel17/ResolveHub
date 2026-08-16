@@ -865,10 +865,9 @@ export const getAdminAnalytics = asyncHandler(
       monthlyData,
       resolutionData,
     ] = await Promise.all([
-      // Total complaints
+      
       Complaint.countDocuments(),
 
-      // Status distribution
       Complaint.aggregate([
         {
           $group: {
@@ -881,7 +880,6 @@ export const getAdminAnalytics = asyncHandler(
         },
       ]),
 
-      // Category distribution
       Complaint.aggregate([
         {
           $group: {
@@ -894,7 +892,6 @@ export const getAdminAnalytics = asyncHandler(
         },
       ]),
 
-      // Priority distribution
       Complaint.aggregate([
         {
           $group: {
@@ -907,7 +904,6 @@ export const getAdminAnalytics = asyncHandler(
         },
       ]),
 
-      // Monthly complaint trend
       Complaint.aggregate([
         {
           $match: {
@@ -1097,25 +1093,17 @@ export const getAdminAnalytics = asyncHandler(
     const avgResolutionTime =
       Number(averageHours.toFixed(1));
 
-
     return res.status(200).json(
       new ApiResponse(
         200,
         {
           totalComplaints,
-
           resolutionRate,
-
           rejectionRate,
-
           avgResolutionTime,
-
           complaintTrend,
-
           statusDistribution,
-
           categoryDistribution,
-
           priorityDistribution,
         },
         "Admin analytics fetched successfully"
