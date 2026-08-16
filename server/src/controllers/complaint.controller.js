@@ -80,6 +80,16 @@ export const createComplaint = asyncHandler(async (req, res) => {
     );
   }
 
+  for (const admin of admins) {
+    await createNotification({
+      recipient: admin._id,
+      complaint: complaint._id,
+      title: "New Complaint",
+      message: `A new complaint "${complaint.title}" has been submitted.`,
+      type: "complaint",
+    });
+  }
+
   return res.status(201).json(
     new ApiResponse(
       201,

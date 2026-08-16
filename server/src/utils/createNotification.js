@@ -16,12 +16,19 @@ const createNotification = async ({
     type,
   });
 
-  const io = getIO();
+  try {
+    const io = getIO();
 
-  io.to(`user:${recipient.toString()}`).emit(
-    "new-notification",
-    notification
-  );
+    io.to(`user:${recipient.toString()}`).emit(
+      "new-notification",
+      notification
+    );
+  } catch (socketError) {
+    console.error(
+      "Socket notification error:",
+      socketError.message
+    );
+  }
 
   return notification;
 };

@@ -8,4 +8,6 @@ const socket = io(SOCKET_URL, {
   withCredentials: true,
 });
 
+export const getSocket = () => socket;
+
 export default socket;

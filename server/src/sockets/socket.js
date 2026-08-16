@@ -16,7 +16,6 @@ export const initializeSocket = (httpServer) => {
       `🔌 Socket connected: ${socket.id}`
     );
 
-    // User room
     socket.on("join-user", (userId) => {
       if (!userId) return;
 
