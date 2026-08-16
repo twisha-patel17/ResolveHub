@@ -513,7 +513,6 @@ export const addReply = asyncHandler(async (req, res) => {
       "Access denied"
     );
   }
-
   complaint.replies.push({
     sender: isAdmin ? "admin" : "user",
     message: message.trim(),
@@ -521,6 +520,29 @@ export const addReply = asyncHandler(async (req, res) => {
 
   await complaint.save();
 
+  const newReply =
+    complaint.replies[
+      complaint.replies.length - 1
+    ];
+  try {
+    const io = getIO();
+
+    io.to(
+      `complaint:${complaint._id}`
+    ).emit(
+      "complaint:reply",
+      {
+        complaintId:
+          complaint._id.toString(),
+        reply: newReply,
+      }
+    );
+  } catch (socketError) {
+    console.error(
+      "Socket reply error:",
+      socketError.message
+    );
+  }
   const recipient = isAdmin
     ? complaint.createdBy
     : complaint.assignedTo;
@@ -539,7 +561,6 @@ export const addReply = asyncHandler(async (req, res) => {
         : "The complainant replied to your complaint.",
       type: "reply",
     });
-
     try {
       const io = getIO();
 
@@ -931,7 +952,6 @@ export const getAdminAnalytics = asyncHandler(
         },
       ]),
 
-      // Resolution time
       Complaint.aggregate([
         {
           $match: {

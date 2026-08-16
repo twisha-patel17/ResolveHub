@@ -12,48 +12,72 @@ export const initializeSocket = (httpServer) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(`🔌 Connected: ${socket.id}`);
+    console.log(
+      `🔌 Socket connected: ${socket.id}`
+    );
 
+    // User room
     socket.on("join-user", (userId) => {
       if (!userId) return;
 
       socket.join(`user:${userId}`);
-      console.log(`User joined: ${userId}`);
+
+      console.log(
+        `👤 User ${userId} joined room user:${userId}`
+      );
     });
 
-    socket.on("join-admin", (adminId) => {
-      if (!adminId) return;
+    // Complaint room
+    socket.on(
+      "join-complaint",
+      (complaintId) => {
+        if (!complaintId) return;
 
-      socket.join(`admin:${adminId}`);
-      console.log(`Admin joined: ${adminId}`);
-    });
+        socket.join(
+          `complaint:${complaintId}`
+        );
 
-    socket.on("join-complaint", (complaintId) => {
-      if (!complaintId) return;
+        console.log(
+          `💬 Socket ${socket.id} joined complaint:${complaintId}`
+        );
+      }
+    );
 
-      socket.join(`complaint:${complaintId}`);
-      console.log(`Joined complaint: ${complaintId}`);
-    });
+    // Leave complaint room
+    socket.on(
+      "leave-complaint",
+      (complaintId) => {
+        if (!complaintId) return;
 
-    socket.on("leave-complaint", (complaintId) => {
-      if (!complaintId) return;
+        socket.leave(
+          `complaint:${complaintId}`
+        );
 
-      socket.leave(`complaint:${complaintId}`);
-    });
+        console.log(
+          `💬 Socket ${socket.id} left complaint:${complaintId}`
+        );
+      }
+    );
 
     socket.on("disconnect", () => {
-      console.log(`🔌 Disconnected: ${socket.id}`);
+      console.log(
+        `🔌 Socket disconnected: ${socket.id}`
+      );
     });
   });
 
-  console.log("⚡ Socket.IO initialized");
+  console.log(
+    "⚡ Socket.IO initialized"
+  );
 
   return io;
 };
 
 export const getIO = () => {
   if (!io) {
-    throw new Error("Socket.IO has not been initialized");
+    throw new Error(
+      "Socket.IO has not been initialized"
+    );
   }
 
   return io;

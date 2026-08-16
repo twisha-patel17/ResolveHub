@@ -84,7 +84,6 @@ router.patch(
 router.post(
   "/:id/reply",
   verifyJWT,
-  authorizeRoles("admin"),
   addReply
 );
 

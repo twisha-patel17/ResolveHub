@@ -9,8 +9,9 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 
-import { useState } from "react";
-import useSocket from "../../hooks/useSocket";
+import { useEffect, useState } from "react";
+
+import socket from "../../sockets/socket";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -31,7 +32,220 @@ const ComplaintDetails = ({ complaintId }) => {
   const [reply, setReply] = useState("");
 
   const { user } = useAuth();
-  useSocket(user?._id);
+
+  /*
+  |--------------------------------------------------------------------------
+  | SOCKET CONNECTION
+  |--------------------------------------------------------------------------
+  */
+
+  useEffect(() => {
+    if (!user?._id || !complaintId) {
+      return;
+    }
+
+    const joinRoom = () => {
+      console.log("🔌 Socket connected:", socket.id);
+
+      socket.emit("join-user", user._id);
+
+      socket.emit(
+        "join-complaint",
+        complaintId
+      );
+
+      console.log(
+        `💬 Joined complaint room: complaint:${complaintId}`
+      );
+    };
+
+    /*
+     * If already connected, join immediately.
+     * Otherwise connect first.
+     */
+    if (socket.connected) {
+      joinRoom();
+    } else {
+      socket.connect();
+    }
+
+    socket.on("connect", joinRoom);
+
+    /*
+    |--------------------------------------------------------------------------
+    | NEW REPLY
+    |--------------------------------------------------------------------------
+    */
+
+    const handleNewReply = (data) => {
+      console.log(
+        "💬 complaint:reply received:",
+        data
+      );
+
+      /*
+       * Backend might send:
+       *
+       * {
+       *   complaintId,
+       *   reply
+       * }
+       *
+       * or:
+       *
+       * {
+       *   complaintId,
+       *   data: reply
+       * }
+       *
+       * or directly the reply.
+       */
+
+      const incomingComplaintId =
+        data?.complaintId ||
+        data?.complaint?._id ||
+        data?.complaint?._id?.toString();
+
+      if (
+        incomingComplaintId &&
+        incomingComplaintId.toString() !==
+          complaintId.toString()
+      ) {
+        return;
+      }
+
+      const incomingReply =
+        data?.reply ||
+        data?.data ||
+        data?.message;
+
+      /*
+       * If backend sends just a string,
+       * don't try to render it as an object.
+       */
+      if (
+        !incomingReply ||
+        typeof incomingReply !== "object"
+      ) {
+        console.warn(
+          "⚠️ Invalid reply payload:",
+          data
+        );
+
+        queryClient.invalidateQueries({
+          queryKey: [
+            "complaint",
+            complaintId,
+          ],
+        });
+
+        return;
+      }
+
+      queryClient.setQueryData(
+        ["complaint", complaintId],
+        (oldComplaint) => {
+          if (!oldComplaint) {
+            return oldComplaint;
+          }
+
+          const currentReplies =
+            oldComplaint.replies || [];
+
+          const incomingId =
+            incomingReply._id?.toString();
+
+          /*
+           * Prevent duplicate replies.
+           */
+          const alreadyExists =
+            incomingId &&
+            currentReplies.some(
+              (item) =>
+                item._id?.toString() ===
+                incomingId
+            );
+
+          if (alreadyExists) {
+            return oldComplaint;
+          }
+
+          return {
+            ...oldComplaint,
+
+            replies: [
+              ...currentReplies,
+              incomingReply,
+            ],
+          };
+        }
+      );
+    };
+
+    socket.on(
+      "complaint:reply",
+      handleNewReply
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | SOCKET ERROR
+    |--------------------------------------------------------------------------
+    */
+
+    const handleConnectError = (error) => {
+      console.error(
+        "❌ Socket connection error:",
+        error
+      );
+    };
+
+    socket.on(
+      "connect_error",
+      handleConnectError
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | CLEANUP
+    |--------------------------------------------------------------------------
+    */
+
+    return () => {
+      socket.off("connect", joinRoom);
+
+      socket.off(
+        "complaint:reply",
+        handleNewReply
+      );
+
+      socket.off(
+        "connect_error",
+        handleConnectError
+      );
+
+      if (socket.connected) {
+        socket.emit(
+          "leave-complaint",
+          complaintId
+        );
+      }
+
+      console.log(
+        `💬 Left complaint room: complaint:${complaintId}`
+      );
+    };
+  }, [
+    user?._id,
+    complaintId,
+    queryClient,
+  ]);
+
+  /*
+  |--------------------------------------------------------------------------
+  | GET COMPLAINT
+  |--------------------------------------------------------------------------
+  */
 
   const {
     data: complaint,
@@ -40,7 +254,10 @@ const ComplaintDetails = ({ complaintId }) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["complaint", complaintId],
+    queryKey: [
+      "complaint",
+      complaintId,
+    ],
 
     queryFn: async () => {
       const response = await api.get(
@@ -52,6 +269,12 @@ const ComplaintDetails = ({ complaintId }) => {
 
     enabled: Boolean(complaintId),
   });
+
+  /*
+  |--------------------------------------------------------------------------
+  | DELETE COMPLAINT
+  |--------------------------------------------------------------------------
+  */
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -73,7 +296,10 @@ const ComplaintDetails = ({ complaintId }) => {
       });
 
       queryClient.removeQueries({
-        queryKey: ["complaint", complaintId],
+        queryKey: [
+          "complaint",
+          complaintId,
+        ],
       });
 
       navigate("/complaints");
@@ -87,6 +313,12 @@ const ComplaintDetails = ({ complaintId }) => {
     },
   });
 
+  /*
+  |--------------------------------------------------------------------------
+  | REPLY
+  |--------------------------------------------------------------------------
+  */
+
   const replyMutation = useMutation({
     mutationFn: async (message) => {
       const response = await api.post(
@@ -99,19 +331,93 @@ const ComplaintDetails = ({ complaintId }) => {
       return response.data.data;
     },
 
-    onSuccess: (updatedComplaint) => {
+    onSuccess: (result) => {
+      /*
+       * IMPORTANT:
+       *
+       * Do not blindly replace the complaint.
+       *
+       * Depending on your backend, result may be:
+       *
+       * 1. complete complaint
+       * 2. newly created reply
+       *
+       * So we handle both.
+       */
+
       queryClient.setQueryData(
         ["complaint", complaintId],
-        updatedComplaint
+        (oldComplaint) => {
+          if (!oldComplaint) {
+            return oldComplaint;
+          }
+
+          /*
+           * If backend returned complete complaint
+           */
+          if (
+            result?.replies &&
+            Array.isArray(result.replies)
+          ) {
+            return result;
+          }
+
+          /*
+           * Otherwise assume result is the
+           * newly created reply.
+           */
+
+          const newReply =
+            result?.reply || result;
+
+          if (
+            !newReply ||
+            typeof newReply !== "object"
+          ) {
+            return oldComplaint;
+          }
+
+          const currentReplies =
+            oldComplaint.replies || [];
+
+          const newReplyId =
+            newReply._id?.toString();
+
+          const exists =
+            newReplyId &&
+            currentReplies.some(
+              (item) =>
+                item._id?.toString() ===
+                newReplyId
+            );
+
+          if (exists) {
+            return oldComplaint;
+          }
+
+          return {
+            ...oldComplaint,
+
+            replies: [
+              ...currentReplies,
+              newReply,
+            ],
+          };
+        }
       );
 
+      /*
+       * Refresh complaint list.
+       */
       queryClient.invalidateQueries({
         queryKey: ["complaints"],
       });
 
       setReply("");
 
-      toast.success("Reply sent successfully");
+      toast.success(
+        "Reply sent successfully"
+      );
     },
 
     onError: (error) => {
@@ -122,11 +428,24 @@ const ComplaintDetails = ({ complaintId }) => {
     },
   });
 
+  /*
+  |--------------------------------------------------------------------------
+  | HANDLERS
+  |--------------------------------------------------------------------------
+  */
+
   const handleReply = () => {
     const message = reply.trim();
 
     if (!message) {
-      toast.error("Please enter a reply");
+      toast.error(
+        "Please enter a reply"
+      );
+
+      return;
+    }
+
+    if (replyMutation.isPending) {
       return;
     }
 
@@ -148,6 +467,12 @@ const ComplaintDetails = ({ complaintId }) => {
 
     deleteMutation.mutate();
   };
+
+  /*
+  |--------------------------------------------------------------------------
+  | HELPERS
+  |--------------------------------------------------------------------------
+  */
 
   const getInitial = (name) => {
     if (!name) {
@@ -192,10 +517,19 @@ const ComplaintDetails = ({ complaintId }) => {
       case "Urgent":
         return "bg-red-100 text-red-700";
 
+      case "Critical":
+        return "bg-red-100 text-red-700";
+
       default:
         return "bg-slate-100 text-slate-600";
     }
   };
+
+  /*
+  |--------------------------------------------------------------------------
+  | LOADING
+  |--------------------------------------------------------------------------
+  */
 
   if (isLoading) {
     return (
@@ -210,6 +544,12 @@ const ComplaintDetails = ({ complaintId }) => {
       </div>
     );
   }
+
+  /*
+  |--------------------------------------------------------------------------
+  | ERROR
+  |--------------------------------------------------------------------------
+  */
 
   if (isError) {
     return (
@@ -246,6 +586,12 @@ const ComplaintDetails = ({ complaintId }) => {
     );
   }
 
+  /*
+  |--------------------------------------------------------------------------
+  | NOT FOUND
+  |--------------------------------------------------------------------------
+  */
+
   if (!complaint) {
     return (
       <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
@@ -254,8 +600,8 @@ const ComplaintDetails = ({ complaintId }) => {
         </h2>
 
         <p className="mt-2 text-sm text-slate-500">
-          This complaint may have been deleted or
-          does not exist.
+          This complaint may have been deleted
+          or does not exist.
         </p>
 
         <button
@@ -280,6 +626,8 @@ const ComplaintDetails = ({ complaintId }) => {
   return (
     <div className="space-y-6">
 
+      {/* BACK */}
+
       <button
         type="button"
         onClick={() =>
@@ -288,13 +636,18 @@ const ComplaintDetails = ({ complaintId }) => {
         className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-orange-500"
       >
         <ArrowLeft size={17} />
-
         Back to my complaints
       </button>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_320px]">
 
+        {/* =========================================================
+            LEFT
+        ========================================================= */}
+
         <div className="min-w-0 space-y-6">
+
+          {/* COMPLAINT */}
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
 
@@ -357,7 +710,6 @@ const ComplaintDetails = ({ complaintId }) => {
                 </span>
               </div>
 
-
               <div className="flex items-center gap-2">
                 <Clock3
                   size={17}
@@ -372,7 +724,6 @@ const ComplaintDetails = ({ complaintId }) => {
                 </span>
               </div>
 
-
               <div className="flex items-center gap-2">
                 <ShieldCheck
                   size={17}
@@ -385,6 +736,8 @@ const ComplaintDetails = ({ complaintId }) => {
               </div>
 
             </div>
+
+            {/* EVIDENCE */}
 
             <div className="mt-6">
 
@@ -417,7 +770,6 @@ const ComplaintDetails = ({ complaintId }) => {
                         rel="noreferrer"
                         className="group relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
                       >
-
                         <img
                           src={image.url}
                           alt={`Complaint evidence ${
@@ -431,7 +783,6 @@ const ComplaintDetails = ({ complaintId }) => {
                             View image
                           </span>
                         </div>
-
                       </a>
                     )
                   )}
@@ -463,6 +814,10 @@ const ComplaintDetails = ({ complaintId }) => {
 
           </div>
 
+          {/* =====================================================
+              TIMELINE
+          ===================================================== */}
+
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
 
             <h2 className="text-xl font-bold text-slate-900">
@@ -478,8 +833,8 @@ const ComplaintDetails = ({ complaintId }) => {
 
                     const isLast =
                       index ===
-                      complaint.statusHistory
-                        .length - 1;
+                      complaint.statusHistory.length -
+                        1;
 
                     const isCurrent =
                       item.status ===
@@ -505,7 +860,6 @@ const ComplaintDetails = ({ complaintId }) => {
                               : "bg-green-100"
                           }`}
                         >
-
                           <div
                             className={`h-2.5 w-2.5 rounded-full ${
                               isCurrent
@@ -513,7 +867,6 @@ const ComplaintDetails = ({ complaintId }) => {
                                 : "bg-green-500"
                             }`}
                           />
-
                         </div>
 
                         <div className="min-w-0">
@@ -524,9 +877,11 @@ const ComplaintDetails = ({ complaintId }) => {
                           </p>
 
                           <p className="mt-0.5 text-sm text-slate-500">
-                            {new Date(
-                              item.updatedAt
-                            ).toLocaleString()}
+                            {item.updatedAt
+                              ? new Date(
+                                  item.updatedAt
+                                ).toLocaleString()
+                              : "—"}
                           </p>
 
                           {item.status && (
@@ -558,6 +913,10 @@ const ComplaintDetails = ({ complaintId }) => {
 
           </div>
 
+          {/* =====================================================
+              CONVERSATION
+          ===================================================== */}
+
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -574,7 +933,6 @@ const ComplaintDetails = ({ complaintId }) => {
                 </h2>
 
               </div>
-
 
               {assignedAdmin && (
                 <div className="flex items-center gap-2 text-sm text-slate-400">
@@ -632,7 +990,8 @@ const ComplaintDetails = ({ complaintId }) => {
                                   createdByName
                                 )
                               : getInitial(
-                                  assignedAdmin?.name ||
+                                  item.senderName ||
+                                    assignedAdmin?.name ||
                                     "Admin"
                                 )}
                           </div>
@@ -652,19 +1011,22 @@ const ComplaintDetails = ({ complaintId }) => {
                                 <span className="text-sm font-bold text-slate-900">
                                   {isUser
                                     ? "You"
-                                    : assignedAdmin?.name ||
+                                    : item.senderName ||
+                                      assignedAdmin?.name ||
                                       "Administrator"}
                                 </span>
 
                                 <span className="text-xs text-slate-400">
-                                  {new Date(
-                                    item.createdAt
-                                  ).toLocaleString()}
+                                  {item.createdAt
+                                    ? new Date(
+                                        item.createdAt
+                                      ).toLocaleString()
+                                    : ""}
                                 </span>
 
                               </div>
 
-                              <p className="mt-2 text-sm leading-6 text-slate-700">
+                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
                                 {item.message}
                               </p>
 
@@ -703,6 +1065,8 @@ const ComplaintDetails = ({ complaintId }) => {
 
             </div>
 
+            {/* REPLY INPUT */}
+
             <div className="mt-7 border-t border-slate-100 pt-5">
 
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -716,9 +1080,15 @@ const ComplaintDetails = ({ complaintId }) => {
                   onKeyDown={(e) => {
                     if (
                       e.key === "Enter" &&
-                      !replyMutation.isPending
+                      !e.shiftKey
                     ) {
-                      handleReply();
+                      e.preventDefault();
+
+                      if (
+                        !replyMutation.isPending
+                      ) {
+                        handleReply();
+                      }
                     }
                   }}
                   placeholder="Write a reply..."
@@ -732,7 +1102,8 @@ const ComplaintDetails = ({ complaintId }) => {
                   type="button"
                   onClick={handleReply}
                   disabled={
-                    replyMutation.isPending
+                    replyMutation.isPending ||
+                    !reply.trim()
                   }
                   className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -753,7 +1124,13 @@ const ComplaintDetails = ({ complaintId }) => {
 
         </div>
 
+        {/* =========================================================
+            RIGHT SIDEBAR
+        ========================================================= */}
+
         <div className="space-y-6">
+
+          {/* REPORTED BY */}
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
@@ -784,6 +1161,8 @@ const ComplaintDetails = ({ complaintId }) => {
             </div>
 
           </div>
+
+          {/* ADMIN */}
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
@@ -824,8 +1203,7 @@ const ComplaintDetails = ({ complaintId }) => {
               <div className="mt-5 rounded-xl bg-slate-50 p-4">
 
                 <p className="text-sm text-slate-500">
-                  No administrator has been
-                  assigned yet.
+                  No administrator has been assigned yet.
                 </p>
 
               </div>
@@ -833,6 +1211,8 @@ const ComplaintDetails = ({ complaintId }) => {
             )}
 
           </div>
+
+          {/* STATUS */}
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
@@ -861,6 +1241,8 @@ const ComplaintDetails = ({ complaintId }) => {
             </div>
 
           </div>
+
+          {/* DELETE */}
 
           {complaint.status ===
             "Pending" && (
@@ -893,7 +1275,6 @@ const ComplaintDetails = ({ complaintId }) => {
 
               </div>
 
-
               <button
                 type="button"
                 disabled={
@@ -913,6 +1294,8 @@ const ComplaintDetails = ({ complaintId }) => {
 
             </div>
           )}
+
+          {/* TRACKING */}
 
           <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
 
