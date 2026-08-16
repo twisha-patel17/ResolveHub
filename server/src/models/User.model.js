@@ -4,44 +4,69 @@ import jwt from "jsonwebtoken";
 import validator from "validator";
 
 const userSchema = new mongoose.Schema(
-    {
-        name: { type: String, required: [true, "Name is required"], trim: true },
-        email: {
-            type: String, required: [true, "Email is required"], unique: true, trim: true, lowercase: true, validate: [validator.isEmail, "Please enter a valid email"], 
-        },
-        password: { type: String, required: [true, "Password is required"], minlength: 6, select: false },
-        role: {
-            type: String,
-            enum: ["user", "admin"],
-            default: "user",
-        },
-        avatar: {
-            url : { type: String, default: "",},
-            public_id: { type: String, default: "",},
-        },
-        isActive: { type: Boolean, default: true },
-        refreshToken: { type: String, default: "" },
+  {
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+      trim: true,
     },
-    {
-        timestamps: true,
-    }
+
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      validate: [validator.isEmail, "Please enter a valid email"],
+    },
+
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: 6,
+      select: false,
+    },
+
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+
+    avatar: {
+      url: {
+        type: String,
+        default: "",
+      },
+      public_id: {
+        type: String,
+        default: "",
+      },
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    refreshToken: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
 userSchema.pre("save", async function () {
-  if (!this.isModified("password")) {
-    return;
-  }
+  if (!this.isModified("password")) return;
 
   this.password = await bcrypt.hash(this.password, 10);
 });
 
-userSchema.methods.comparePassword = async function (
-  enteredPassword
-) {
-  return await bcrypt.compare(
-    enteredPassword,
-    this.password
-  );
+userSchema.methods.comparePassword = function (password) {
+  return bcrypt.compare(password, this.password);
 };
 
 userSchema.methods.generateAccessToken = function () {
@@ -69,9 +94,6 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
-const User = mongoose.model(
-  "User",
-  userSchema
-);
+const User = mongoose.model("User", userSchema);
 
 export default User;

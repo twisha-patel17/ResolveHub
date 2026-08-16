@@ -27,7 +27,6 @@ export const initializeSocket = (httpServer) => {
       );
     });
 
-    // Complaint room
     socket.on(
       "join-complaint",
       (complaintId) => {
@@ -43,7 +42,6 @@ export const initializeSocket = (httpServer) => {
       }
     );
 
-    // Leave complaint room
     socket.on(
       "leave-complaint",
       (complaintId) => {

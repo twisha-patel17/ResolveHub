@@ -21,64 +21,73 @@ const ALLOWED_UPDATE_FIELDS = [
   "location",
 ];
 
-export const createComplaint = asyncHandler(
-  async (req, res) => {
-    const {
-      title,
-      description,
-      category,
-      priority,
-      location,
-    } = req.body;
+export const createComplaint = asyncHandler(async (req, res) => {
+  const {
+    title,
+    description,
+    category,
+    priority,
+    location,
+  } = req.body;
 
-    if (
-      !title?.trim() ||
-      !description?.trim() ||
-      !category
-    ) {
-      throw new ApiError(
-        400,
-        "Title, description and category are required"
-      );
-    }
-
-    const complaint = await Complaint.create({
-      complaintId: `RH-${Date.now()}`,
-
-      title: title.trim(),
-
-      description: description.trim(),
-
-      category,
-
-      priority: priority || "Medium",
-
-      location: location ? JSON.parse(location) : {},
-
-      images: req.cloudinaryImages || [],
-
-      createdBy: req.user._id,
-
-      status: "Pending",
-
-      statusHistory: [
-        {
-          status: "Pending",
-          message: "Complaint submitted",
-          updatedBy: req.user._id,
-        },
-      ],
-    });
-
-    return res.status(201).json(
-      new ApiResponse(
-        201,
-        complaint,
-        "Complaint created successfully"
-      )
+  if (
+    !title?.trim() ||
+    !description?.trim() ||
+    !category
+  ) {
+    throw new ApiError(
+      400,
+      "Title, description and category are required"
     );
   }
-);
+
+  const complaint = await Complaint.create({
+    complaintId: `RH-${Date.now()}`,
+    title: title.trim(),
+    description: description.trim(),
+    category,
+    priority: priority || "Medium",
+    location: location ? JSON.parse(location) : {},
+    images: req.cloudinaryImages || [],
+    createdBy: req.user._id,
+    status: "Pending",
+
+    statusHistory: [
+      {
+        status: "Pending",
+        message: "Complaint submitted",
+        updatedBy: req.user._id,
+      },
+    ],
+  });
+
+  const admins = await User.find({ role: "admin" }).select("_id");
+
+  const io = getIO();
+
+  for (const admin of admins) {
+    const notification = await createNotification({
+      recipient: admin._id,
+      complaint: complaint._id,
+      title: "New Complaint",
+      message: `A new complaint "${complaint.title}" has been submitted.`,
+      type: "complaint",
+    });
+
+    io.to(`user:${admin._id.toString()}`).emit(
+      "notification:new",
+      notification
+    );
+  }
+
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      complaint,
+      "Complaint created successfully"
+    )
+  );
+});
 
 export const getMyComplaints = asyncHandler(async (req, res) => {
   const complaints = await Complaint.find({
@@ -256,17 +265,11 @@ export const getAllComplaints = asyncHandler(async (req, res) => {
   } = req.query;
 
   const page = Math.max(
-    Number(req.query.page) || 1,
-    1
-  );
+    Number(req.query.page) || 1, 1);
 
   const limit = Math.min(
     Math.max(
-      Number(req.query.limit) || 10,
-      1
-    ),
-    100
-  );
+      Number(req.query.limit) || 10, 1),100);
 
   const query = {};
 
@@ -277,7 +280,6 @@ export const getAllComplaints = asyncHandler(async (req, res) => {
         "Invalid complaint status"
       );
     }
-
     query.status = status;
   }
 
@@ -482,37 +484,25 @@ export const getMyDashboardStats = asyncHandler(
 export const addReply = asyncHandler(async (req, res) => {
   const { message } = req.body;
 
-  if (!message || !message.trim()) {
-    throw new ApiError(
-      400,
-      "Reply message is required"
-    );
+  if (!message?.trim()) {
+    throw new ApiError(400, "Reply message is required");
   }
 
-  const complaint = await Complaint.findById(
-    req.params.id
-  );
+  const complaint = await Complaint.findById(req.params.id);
 
   if (!complaint) {
-    throw new ApiError(
-      404,
-      "Complaint not found"
-    );
+    throw new ApiError(404, "Complaint not found");
   }
 
   const isOwner =
-    complaint.createdBy.toString() ===
-    req.user._id.toString();
+    complaint.createdBy.toString() === req.user._id.toString();
 
-  const isAdmin =
-    req.user.role === "admin";
+  const isAdmin = req.user.role === "admin";
 
   if (!isOwner && !isAdmin) {
-    throw new ApiError(
-      403,
-      "Access denied"
-    );
+    throw new ApiError(403, "Access denied");
   }
+
   complaint.replies.push({
     sender: isAdmin ? "admin" : "user",
     message: message.trim(),
@@ -521,36 +511,28 @@ export const addReply = asyncHandler(async (req, res) => {
   await complaint.save();
 
   const newReply =
-    complaint.replies[
-      complaint.replies.length - 1
-    ];
+    complaint.replies[complaint.replies.length - 1];
+
   try {
     const io = getIO();
 
-    io.to(
-      `complaint:${complaint._id}`
-    ).emit(
+    io.to(`complaint:${complaint._id}`).emit(
       "complaint:reply",
       {
-        complaintId:
-          complaint._id.toString(),
+        complaintId: complaint._id.toString(),
         reply: newReply,
       }
     );
-  } catch (socketError) {
-    console.error(
-      "Socket reply error:",
-      socketError.message
-    );
+  } catch (error) {
+    console.error("Socket reply error:", error.message);
   }
+
   const recipient = isAdmin
     ? complaint.createdBy
     : complaint.assignedTo;
 
-  let notification = null;
-
   if (recipient) {
-    notification = await createNotification({
+    const notification = await createNotification({
       recipient,
       complaint: complaint._id,
       title: isAdmin
@@ -561,19 +543,18 @@ export const addReply = asyncHandler(async (req, res) => {
         : "The complainant replied to your complaint.",
       type: "reply",
     });
+
     try {
       const io = getIO();
 
-      io.to(
-        `user:${recipient.toString()}`
-      ).emit(
+      io.to(`user:${recipient.toString()}`).emit(
         "notification:new",
         notification
       );
-    } catch (socketError) {
+    } catch (error) {
       console.error(
         "Socket notification error:",
-        socketError.message
+        error.message
       );
     }
   }

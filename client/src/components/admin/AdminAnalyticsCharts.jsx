@@ -59,10 +59,8 @@ const StatCard = ({
   accent,
 }) => {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
-      <div
-        className={`absolute left-0 top-0 h-full w-1 ${accent}`}
-      />
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className={`absolute left-0 top-0 h-full w-1 ${accent}`} />
 
       <div className="flex items-start justify-between">
         <div>
@@ -70,7 +68,7 @@ const StatCard = ({
             {title}
           </p>
 
-          <h3 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+          <h3 className="mt-2 text-3xl font-bold text-slate-900">
             {value}
           </h3>
 
@@ -82,10 +80,7 @@ const StatCard = ({
         <div
           className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconBg}`}
         >
-          <Icon
-            size={21}
-            className={iconColor}
-          />
+          <Icon size={21} className={iconColor} />
         </div>
       </div>
     </div>
@@ -95,70 +90,22 @@ const StatCard = ({
 const ChartCard = ({
   title,
   description,
-  badge,
   children,
-  className = "",
 }) => {
   return (
-    <div
-      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 ${className}`}
-    >
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900">
-            {title}
-          </h2>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="mb-6">
+        <h2 className="text-lg font-bold text-slate-900">
+          {title}
+        </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
-            {description}
-          </p>
-        </div>
-
-        {badge && (
-          <span className="hidden rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500 sm:block">
-            {badge}
-          </span>
-        )}
+        <p className="mt-1 text-sm text-slate-500">
+          {description}
+        </p>
       </div>
 
       {children}
     </div>
-  );
-};
-
-const CustomPieLabel = ({
-  cx,
-  cy,
-  midAngle,
-  outerRadius,
-  percent,
-}) => {
-  if (percent < 0.05) {
-    return null;
-  }
-
-  const RADIAN = Math.PI / 180;
-
-  const radius = outerRadius + 20;
-
-  const x =
-    cx + radius * Math.cos(-midAngle * RADIAN);
-
-  const y =
-    cy + radius * Math.sin(-midAngle * RADIAN);
-
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="#64748b"
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-      fontSize={11}
-      fontWeight={600}
-    >
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
   );
 };
 
@@ -184,9 +131,8 @@ const AdminAnalyticsCharts = ({
   return (
     <div className="space-y-6">
 
-      {/* =================================
-          ANALYTICS STAT CARDS
-      ================================= */}
+      {/* STAT CARDS */}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
         <StatCard
@@ -202,7 +148,7 @@ const AdminAnalyticsCharts = ({
         <StatCard
           title="Resolution Rate"
           value={`${resolutionRate}%`}
-          subtitle="Complaints successfully resolved"
+          subtitle="Complaints resolved"
           icon={CircleCheckBig}
           iconBg="bg-green-100"
           iconColor="text-green-600"
@@ -210,9 +156,9 @@ const AdminAnalyticsCharts = ({
         />
 
         <StatCard
-          title="Avg. Resolution Time"
-          value={`${avgResolutionTime}d`}
-          subtitle="Average time to resolve"
+          title="Avg. Resolution"
+          value={`${avgResolutionTime}h`}
+          subtitle="Average resolution time"
           icon={Clock3}
           iconBg="bg-blue-100"
           iconColor="text-blue-600"
@@ -222,7 +168,7 @@ const AdminAnalyticsCharts = ({
         <StatCard
           title="Rejection Rate"
           value={`${rejectionRate}%`}
-          subtitle="Complaints that were rejected"
+          subtitle="Complaints rejected"
           icon={XCircle}
           iconBg="bg-red-100"
           iconColor="text-red-600"
@@ -231,36 +177,25 @@ const AdminAnalyticsCharts = ({
 
       </div>
 
-      {/* =================================
-          ROW 1
-      ================================= */}
+
+      {/* COMPLAINT TREND + STATUS */}
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
 
-        {/* Complaint Trend */}
         <ChartCard
           title="Complaint Trend"
-          description="Complaint submissions over time."
-          badge="Monthly"
+          description="Number of complaints submitted each month."
         >
-          <div className="h-72 w-full">
-
+          <div className="h-72">
             <ResponsiveContainer
               width="100%"
               height="100%"
             >
-              <AreaChart
-                data={complaintTrend}
-                margin={{
-                  top: 10,
-                  right: 10,
-                  left: -20,
-                  bottom: 0,
-                }}
-              >
+              <AreaChart data={complaintTrend}>
 
                 <defs>
                   <linearGradient
-                    id="complaintTrendGradient"
+                    id="complaintGradient"
                     x1="0"
                     y1="0"
                     x2="0"
@@ -269,7 +204,7 @@ const AdminAnalyticsCharts = ({
                     <stop
                       offset="0%"
                       stopColor="#f97316"
-                      stopOpacity={0.28}
+                      stopOpacity={0.3}
                     />
 
                     <stop
@@ -290,28 +225,16 @@ const AdminAnalyticsCharts = ({
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tick={{
-                    fill: "#94a3b8",
-                    fontSize: 12,
-                  }}
                 />
 
                 <YAxis
+                  allowDecimals={false}
                   axisLine={false}
                   tickLine={false}
-                  allowDecimals={false}
-                  tick={{
-                    fill: "#94a3b8",
-                    fontSize: 12,
-                  }}
                 />
 
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  cursor={{
-                    stroke: "#f97316",
-                    strokeDasharray: "4 4",
-                  }}
                 />
 
                 <Area
@@ -319,32 +242,20 @@ const AdminAnalyticsCharts = ({
                   dataKey="complaints"
                   stroke="#f97316"
                   strokeWidth={3}
-                  fill="url(#complaintTrendGradient)"
-                  dot={{
-                    r: 4,
-                    fill: "#f97316",
-                    stroke: "#ffffff",
-                    strokeWidth: 2,
-                  }}
-                  activeDot={{
-                    r: 6,
-                  }}
+                  fill="url(#complaintGradient)"
                 />
 
               </AreaChart>
             </ResponsiveContainer>
-
           </div>
         </ChartCard>
 
-        {/* Status Distribution */}
+
         <ChartCard
           title="Complaint Status"
-          description="Distribution of complaints by current status."
-          badge="Status"
+          description="Current status of all complaints."
         >
-          <div className="h-72 w-full">
-
+          <div className="h-72">
             <ResponsiveContainer
               width="100%"
               height="100%"
@@ -353,23 +264,22 @@ const AdminAnalyticsCharts = ({
 
                 <Pie
                   data={statusDistribution}
-                  dataKey="count"
-                  nameKey="status"
+                  dataKey="value"
+                  nameKey="name"
                   cx="50%"
-                  cy="50%"
-                  innerRadius={65}
-                  outerRadius={100}
+                  cy="45%"
+                  innerRadius={60}
+                  outerRadius={95}
                   paddingAngle={3}
-                  labelLine={false}
-                  label={CustomPieLabel}
                 >
                   {statusDistribution.map(
                     (entry, index) => (
                       <Cell
-                        key={`status-${index}`}
+                        key={index}
                         fill={
-                          entry.color ||
-                          COLORS[index % COLORS.length]
+                          COLORS[
+                            index % COLORS.length
+                          ]
                         }
                       />
                     )
@@ -382,35 +292,26 @@ const AdminAnalyticsCharts = ({
 
                 <Legend
                   verticalAlign="bottom"
-                  height={36}
                   iconType="circle"
-                  wrapperStyle={{
-                    fontSize: "12px",
-                    color: "#64748b",
-                  }}
                 />
 
               </PieChart>
             </ResponsiveContainer>
-
           </div>
         </ChartCard>
 
       </div>
 
-      {/* =================================
-          ROW 2
-      ================================= */}
+
+      {/* CATEGORY + PRIORITY */}
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
 
-        {/* Category */}
         <ChartCard
           title="Complaints by Category"
-          description="Identify the most common complaint categories."
-          badge="Category"
+          description="Number of complaints in each category."
         >
-          <div className="h-80 w-full">
-
+          <div className="h-80">
             <ResponsiveContainer
               width="100%"
               height="100%"
@@ -419,10 +320,8 @@ const AdminAnalyticsCharts = ({
                 data={categoryDistribution}
                 layout="vertical"
                 margin={{
-                  top: 5,
-                  right: 15,
                   left: 20,
-                  bottom: 5,
+                  right: 20,
                 }}
               >
 
@@ -434,60 +333,41 @@ const AdminAnalyticsCharts = ({
 
                 <XAxis
                   type="number"
+                  allowDecimals={false}
                   axisLine={false}
                   tickLine={false}
-                  allowDecimals={false}
-                  tick={{
-                    fill: "#94a3b8",
-                    fontSize: 12,
-                  }}
                 />
 
                 <YAxis
                   type="category"
-                  dataKey="category"
+                  dataKey="name"
+                  width={100}
                   axisLine={false}
                   tickLine={false}
-                  width={95}
-                  tick={{
-                    fill: "#64748b",
-                    fontSize: 11,
-                  }}
                 />
 
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  cursor={{
-                    fill: "#fff7ed",
-                  }}
                 />
 
                 <Bar
-                  dataKey="count"
+                  dataKey="value"
                   fill="#f97316"
-                  radius={[
-                    0,
-                    7,
-                    7,
-                    0,
-                  ]}
+                  radius={[0, 7, 7, 0]}
                   barSize={22}
                 />
 
               </BarChart>
             </ResponsiveContainer>
-
           </div>
         </ChartCard>
 
-        {/* Priority */}
+
         <ChartCard
           title="Complaints by Priority"
-          description="Understand the severity of submitted complaints."
-          badge="Priority"
+          description="Number of complaints by priority level."
         >
-          <div className="h-80 w-full">
-
+          <div className="h-80">
             <ResponsiveContainer
               width="100%"
               height="100%"
@@ -495,10 +375,8 @@ const AdminAnalyticsCharts = ({
               <BarChart
                 data={priorityDistribution}
                 margin={{
-                  top: 10,
-                  right: 10,
                   left: -20,
-                  bottom: 5,
+                  right: 10,
                 }}
               >
 
@@ -509,49 +387,34 @@ const AdminAnalyticsCharts = ({
                 />
 
                 <XAxis
-                  dataKey="priority"
+                  dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{
-                    fill: "#64748b",
-                    fontSize: 12,
-                  }}
                 />
 
                 <YAxis
+                  allowDecimals={false}
                   axisLine={false}
                   tickLine={false}
-                  allowDecimals={false}
-                  tick={{
-                    fill: "#94a3b8",
-                    fontSize: 12,
-                  }}
                 />
 
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  cursor={{
-                    fill: "#f8fafc",
-                  }}
                 />
 
                 <Bar
-                  dataKey="count"
-                  radius={[
-                    7,
-                    7,
-                    0,
-                    0,
-                  ]}
-                  barSize={38}
+                  dataKey="value"
+                  radius={[7, 7, 0, 0]}
+                  barSize={40}
                 >
                   {priorityDistribution.map(
                     (entry, index) => (
                       <Cell
-                        key={`priority-${index}`}
+                        key={index}
                         fill={
-                          entry.color ||
-                          COLORS[index % COLORS.length]
+                          COLORS[
+                            index % COLORS.length
+                          ]
                         }
                       />
                     )
@@ -560,7 +423,6 @@ const AdminAnalyticsCharts = ({
 
               </BarChart>
             </ResponsiveContainer>
-
           </div>
         </ChartCard>
 

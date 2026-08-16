@@ -65,7 +65,6 @@ const AdminAnalyticsPage = () => {
     <AdminLayout>
       <div className="mx-auto w-full max-w-7xl space-y-6 sm:space-y-8">
 
-        {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl lg:text-4xl">
             Analytics
@@ -77,14 +76,12 @@ const AdminAnalyticsPage = () => {
           </p>
         </div>
 
-        {/* Error */}
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
             {error}
           </div>
         )}
 
-        {/* Loading */}
         {loading ? (
           <div className="rounded-2xl border border-slate-200 bg-white py-20 text-center shadow-sm">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-orange-500" />

@@ -9,13 +9,13 @@ const complaintSchema = new mongoose.Schema(
 
     title: {
       type: String,
-      required: [true, "Title is required"],
+      required: true,
       trim: true,
     },
 
     description: {
       type: String,
-      required: [true, "Description is required"],
+      required: true,
       trim: true,
     },
 
@@ -38,35 +38,20 @@ const complaintSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "Pending",
-        "In Progress",
-        "Resolved",
-        "Rejected",
-      ],
+      enum: ["Pending", "In Progress", "Resolved", "Rejected"],
       default: "Pending",
     },
 
     priority: {
       type: String,
-      enum: [
-        "Low",
-        "Medium",
-        "High",
-        "Urgent",
-      ],
+      enum: ["Low", "Medium", "High", "Urgent"],
       default: "Medium",
     },
 
     images: [
       {
-        url: {
-          type: String,
-        },
-
-        public_id: {
-          type: String,
-        },
+        url: String,
+        public_id: String,
       },
     ],
 
@@ -100,9 +85,7 @@ const complaintSchema = new mongoose.Schema(
           type: String,
           enum: ["user", "admin"],
         },
-
         message: String,
-
         createdAt: {
           type: Date,
           default: Date.now,
@@ -141,9 +124,6 @@ complaintSchema.index({ status: 1 });
 complaintSchema.index({ category: 1 });
 complaintSchema.index({ createdAt: -1 });
 
-const Complaint = mongoose.model(
-  "Complaint",
-  complaintSchema
-);
+const Complaint = mongoose.model("Complaint", complaintSchema);
 
 export default Complaint;
