@@ -27,15 +27,22 @@ const DashboardPage = () => {
             api.get("/complaints/my"),
             api.get("/complaints/activity/recent"),
           ]);
+const complaintsData =
+  complaintsResponse.data.data;
 
-        const userComplaints =
-          complaintsResponse.data.data || [];
+const userComplaints = Array.isArray(complaintsData)
+  ? complaintsData
+  : complaintsData?.complaints || [];
 
-        const userActivities =
-          activityResponse.data.data || [];
+const activitiesData =
+  activityResponse.data.data;
 
-        setComplaints(userComplaints);
-        setActivities(userActivities.slice(0, 3));
+const userActivities = Array.isArray(activitiesData)
+  ? activitiesData
+  : [];
+
+setComplaints(userComplaints);
+setActivities(userActivities.slice(0, 3));
       } catch (error) {
         console.error(
           "Failed to fetch dashboard data:",

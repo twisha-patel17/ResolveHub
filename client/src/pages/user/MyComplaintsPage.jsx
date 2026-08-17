@@ -49,7 +49,7 @@ const MyComplaintsPage = () => {
     queryFn: async () => {
       const response = await api.get("/complaints/my");
 
-      return response.data.data;
+      return response.data.data.complaints;
     },
   });
 

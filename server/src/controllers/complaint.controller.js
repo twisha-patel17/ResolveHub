@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Complaint from "../models/Complaint.model.js";
+import User from "../models/User.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
@@ -20,7 +21,6 @@ const ALLOWED_UPDATE_FIELDS = [
   "priority",
   "location",
 ];
-
 export const createComplaint = asyncHandler(async (req, res) => {
   const {
     title,
@@ -41,13 +41,29 @@ export const createComplaint = asyncHandler(async (req, res) => {
     );
   }
 
+  let parsedLocation = {};
+
+  if (location) {
+    try {
+      parsedLocation =
+        typeof location === "string"
+          ? JSON.parse(location)
+          : location;
+    } catch {
+      throw new ApiError(
+        400,
+        "Invalid location data"
+      );
+    }
+  }
+
   const complaint = await Complaint.create({
     complaintId: `RH-${Date.now()}`,
     title: title.trim(),
     description: description.trim(),
     category,
     priority: priority || "Medium",
-    location: location ? JSON.parse(location) : {},
+    location: parsedLocation,
     images: req.cloudinaryImages || [],
     createdBy: req.user._id,
     status: "Pending",
@@ -61,9 +77,23 @@ export const createComplaint = asyncHandler(async (req, res) => {
     ],
   });
 
-  const admins = await User.find({ role: "admin" }).select("_id");
+  /*
+   * Notify all admins
+   */
+  const admins = await User.find({
+    role: "admin",
+  }).select("_id");
 
-  const io = getIO();
+  let io = null;
+
+  try {
+    io = getIO();
+  } catch (error) {
+    console.error(
+      "Socket.IO unavailable:",
+      error.message
+    );
+  }
 
   for (const admin of admins) {
     const notification = await createNotification({
@@ -74,20 +104,14 @@ export const createComplaint = asyncHandler(async (req, res) => {
       type: "complaint",
     });
 
-    io.to(`user:${admin._id.toString()}`).emit(
-      "notification:new",
-      notification
-    );
-  }
-
-  for (const admin of admins) {
-    await createNotification({
-      recipient: admin._id,
-      complaint: complaint._id,
-      title: "New Complaint",
-      message: `A new complaint "${complaint.title}" has been submitted.`,
-      type: "complaint",
-    });
+    if (io) {
+      io.to(
+        `user:${admin._id.toString()}`
+      ).emit(
+        "notification:new",
+        notification
+      );
+    }
   }
 
   return res.status(201).json(
@@ -98,23 +122,6 @@ export const createComplaint = asyncHandler(async (req, res) => {
     )
   );
 });
-
-export const getMyComplaints = asyncHandler(async (req, res) => {
-  const complaints = await Complaint.find({
-    createdBy: req.user._id,
-  })
-    .populate("assignedTo", "name email")
-    .sort({ createdAt: -1 });
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      complaints,
-      "Complaints fetched successfully"
-    )
-  );
-});
-
 export const getComplaintById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -164,7 +171,107 @@ export const getComplaintById = asyncHandler(async (req, res) => {
     )
   );
 });
+export const getMyComplaints = asyncHandler(async (req, res) => {
+  const {
+    status,
+    category,
+    priority,
+    search,
+  } = req.query;
 
+  const page = Math.max(
+    Number(req.query.page) || 1,
+    1
+  );
+
+  const limit = Math.min(
+    Math.max(
+      Number(req.query.limit) || 10,
+      1
+    ),
+    100
+  );
+
+  const query = {
+    createdBy: req.user._id,
+  };
+
+  if (status && status !== "All") {
+    if (!ALLOWED_STATUSES.includes(status)) {
+      throw new ApiError(
+        400,
+        "Invalid complaint status"
+      );
+    }
+
+    query.status = status;
+  }
+
+  if (category && category !== "All categories") {
+    query.category = category;
+  }
+
+  if (priority && priority !== "All priorities") {
+    query.priority = priority;
+  }
+
+  if (search?.trim()) {
+    const searchValue = search.trim();
+
+    query.$or = [
+      {
+        title: {
+          $regex: searchValue,
+          $options: "i",
+        },
+      },
+      {
+        description: {
+          $regex: searchValue,
+          $options: "i",
+        },
+      },
+      {
+        complaintId: {
+          $regex: searchValue,
+          $options: "i",
+        },
+      },
+      {
+        category: {
+          $regex: searchValue,
+          $options: "i",
+        },
+      },
+    ];
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [complaints, total] = await Promise.all([
+    Complaint.find(query)
+      .populate("assignedTo", "name email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+
+    Complaint.countDocuments(query),
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        complaints,
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+      "My complaints fetched successfully"
+    )
+  );
+});
 export const updateComplaint = asyncHandler(async (req, res) => {
   const complaint = await Complaint.findById(
     req.params.id
@@ -495,89 +602,155 @@ export const addReply = asyncHandler(async (req, res) => {
   const { message } = req.body;
 
   if (!message?.trim()) {
-    throw new ApiError(400, "Reply message is required");
+    throw new ApiError(
+      400,
+      "Reply message is required"
+    );
   }
 
-  const complaint = await Complaint.findById(req.params.id);
+  const complaint = await Complaint.findById(
+    req.params.id
+  );
 
   if (!complaint) {
-    throw new ApiError(404, "Complaint not found");
+    throw new ApiError(
+      404,
+      "Complaint not found"
+    );
   }
 
   const isOwner =
-    complaint.createdBy.toString() === req.user._id.toString();
+    complaint.createdBy.toString() ===
+    req.user._id.toString();
 
-  const isAdmin = req.user.role === "admin";
+  const isAdmin =
+    req.user.role === "admin";
 
   if (!isOwner && !isAdmin) {
-    throw new ApiError(403, "Access denied");
+    throw new ApiError(
+      403,
+      "Access denied"
+    );
   }
+  const reply = {
+    sender: isAdmin
+      ? "admin"
+      : "user",
 
-  complaint.replies.push({
-    sender: isAdmin ? "admin" : "user",
+    senderId: req.user._id,
+
+    senderName:
+      req.user.name || 
+      (isAdmin ? "Administrator" : "User"),
+
     message: message.trim(),
-  });
+
+    createdAt: new Date(),
+  };
+
+  complaint.replies.push(reply);
 
   await complaint.save();
 
-  const newReply =
-    complaint.replies[complaint.replies.length - 1];
+  const savedReply =
+    complaint.replies[
+      complaint.replies.length - 1
+    ];
+
+  let io = null;
 
   try {
-    const io = getIO();
-
-    io.to(`complaint:${complaint._id}`).emit(
-      "complaint:reply",
-      {
-        complaintId: complaint._id.toString(),
-        reply: newReply,
-      }
-    );
+    io = getIO();
   } catch (error) {
-    console.error("Socket reply error:", error.message);
+    console.error(
+      "Socket.IO error:",
+      error.message
+    );
   }
 
-  const recipient = isAdmin
-    ? complaint.createdBy
-    : complaint.assignedTo;
+  if (io) {
+    io.to(
+      `complaint:${complaint._id.toString()}`
+    ).emit(
+      "complaint:reply",
+      {
+        complaintId:
+          complaint._id.toString(),
 
-  if (recipient) {
-    const notification = await createNotification({
-      recipient,
-      complaint: complaint._id,
-      title: isAdmin
-        ? "New Reply"
-        : "New Complaint Reply",
-      message: isAdmin
-        ? "An administrator replied to your complaint."
-        : "The complainant replied to your complaint.",
-      type: "reply",
-    });
+        reply: savedReply,
+      }
+    );
+  }
 
-    try {
-      const io = getIO();
+  if (!isAdmin) {
+    const admins = await User.find({
+      role: "admin",
+    }).select("_id");
 
-      io.to(`user:${recipient.toString()}`).emit(
+    for (const admin of admins) {
+      const notification =
+        await createNotification({
+          recipient: admin._id,
+
+          complaint:
+            complaint._id,
+
+          title: "New Reply",
+
+          message:
+            `${req.user.name || "A user"} replied to ` +
+            `"${complaint.title}".`,
+
+          type: "reply",
+        });
+
+
+      if (io) {
+        io.to(
+          `user:${admin._id.toString()}`
+        ).emit(
+          "notification:new",
+          notification
+        );
+      }
+    }
+  }
+  if (isAdmin) {
+    const notification =
+      await createNotification({
+        recipient:
+          complaint.createdBy,
+
+        complaint:
+          complaint._id,
+
+        title: "Admin Replied",
+
+        message:
+          `Administrator replied to ` +
+          `"${complaint.title}".`,
+
+        type: "reply",
+      });
+
+    if (io) {
+      io.to(
+        `user:${complaint.createdBy.toString()}`
+      ).emit(
         "notification:new",
         notification
-      );
-    } catch (error) {
-      console.error(
-        "Socket notification error:",
-        error.message
       );
     }
   }
 
-  return res.status(200).json(
+  return res.status(201).json(
     new ApiResponse(
-      200,
-      complaint,
-      "Reply added successfully"
+      201,
+      savedReply,
+      "Reply sent successfully"
     )
   );
 });
-
 export const getMyRecentActivity = asyncHandler(async (req, res) => {
   const complaints = await Complaint.find({
     createdBy: req.user._id,

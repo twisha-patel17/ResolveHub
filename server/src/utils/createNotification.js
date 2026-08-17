@@ -16,6 +16,8 @@ const createNotification = async ({
     type,
   });
 
+  await notification.populate("complaint");
+
   try {
     const io = getIO();
 

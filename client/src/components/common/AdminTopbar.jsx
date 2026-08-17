@@ -42,89 +42,166 @@ const AdminTopbar = () => {
     fetchNotifications();
   }, []);
 
+  // ==========================================
+  // SOCKET.IO - ADMIN NOTIFICATIONS
+  // ==========================================
+
   useEffect(() => {
-  const socket = getSocket();
+    const socket = getSocket();
 
-  if (!socket) {
-    console.error("Socket instance not found");
-    return;
-  }
+    if (!socket) {
+      console.error(
+        "❌ Socket instance not found"
+      );
+      return;
+    }
 
-  // Get logged-in user/admin
-  const storedUser = localStorage.getItem("user");
+    // ------------------------------------------
+    // GET LOGGED-IN ADMIN
+    // ------------------------------------------
 
-  if (!storedUser) {
-    console.error("No logged-in user found");
-    return;
-  }
+    const storedUser =
+      localStorage.getItem("user");
 
-  let user;
+    if (!storedUser) {
+      console.error(
+        "❌ No logged-in user found in localStorage"
+      );
+      return;
+    }
 
-  try {
-    user = JSON.parse(storedUser);
-  } catch (error) {
-    console.error("Invalid user data in localStorage");
-    return;
-  }
+    let user;
 
-  if (!user?._id) {
-    console.error("Admin ID not found");
-    return;
-  }
+    try {
+      user = JSON.parse(storedUser);
+    } catch (error) {
+      console.error(
+        "❌ Invalid user data in localStorage"
+      );
+      return;
+    }
 
-  // Connect socket
-  if (!socket.connected) {
-    socket.connect();
-  }
+    const adminId = user?._id;
 
-  // Join admin's personal notification room
-  socket.emit("join-user", user._id);
+    if (!adminId) {
+      console.error(
+        "❌ Admin ID not found in logged-in user"
+      );
+      return;
+    }
 
-  console.log(
-    `👤 Admin joined room: user:${user._id}`
-  );
+    // ------------------------------------------
+    // JOIN ADMIN PERSONAL ROOM
+    // ------------------------------------------
 
-  // Listen for new notifications
-  const handleNewNotification = (notification) => {
-    console.log(
-      "🔔 New admin notification:",
-      notification
-    );
-
-    setNotifications((prev) => {
-      const exists = prev.some(
-        (item) =>
-          item._id === notification._id
+    const joinAdminRoom = () => {
+      console.log(
+        "🔌 Admin socket connected:",
+        socket.id
       );
 
-      if (exists) {
-        return prev;
-      }
+      socket.emit(
+        "join-user",
+        adminId
+      );
 
-      return [
-        notification,
-        ...prev,
-      ];
-    });
-  };
+      console.log(
+        `👤 Admin joined room: user:${adminId}`
+      );
+    };
 
-  socket.on(
-    "new-notification",
-    handleNewNotification
-  );
+    // ------------------------------------------
+    // RECEIVE NEW NOTIFICATION
+    // ------------------------------------------
 
-  return () => {
-    socket.off(
+    const handleNewNotification = (
+      notification
+    ) => {
+      console.log(
+        "🔔 NEW ADMIN NOTIFICATION:",
+        notification
+      );
+
+      setNotifications((prev) => {
+        const exists = prev.some(
+          (item) =>
+            item._id === notification._id
+        );
+
+        if (exists) {
+          console.log(
+            "⚠️ Duplicate notification ignored"
+          );
+
+          return prev;
+        }
+
+        return [
+          notification,
+          ...prev,
+        ];
+      });
+    };
+
+    // ------------------------------------------
+    // SOCKET EVENTS
+    // ------------------------------------------
+
+    socket.on(
+      "connect",
+      joinAdminRoom
+    );
+
+    socket.on(
       "new-notification",
       handleNewNotification
     );
-  };
-}, []);
+
+    // ------------------------------------------
+    // CONNECT SOCKET
+    // ------------------------------------------
+
+    if (!socket.connected) {
+      console.log(
+        "🔌 Connecting admin socket..."
+      );
+
+      socket.connect();
+    } else {
+      // Socket is already connected
+      // so join the room immediately.
+      joinAdminRoom();
+    }
+
+    // ------------------------------------------
+    // CLEANUP
+    // ------------------------------------------
+
+    return () => {
+      socket.off(
+        "connect",
+        joinAdminRoom
+      );
+
+      socket.off(
+        "new-notification",
+        handleNewNotification
+      );
+    };
+  }, []);
+
+  // ==========================================
+  // UNREAD COUNT
+  // ==========================================
+
   const unreadCount = notifications.filter(
     (notification) =>
       !notification.isRead
   ).length;
 
+  // ==========================================
+  // MARK SINGLE NOTIFICATION AS READ
+  // ==========================================
 
   const markAsRead = async (
     notification
@@ -147,6 +224,7 @@ const AdminTopbar = () => {
         );
       }
 
+      // Open related complaint
       if (notification.complaint?._id) {
         navigate(
           `/complaints/${notification.complaint._id}`
@@ -201,7 +279,9 @@ const AdminTopbar = () => {
   return (
     <header className="flex h-20 items-center justify-between border-b border-slate-200 bg-white px-6 lg:px-8">
 
-      {/* LEFT */}
+      {/* =====================================
+          LEFT
+      ====================================== */}
 
       <div>
         <p className="text-sm font-medium text-slate-500">
@@ -213,7 +293,9 @@ const AdminTopbar = () => {
         </h2>
       </div>
 
-      {/* RIGHT */}
+      {/* =====================================
+          RIGHT
+      ====================================== */}
 
       <div className="flex items-center gap-4">
 
@@ -430,7 +512,9 @@ const AdminTopbar = () => {
 
         <div className="hidden h-8 w-px bg-slate-200 sm:block" />
 
-        {/* ADMIN PROFILE */}
+        {/* =====================================
+            ADMIN PROFILE
+        ====================================== */}
 
         <button
           type="button"

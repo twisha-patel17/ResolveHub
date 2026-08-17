@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
-
-import socket from "../../sockets/socket";
-import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+
+import { useAuth } from "../../context/AuthContext";
+import socket from "../../sockets/socket";
 
 import {
   useQuery,
@@ -22,20 +22,19 @@ import {
 } from "@tanstack/react-query";
 
 import toast from "react-hot-toast";
-
 import api from "../../lib/axios";
 
 const ComplaintDetails = ({ complaintId }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [reply, setReply] = useState("");
-
   const { user } = useAuth();
+
+  const [reply, setReply] = useState("");
 
   /*
   |--------------------------------------------------------------------------
-  | SOCKET CONNECTION
+  | SOCKET.IO
   |--------------------------------------------------------------------------
   */
 
@@ -44,72 +43,51 @@ const ComplaintDetails = ({ complaintId }) => {
       return;
     }
 
-    const joinRoom = () => {
-      console.log("🔌 Socket connected:", socket.id);
+    const complaintRoom = complaintId.toString();
 
-      socket.emit("join-user", user._id);
-
-      socket.emit(
-        "join-complaint",
-        complaintId
+    /*
+     * Join the user room and complaint room.
+     */
+    const joinRooms = () => {
+      console.log(
+        `👤 Joining user room: user:${user._id}`
       );
 
       console.log(
-        `💬 Joined complaint room: complaint:${complaintId}`
+        `💬 Joining complaint room: complaint:${complaintRoom}`
+      );
+
+      socket.emit("join-user", user._id);
+      socket.emit(
+        "join-complaint",
+        complaintRoom
       );
     };
 
     /*
-     * If already connected, join immediately.
-     * Otherwise connect first.
+     * Receive a new reply from Socket.IO.
+     *
+     * IMPORTANT:
+     * We only ADD the reply here.
+     *
+     * We do NOT add the reply again inside
+     * replyMutation.onSuccess.
      */
-    if (socket.connected) {
-      joinRoom();
-    } else {
-      socket.connect();
-    }
-
-    socket.on("connect", joinRoom);
-
-    /*
-    |--------------------------------------------------------------------------
-    | NEW REPLY
-    |--------------------------------------------------------------------------
-    */
-
     const handleNewReply = (data) => {
       console.log(
-        "💬 complaint:reply received:",
+        "📨 Socket received complaint reply:",
         data
       );
 
-      /*
-       * Backend might send:
-       *
-       * {
-       *   complaintId,
-       *   reply
-       * }
-       *
-       * or:
-       *
-       * {
-       *   complaintId,
-       *   data: reply
-       * }
-       *
-       * or directly the reply.
-       */
-
       const incomingComplaintId =
-        data?.complaintId ||
-        data?.complaint?._id ||
-        data?.complaint?._id?.toString();
+        data?.complaintId?.toString();
 
+      /*
+       * Ignore replies belonging to another complaint.
+       */
       if (
         incomingComplaintId &&
-        incomingComplaintId.toString() !==
-          complaintId.toString()
+        incomingComplaintId !== complaintRoom
       ) {
         return;
       }
@@ -117,33 +95,25 @@ const ComplaintDetails = ({ complaintId }) => {
       const incomingReply =
         data?.reply ||
         data?.data ||
-        data?.message;
+        data;
 
       /*
-       * If backend sends just a string,
-       * don't try to render it as an object.
+       * Invalid socket payload.
        */
-      if (
-        !incomingReply ||
-        typeof incomingReply !== "object"
-      ) {
+      if (!incomingReply?._id) {
         console.warn(
-          "⚠️ Invalid reply payload:",
+          "⚠️ Invalid reply received:",
           data
         );
-
-        queryClient.invalidateQueries({
-          queryKey: [
-            "complaint",
-            complaintId,
-          ],
-        });
 
         return;
       }
 
+      const incomingReplyId =
+        incomingReply._id.toString();
+
       queryClient.setQueryData(
-        ["complaint", complaintId],
+        ["complaint", complaintRoom],
         (oldComplaint) => {
           if (!oldComplaint) {
             return oldComplaint;
@@ -152,27 +122,35 @@ const ComplaintDetails = ({ complaintId }) => {
           const currentReplies =
             oldComplaint.replies || [];
 
-          const incomingId =
-            incomingReply._id?.toString();
-
           /*
-           * Prevent duplicate replies.
+           * VERY IMPORTANT:
+           *
+           * Prevent the same reply from being
+           * inserted more than once.
            */
           const alreadyExists =
-            incomingId &&
             currentReplies.some(
-              (item) =>
-                item._id?.toString() ===
-                incomingId
+              (existingReply) =>
+                existingReply?._id?.toString() ===
+                incomingReplyId
             );
 
           if (alreadyExists) {
+            console.log(
+              "⚠️ Duplicate socket reply ignored:",
+              incomingReplyId
+            );
+
             return oldComplaint;
           }
 
+          console.log(
+            "✅ Adding new socket reply:",
+            incomingReplyId
+          );
+
           return {
             ...oldComplaint,
-
             replies: [
               ...currentReplies,
               incomingReply,
@@ -182,17 +160,9 @@ const ComplaintDetails = ({ complaintId }) => {
       );
     };
 
-    socket.on(
-      "complaint:reply",
-      handleNewReply
-    );
-
     /*
-    |--------------------------------------------------------------------------
-    | SOCKET ERROR
-    |--------------------------------------------------------------------------
-    */
-
+     * Socket connection error.
+     */
     const handleConnectError = (error) => {
       console.error(
         "❌ Socket connection error:",
@@ -200,19 +170,65 @@ const ComplaintDetails = ({ complaintId }) => {
       );
     };
 
+    /*
+     * Socket disconnected.
+     */
+    const handleDisconnect = (reason) => {
+      console.log(
+        "🔌 Socket disconnected:",
+        reason
+      );
+    };
+
+    /*
+     * Register listeners ONCE.
+     */
+    socket.on(
+      "complaint:reply",
+      handleNewReply
+    );
+
     socket.on(
       "connect_error",
       handleConnectError
     );
 
-    /*
-    |--------------------------------------------------------------------------
-    | CLEANUP
-    |--------------------------------------------------------------------------
-    */
+    socket.on(
+      "disconnect",
+      handleDisconnect
+    );
 
+    /*
+     * Connect / join rooms.
+     */
+    if (socket.connected) {
+      joinRooms();
+    } else {
+      socket.connect();
+    }
+
+    /*
+     * When socket connects/reconnects,
+     * join rooms again.
+     */
+    socket.on("connect", joinRooms);
+
+    /*
+     * Cleanup.
+     *
+     * This is VERY important because otherwise
+     * every render/navigation can create another
+     * socket listener.
+     */
     return () => {
-      socket.off("connect", joinRoom);
+      console.log(
+        `🧹 Cleaning socket listeners for complaint:${complaintRoom}`
+      );
+
+      socket.off(
+        "connect",
+        joinRooms
+      );
 
       socket.off(
         "complaint:reply",
@@ -224,16 +240,17 @@ const ComplaintDetails = ({ complaintId }) => {
         handleConnectError
       );
 
+      socket.off(
+        "disconnect",
+        handleDisconnect
+      );
+
       if (socket.connected) {
         socket.emit(
           "leave-complaint",
-          complaintId
+          complaintRoom
         );
       }
-
-      console.log(
-        `💬 Left complaint room: complaint:${complaintId}`
-      );
     };
   }, [
     user?._id,
@@ -315,7 +332,7 @@ const ComplaintDetails = ({ complaintId }) => {
 
   /*
   |--------------------------------------------------------------------------
-  | REPLY
+  | SEND REPLY
   |--------------------------------------------------------------------------
   */
 
@@ -328,92 +345,35 @@ const ComplaintDetails = ({ complaintId }) => {
         }
       );
 
-      return response.data.data;
+      return response.data;
     },
 
-    onSuccess: (result) => {
+    onSuccess: () => {
       /*
        * IMPORTANT:
        *
-       * Do not blindly replace the complaint.
+       * DO NOT manually append the reply here.
        *
-       * Depending on your backend, result may be:
+       * The server emits the Socket.IO event.
+       * handleNewReply() will add it to the cache.
        *
-       * 1. complete complaint
-       * 2. newly created reply
+       * This prevents:
        *
-       * So we handle both.
+       * API response
+       *      +
+       * Socket.IO response
+       *
+       * from rendering the same reply twice.
        */
 
-      queryClient.setQueryData(
-        ["complaint", complaintId],
-        (oldComplaint) => {
-          if (!oldComplaint) {
-            return oldComplaint;
-          }
-
-          /*
-           * If backend returned complete complaint
-           */
-          if (
-            result?.replies &&
-            Array.isArray(result.replies)
-          ) {
-            return result;
-          }
-
-          /*
-           * Otherwise assume result is the
-           * newly created reply.
-           */
-
-          const newReply =
-            result?.reply || result;
-
-          if (
-            !newReply ||
-            typeof newReply !== "object"
-          ) {
-            return oldComplaint;
-          }
-
-          const currentReplies =
-            oldComplaint.replies || [];
-
-          const newReplyId =
-            newReply._id?.toString();
-
-          const exists =
-            newReplyId &&
-            currentReplies.some(
-              (item) =>
-                item._id?.toString() ===
-                newReplyId
-            );
-
-          if (exists) {
-            return oldComplaint;
-          }
-
-          return {
-            ...oldComplaint,
-
-            replies: [
-              ...currentReplies,
-              newReply,
-            ],
-          };
-        }
-      );
+      setReply("");
 
       /*
-       * Refresh complaint list.
+       * Refresh complaint list only.
        */
       queryClient.invalidateQueries({
         queryKey: ["complaints"],
       });
-
-      setReply("");
 
       toast.success(
         "Reply sent successfully"
@@ -515,8 +475,6 @@ const ComplaintDetails = ({ complaintId }) => {
         return "bg-orange-100 text-orange-700";
 
       case "Urgent":
-        return "bg-red-100 text-red-700";
-
       case "Critical":
         return "bg-red-100 text-red-700";
 
@@ -623,6 +581,12 @@ const ComplaintDetails = ({ complaintId }) => {
   const assignedAdmin =
     complaint.assignedTo;
 
+  /*
+  |--------------------------------------------------------------------------
+  | UI
+  |--------------------------------------------------------------------------
+  */
+
   return (
     <div className="space-y-6">
 
@@ -681,7 +645,6 @@ const ComplaintDetails = ({ complaintId }) => {
                 <span className="mr-1">
                   ●
                 </span>
-
                 Live
               </span>
 
@@ -742,7 +705,6 @@ const ComplaintDetails = ({ complaintId }) => {
             <div className="mt-6">
 
               <div className="flex items-center gap-2">
-
                 <ImageIcon
                   size={18}
                   className="text-slate-500"
@@ -751,7 +713,6 @@ const ComplaintDetails = ({ complaintId }) => {
                 <h2 className="text-sm font-bold text-slate-900">
                   Evidence
                 </h2>
-
               </div>
 
               {complaint.images?.length > 0 ? (
@@ -814,9 +775,7 @@ const ComplaintDetails = ({ complaintId }) => {
 
           </div>
 
-          {/* =====================================================
-              TIMELINE
-          ===================================================== */}
+          {/* TIMELINE */}
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
 
@@ -913,9 +872,7 @@ const ComplaintDetails = ({ complaintId }) => {
 
           </div>
 
-          {/* =====================================================
-              CONVERSATION
-          ===================================================== */}
+          {/* CONVERSATION */}
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
 
@@ -936,11 +893,8 @@ const ComplaintDetails = ({ complaintId }) => {
 
               {assignedAdmin && (
                 <div className="flex items-center gap-2 text-sm text-slate-400">
-
                   <span className="h-2 w-2 rounded-full bg-green-500" />
-
                   {assignedAdmin.name} is assigned
-
                 </div>
               )}
 
@@ -954,8 +908,7 @@ const ComplaintDetails = ({ complaintId }) => {
                   (item, index) => {
 
                     const isUser =
-                      item.sender ===
-                      "user";
+                      item.sender === "user";
 
                     return (
                       <div
@@ -1187,11 +1140,8 @@ const ComplaintDetails = ({ complaintId }) => {
                   </p>
 
                   <div className="mt-1 flex items-center gap-1.5 text-xs text-green-600">
-
                     <span className="h-2 w-2 rounded-full bg-green-500" />
-
                     Assigned
-
                   </div>
 
                 </div>
