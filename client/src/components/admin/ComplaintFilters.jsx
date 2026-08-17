@@ -81,7 +81,7 @@ const ComplaintFilters = ({
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
           <option value="High">High</option>
-          <option value="Critical">Critical</option>
+          <option value="Urgent">Urgent</option>
         </select>
 
         <select
@@ -90,11 +90,15 @@ const ComplaintFilters = ({
           className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
         >
           <option value="All">All Categories</option>
-          <option value="Water">Water</option>
+          <option value="Water Supply">Water Supply</option>
           <option value="Electricity">Electricity</option>
-          <option value="Roads">Roads</option>
-          <option value="Sanitation">Sanitation</option>
+          <option value="Road">Road</option>
+          <option value="Garbage">Garbage</option>
+          <option value="Drainage">Drainage</option>
           <option value="Healthcare">Healthcare</option>
+          <option value="Street Light">Street Light</option>
+          <option value="Traffic">Traffic</option>
+          <option value="Public Property">Public Property</option>
           <option value="Other">Other</option>
         </select>
       </div>
