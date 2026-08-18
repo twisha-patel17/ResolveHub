@@ -16,10 +16,7 @@ const DEFAULT_ANALYTICS = {
 };
 
 const AdminAnalyticsPage = () => {
-  const [analytics, setAnalytics] = useState(
-    DEFAULT_ANALYTICS
-  );
-
+  const [analytics, setAnalytics] = useState(DEFAULT_ANALYTICS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -36,12 +33,13 @@ const AdminAnalyticsPage = () => {
         const data = response.data?.data;
 
         if (!data) {
-          throw new Error(
-            "Invalid analytics response"
-          );
+          throw new Error("Invalid analytics response");
         }
 
-        setAnalytics(data);
+        setAnalytics({
+          ...DEFAULT_ANALYTICS,
+          ...data,
+        });
       } catch (error) {
         console.error(
           "Failed to fetch admin analytics:",
@@ -64,7 +62,6 @@ const AdminAnalyticsPage = () => {
   return (
     <AdminLayout>
       <div className="mx-auto w-full max-w-7xl space-y-6 sm:space-y-8">
-
         <div>
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl lg:text-4xl">
             Analytics
@@ -82,20 +79,10 @@ const AdminAnalyticsPage = () => {
           </div>
         )}
 
-        {loading ? (
-          <div className="rounded-2xl border border-slate-200 bg-white py-20 text-center shadow-sm">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-orange-500" />
-
-            <p className="mt-4 text-sm font-medium text-slate-500">
-              Loading analytics...
-            </p>
-          </div>
-        ) : (
-          <AdminAnalyticsCharts
-            analytics={analytics}
-          />
-        )}
-
+        <AdminAnalyticsCharts
+          analytics={analytics}
+          loading={loading}
+        />
       </div>
     </AdminLayout>
   );

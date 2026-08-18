@@ -11,49 +11,68 @@ import DashboardHeader from "../../components/dashboard/DashboardHeader";
 import StatCard from "../../components/dashboard/StatCard";
 import RecentComplaints from "../../components/dashboard/RecentComplaints";
 import ActivityFeed from "../../components/dashboard/ActivityFeed";
+import SkeletonCard from "../../components/ui/SkeletonCard";
 
 import api from "../../lib/axios";
 
 const DashboardPage = () => {
   const [complaints, setComplaints] = useState([]);
   const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  const [complaintsLoading, setComplaintsLoading] = useState(true);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchComplaints = async () => {
       try {
-        const [complaintsResponse, activityResponse] =
-          await Promise.all([
-            api.get("/complaints/my"),
-            api.get("/complaints/activity/recent"),
-          ]);
-const complaintsData =
-  complaintsResponse.data.data;
+        setComplaintsLoading(true);
 
-const userComplaints = Array.isArray(complaintsData)
-  ? complaintsData
-  : complaintsData?.complaints || [];
+        const response = await api.get("/complaints/my");
 
-const activitiesData =
-  activityResponse.data.data;
+        const complaintsData = response.data.data;
 
-const userActivities = Array.isArray(activitiesData)
-  ? activitiesData
-  : [];
+        const userComplaints = Array.isArray(complaintsData)
+          ? complaintsData
+          : complaintsData?.complaints || [];
 
-setComplaints(userComplaints);
-setActivities(userActivities.slice(0, 3));
+        setComplaints(userComplaints);
       } catch (error) {
         console.error(
-          "Failed to fetch dashboard data:",
+          "Failed to fetch complaints:",
           error
         );
       } finally {
-        setLoading(false);
+        setComplaintsLoading(false);
       }
     };
 
-    fetchDashboardData();
+    const fetchActivities = async () => {
+      try {
+        setActivitiesLoading(true);
+
+        const response = await api.get(
+          "/complaints/activity/recent"
+        );
+
+        const activitiesData = response.data.data;
+
+        const userActivities = Array.isArray(activitiesData)
+          ? activitiesData
+          : [];
+
+        setActivities(userActivities.slice(0, 3));
+      } catch (error) {
+        console.error(
+          "Failed to fetch activities:",
+          error
+        );
+      } finally {
+        setActivitiesLoading(false);
+      }
+    };
+
+    fetchComplaints();
+    fetchActivities();
   }, []);
 
   const stats = {
@@ -76,63 +95,78 @@ setActivities(userActivities.slice(0, 3));
     ).length,
   };
 
-  const recentComplaints = complaints.slice(0, 3);
-
   return (
     <DashboardLayout>
       <div className="space-y-8">
 
         <DashboardHeader />
+
+        {/* Stats */}
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          {complaintsLoading ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : (
+            <>
+              <StatCard
+                title="Total Complaints"
+                value={stats.total}
+                subtitle="All complaints"
+                icon={FileText}
+                iconBg="bg-orange-100"
+                iconColor="text-orange-500"
+                accentColor="bg-orange-500"
+              />
 
-          <StatCard
-            title="Total Complaints"
-            value={loading ? "..." : stats.total}
-            subtitle="All complaints"
-            icon={FileText}
-            iconBg="bg-orange-100"
-            iconColor="text-orange-500"
-          />
+              <StatCard
+                title="Pending"
+                value={stats.pending}
+                subtitle="Awaiting review"
+                icon={Clock3}
+                iconBg="bg-yellow-100"
+                iconColor="text-yellow-600"
+                accentColor="bg-yellow-500"
+              />
 
-          <StatCard
-            title="Pending"
-            value={loading ? "..." : stats.pending}
-            subtitle="Awaiting review"
-            icon={Clock3}
-            iconBg="bg-yellow-100"
-            iconColor="text-yellow-600"
-          />
+              <StatCard
+                title="In Progress"
+                value={stats.inProgress}
+                subtitle="Currently active"
+                icon={Activity}
+                iconBg="bg-blue-100"
+                iconColor="text-blue-600"
+                accentColor="bg-blue-500"
+              />
 
-          <StatCard
-            title="In Progress"
-            value={loading ? "..." : stats.inProgress}
-            subtitle="Currently active"
-            icon={Activity}
-            iconBg="bg-blue-100"
-            iconColor="text-blue-600"
-          />
-
-          <StatCard
-            title="Resolved"
-            value={loading ? "..." : stats.resolved}
-            subtitle="Completed"
-            icon={CircleCheckBig}
-            iconBg="bg-green-100"
-            iconColor="text-green-600"
-          />
-
+              <StatCard
+                title="Resolved"
+                value={stats.resolved}
+                subtitle="Completed"
+                icon={CircleCheckBig}
+                iconBg="bg-green-100"
+                iconColor="text-green-600"
+                accentColor="bg-green-500"
+              />
+            </>
+          )}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
 
           <div className="lg:col-span-2">
             <RecentComplaints
-              complaints={recentComplaints}
+              complaints={complaints}
+              loading={complaintsLoading}
             />
           </div>
 
           <ActivityFeed
             activities={activities}
+            loading={activitiesLoading}
           />
 
         </div>

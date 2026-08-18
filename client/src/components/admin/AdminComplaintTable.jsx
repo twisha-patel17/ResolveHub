@@ -1,9 +1,11 @@
 import {
   Eye,
-  LoaderCircle,
   FileText,
   User,
 } from "lucide-react";
+
+import EmptyState from "../../components/ui/EmptyState";
+import SkeletonTable from "../../components/ui/SkeletonTable";
 
 const AdminComplaintTable = ({
   complaints = [],
@@ -23,7 +25,11 @@ const AdminComplaintTable = ({
       return "bg-green-100 text-green-700";
     }
 
-    return "bg-red-100 text-red-700";
+    if (status === "Rejected") {
+      return "bg-red-100 text-red-700";
+    }
+
+    return "bg-slate-100 text-slate-600";
   };
 
   const getPriorityStyle = (priority) => {
@@ -47,6 +53,7 @@ const AdminComplaintTable = ({
 
   return (
     <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
       <div className="border-b border-slate-100 px-4 py-4 sm:px-6 sm:py-5">
 
         <div className="flex items-center justify-between gap-4">
@@ -65,6 +72,7 @@ const AdminComplaintTable = ({
 
           <span className="shrink-0 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600 sm:px-3">
             {complaints.length}
+
             <span className="hidden sm:inline">
               {" "}
               complaints
@@ -76,51 +84,28 @@ const AdminComplaintTable = ({
       </div>
 
       {loading ? (
-        <div className="flex min-h-70 flex-col items-center justify-center px-6 text-center">
-
-          <LoaderCircle
-            size={24}
-            className="animate-spin text-orange-500"
-          />
-
-          <p className="mt-3 text-sm font-medium text-slate-600">
-            Loading complaints...
-          </p>
-
-          <p className="mt-1 text-xs text-slate-400">
-            Please wait while we fetch the complaints.
-          </p>
-
-        </div>
+        <SkeletonTable />
       ) : complaints.length === 0 ? (
 
-        <div className="flex min-h-70 flex-col items-center justify-center px-6 text-center">
+        <div className="p-4 sm:p-6">
 
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-            <FileText
-              size={25}
-              className="text-slate-400"
-            />
-          </div>
-
-          <h3 className="mt-4 text-sm font-semibold text-slate-800">
-            No complaints found
-          </h3>
-
-          <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500 sm:text-sm">
-            Try changing your search or filter options.
-          </p>
+          <EmptyState
+            icon={FileText}
+            title="No complaints found"
+            description="Try changing your search or filter options."
+          />
 
         </div>
+
       ) : (
 
         <>
-        
           <div className="hidden overflow-x-auto lg:block">
 
             <table className="w-full">
 
               <thead>
+
                 <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
 
                   <th className="whitespace-nowrap px-5 py-4">
@@ -148,15 +133,18 @@ const AdminComplaintTable = ({
                   </th>
 
                 </tr>
+
               </thead>
 
               <tbody>
 
                 {complaints.map((complaint) => (
+
                   <tr
                     key={complaint._id}
                     className="border-b border-slate-100 transition last:border-0 hover:bg-slate-50"
                   >
+
                     <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-600">
                       {complaint.complaintId}
                     </td>
@@ -209,6 +197,7 @@ const AdminComplaintTable = ({
                       </span>
 
                     </td>
+
                     <td className="whitespace-nowrap px-5 py-4 text-right">
 
                       <button
@@ -241,6 +230,7 @@ const AdminComplaintTable = ({
                     </td>
 
                   </tr>
+
                 ))}
 
               </tbody>
@@ -248,13 +238,16 @@ const AdminComplaintTable = ({
             </table>
 
           </div>
+
           <div className="divide-y divide-slate-100 lg:hidden">
 
             {complaints.map((complaint) => (
+
               <div
                 key={complaint._id}
                 className="p-4 transition hover:bg-slate-50 sm:p-5"
               >
+
                 <div className="flex items-start justify-between gap-3">
 
                   <div className="min-w-0 flex-1">
@@ -324,9 +317,6 @@ const AdminComplaintTable = ({
 
                 </div>
 
-
-                {/* View */}
-
                 <button
                   type="button"
                   onClick={() =>
@@ -359,10 +349,12 @@ const AdminComplaintTable = ({
                 </button>
 
               </div>
+
             ))}
 
           </div>
         </>
+
       )}
 
     </div>

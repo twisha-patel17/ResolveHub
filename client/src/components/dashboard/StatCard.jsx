@@ -11,26 +11,23 @@ const StatCard = ({
 }) => {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-      {/* Accent */}
+      
       <div
         className={`absolute left-0 top-0 h-full w-1 ${accentColor}`}
       />
 
       <div className="flex items-start justify-between">
-        {/* Icon */}
         <div
           className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconBg}`}
         >
           <Icon size={21} className={iconColor} />
         </div>
 
-        {/* Small arrow */}
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 transition group-hover:bg-slate-100">
           <ArrowUpRight size={16} />
         </div>
       </div>
 
-      {/* Content */}
       <div className="mt-5">
         <p className="text-sm font-medium text-slate-500">
           {title}

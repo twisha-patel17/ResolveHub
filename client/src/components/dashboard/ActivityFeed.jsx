@@ -5,67 +5,63 @@ import {
   Bell,
 } from "lucide-react";
 
-const ActivityFeed = ({ activities = [] }) => {
+import SkeletonTable from "../../components/ui/SkeletonTable";
+
+const ActivityFeed = ({
+  activities = [],
+  loading = false,
+}) => {
   const getIcon = (type) => {
-    switch (type) {
-      case "reply":
-        return (
-          <MessageSquare
-            size={18}
-            className="text-blue-600"
-          />
-        );
+    const icons = {
+      reply: (
+        <MessageSquare
+          size={18}
+          className="text-blue-600"
+        />
+      ),
+      resolved: (
+        <CheckCircle2
+          size={18}
+          className="text-green-600"
+        />
+      ),
+      pending: (
+        <Clock3
+          size={18}
+          className="text-yellow-600"
+        />
+      ),
+    };
 
-      case "resolved":
-        return (
-          <CheckCircle2
-            size={18}
-            className="text-green-600"
-          />
-        );
-
-      case "pending":
-        return (
-          <Clock3
-            size={18}
-            className="text-yellow-600"
-          />
-        );
-
-      default:
-        return (
-          <Bell
-            size={18}
-            className="text-orange-500"
-          />
-        );
-    }
+    return (
+      icons[type] || (
+        <Bell
+          size={18}
+          className="text-orange-500"
+        />
+      )
+    );
   };
 
   const getIconBg = (type) => {
-    switch (type) {
-      case "reply":
-        return "bg-blue-100";
+    const backgrounds = {
+      reply: "bg-blue-100",
+      resolved: "bg-green-100",
+      pending: "bg-yellow-100",
+    };
 
-      case "resolved":
-        return "bg-green-100";
-
-      case "pending":
-        return "bg-yellow-100";
-
-      default:
-        return "bg-orange-100";
-    }
+    return backgrounds[type] || "bg-orange-100";
   };
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
       <h2 className="mb-6 text-xl font-bold text-slate-900">
         Recent Activity
       </h2>
 
-      {activities.length === 0 ? (
+      {loading ? (
+        <SkeletonTable />
+      ) : activities.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-center">
           <div className="mb-3 rounded-full bg-slate-100 p-4">
             <Bell
@@ -84,10 +80,9 @@ const ActivityFeed = ({ activities = [] }) => {
         </div>
       ) : (
         <div className="space-y-5">
-
-          {activities.map((activity) => (
+          {activities.map((activity, index) => (
             <div
-              key={activity.id}
+              key={activity.id || index}
               className="flex items-start gap-4"
             >
               <div
@@ -99,7 +94,6 @@ const ActivityFeed = ({ activities = [] }) => {
               </div>
 
               <div className="min-w-0 flex-1">
-
                 <p className="font-semibold text-slate-800">
                   {activity.title}
                 </p>
@@ -111,14 +105,11 @@ const ActivityFeed = ({ activities = [] }) => {
                 <span className="mt-2 block text-xs text-slate-400">
                   {activity.time}
                 </span>
-
               </div>
             </div>
           ))}
-
         </div>
       )}
-
     </div>
   );
 };
