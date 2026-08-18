@@ -69,11 +69,14 @@ const ComplaintDetailsModal = ({
       return "—";
     }
 
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+    return new Date(date).toLocaleDateString(
+      "en-IN",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }
+    );
   };
 
   const formatDateTime = (date) => {
@@ -81,13 +84,16 @@ const ComplaintDetailsModal = ({
       return "—";
     }
 
-    return new Date(date).toLocaleString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    return new Date(date).toLocaleString(
+      "en-IN",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    );
   };
 
   const handleReply = () => {
@@ -97,7 +103,14 @@ const ComplaintDetailsModal = ({
       return;
     }
 
+    /*
+     * Parent handles the API request.
+     *
+     * We clear ONLY the input.
+     * The modal itself stays mounted.
+     */
     onReply(message);
+
     setReply("");
   };
 
@@ -121,16 +134,38 @@ const ComplaintDetailsModal = ({
       <button
         type="button"
         disabled={updating}
-        onClick={() => onStatusChange(status)}
-        className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition ${style} disabled:cursor-not-allowed disabled:opacity-50`}
+        onClick={() =>
+          onStatusChange(status)
+        }
+        className={`
+          flex
+          min-h-11
+          flex-1
+          items-center
+          justify-center
+          rounded-xl
+          px-4
+          py-2.5
+          text-sm
+          font-semibold
+          text-white
+          transition
+          sm:flex-none
+          ${style}
+          disabled:cursor-not-allowed
+          disabled:opacity-50
+        `}
       >
-        {updating ? "Updating..." : text}
+        {updating
+          ? "Updating..."
+          : text}
       </button>
     );
   };
 
   const createdByName =
-    complaint.createdBy?.name || "Unknown";
+    complaint.createdBy?.name ||
+    "Unknown";
 
   const assignedAdmin =
     complaint.assignedTo;
@@ -140,36 +175,78 @@ const ComplaintDetailsModal = ({
     complaint.location?.city ||
     "Location not provided";
 
+  /*
+   * VERY IMPORTANT
+   *
+   * Never directly use:
+   *
+   * complaint.replies.map((item) => item.sender)
+   *
+   * because an invalid/undefined item can crash
+   * the entire modal.
+   */
+  const replies = Array.isArray(
+    complaint.replies
+  )
+    ? complaint.replies.filter(
+        (item) => item != null
+      )
+    : [];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+    <div
+      className="
+        fixed
+        inset-0
+        z-50
+        flex
+        items-end
+        justify-center
+        bg-slate-900/60
+        backdrop-blur-sm
+        sm:items-center
+        sm:p-4
+      "
+    >
+      <div
+        className="
+          flex
+          h-[96vh]
+          w-full
+          flex-col
+          overflow-hidden
+          rounded-t-3xl
+          bg-white
+          shadow-2xl
+          sm:h-auto
+          sm:max-h-[92vh]
+          sm:max-w-5xl
+          sm:rounded-3xl
+        "
+      >
+        {/* HEADER */}
 
-        {/* =====================================================
-            HEADER
-        ====================================================== */}
-
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3.5 sm:px-6 sm:py-4">
           <div className="flex min-w-0 items-center gap-3">
-
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-100">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-100 sm:h-11 sm:w-11">
               <FileText
-                size={21}
+                size={20}
                 className="text-orange-500"
               />
             </div>
 
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="font-bold text-slate-900">
+                <h2 className="truncate text-sm font-bold text-slate-900 sm:text-base">
                   Complaint Details
                 </h2>
 
-                <span className="hidden rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-bold text-green-600 sm:inline-flex">
+                <span className="hidden shrink-0 rounded-full bg-green-100 px-2 py-1 text-[10px] font-bold text-green-600 sm:inline-flex">
                   ● Live
                 </span>
               </div>
 
-              <p className="truncate text-xs text-slate-400">
+              <p className="truncate text-[11px] text-slate-400 sm:text-xs">
                 #{complaint.complaintId}
               </p>
             </div>
@@ -178,66 +255,91 @@ const ComplaintDetailsModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="
+              flex
+              h-9
+              w-9
+              shrink-0
+              items-center
+              justify-center
+              rounded-xl
+              text-slate-400
+              transition
+              hover:bg-slate-100
+              hover:text-slate-700
+              sm:h-10
+              sm:w-10
+            "
           >
-            <X size={21} />
+            <X size={20} />
           </button>
         </div>
 
-        {/* =====================================================
-            CONTENT
-        ====================================================== */}
+        {/* BODY */}
 
-        <div className="overflow-y-auto bg-slate-50/50 p-5 sm:p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/70 p-3 sm:p-5 lg:p-6">
+          {/* COMPLAINT */}
 
-          {/* ===================================================
-              TOP SUMMARY
-          ==================================================== */}
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+            <div className="flex flex-col gap-4">
               <div className="min-w-0">
-                <h1 className="text-xl font-bold leading-tight text-slate-900 sm:text-2xl">
+                <h1 className="break-words text-lg font-bold leading-6 text-slate-900 sm:text-2xl sm:leading-tight">
                   {complaint.title}
                 </h1>
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold ${getPriorityClasses(
-                      complaint.priority
-                    )}`}
+                    className={`
+                      rounded-full
+                      px-3
+                      py-1.5
+                      text-[11px]
+                      font-bold
+                      sm:text-xs
+                      ${getPriorityClasses(
+                        complaint.priority
+                      )}
+                    `}
                   >
-                    {complaint.priority || "No priority"}{" "}
+                    {complaint.priority ||
+                      "No priority"}{" "}
                     priority
                   </span>
 
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusClasses(
-                      complaint.status
-                    )}`}
+                    className={`
+                      rounded-full
+                      px-3
+                      py-1.5
+                      text-[11px]
+                      font-bold
+                      sm:text-xs
+                      ${getStatusClasses(
+                        complaint.status
+                      )}
+                    `}
                   >
                     <span className="mr-1">
                       ●
                     </span>
 
-                    {complaint.status || "Unknown"}
+                    {complaint.status ||
+                      "Unknown"}
                   </span>
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2 text-xs text-slate-400">
+              <div className="flex items-center gap-2 text-xs text-slate-400">
                 <Clock3 size={15} />
 
-                {formatDate(
-                  complaint.createdAt
-                )}
+                <span>
+                  Submitted{" "}
+                  {formatDate(
+                    complaint.createdAt
+                  )}
+                </span>
               </div>
             </div>
-
-            {/* Description */}
 
             <div className="mt-6">
               <div className="mb-2 flex items-center gap-2">
@@ -251,23 +353,20 @@ const ComplaintDetailsModal = ({
                 </h3>
               </div>
 
-              <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">
+              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-600 sm:leading-7">
                 {complaint.description ||
                   "No description provided."}
               </p>
             </div>
 
-            {/* Meta */}
-
-            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 border-t border-slate-100 pt-5">
-
-              <div className="flex items-center gap-2 text-sm text-slate-500">
+            <div className="mt-6 grid grid-cols-1 gap-3 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:flex lg:flex-wrap lg:gap-x-6">
+              <div className="flex min-w-0 items-start gap-2 text-sm text-slate-500">
                 <MapPin
                   size={17}
-                  className="text-slate-400"
+                  className="mt-0.5 shrink-0 text-slate-400"
                 />
 
-                <span>
+                <span className="break-words">
                   {location}
                 </span>
               </div>
@@ -275,7 +374,7 @@ const ComplaintDetailsModal = ({
               <div className="flex items-center gap-2 text-sm text-slate-500">
                 <CalendarDays
                   size={17}
-                  className="text-slate-400"
+                  className="shrink-0 text-slate-400"
                 />
 
                 <span>
@@ -288,67 +387,65 @@ const ComplaintDetailsModal = ({
               <div className="flex items-center gap-2 text-sm text-slate-500">
                 <ShieldCheck
                   size={17}
-                  className="text-slate-400"
+                  className="shrink-0 text-slate-400"
                 />
 
-                <span>
-                  {complaint.category || "Uncategorized"}
+                <span className="truncate">
+                  {complaint.category ||
+                    "Uncategorized"}
                 </span>
               </div>
-
             </div>
           </div>
 
-          {/* ===================================================
-              CATEGORY / PRIORITY / USER
-          ==================================================== */}
+          {/* INFO CARDS */}
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-3">
-
-            {/* Category */}
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-5">
               <div className="flex items-center gap-2 text-slate-400">
                 <Tag size={17} />
 
-                <span className="text-xs font-semibold uppercase tracking-wide">
+                <span className="text-[11px] font-semibold uppercase tracking-wide">
                   Category
                 </span>
               </div>
 
-              <p className="mt-3 font-bold text-slate-800">
+              <p className="mt-3 break-words font-bold text-slate-800">
                 {complaint.category || "—"}
               </p>
             </div>
 
-            {/* Priority */}
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-5">
               <div className="flex items-center gap-2 text-slate-400">
                 <AlertCircle size={17} />
 
-                <span className="text-xs font-semibold uppercase tracking-wide">
+                <span className="text-[11px] font-semibold uppercase tracking-wide">
                   Priority
                 </span>
               </div>
 
               <div className="mt-3">
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-bold ${getPriorityClasses(
-                    complaint.priority
-                  )}`}
+                  className={`
+                    inline-flex
+                    rounded-full
+                    px-3
+                    py-1.5
+                    text-xs
+                    font-bold
+                    ${getPriorityClasses(
+                      complaint.priority
+                    )}
+                  `}
                 >
-                  {complaint.priority || "—"}
+                  {complaint.priority ||
+                    "—"}
                 </span>
               </div>
             </div>
 
-            {/* Reporter */}
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-
-              <div className="flex items-center gap-3">
-
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:col-span-2 sm:rounded-3xl sm:p-5 lg:col-span-1">
+              <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-100 font-bold text-orange-600">
                   {getInitial(
                     createdByName
@@ -356,29 +453,23 @@ const ComplaintDetailsModal = ({
                 </div>
 
                 <div className="min-w-0">
-
                   <p className="truncate font-bold text-slate-900">
                     {createdByName}
                   </p>
 
                   <p className="truncate text-xs text-slate-500">
-                    {complaint.createdBy?.email ||
+                    {complaint.createdBy
+                      ?.email ||
                       "No email available"}
                   </p>
-
                 </div>
-
               </div>
             </div>
-
           </div>
 
-          {/* ===================================================
-              EVIDENCE
-          ==================================================== */}
+          {/* EVIDENCE */}
 
-          <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-5 sm:rounded-3xl sm:p-6">
             <div className="flex items-center gap-2">
               <ImageIcon
                 size={18}
@@ -391,41 +482,39 @@ const ComplaintDetailsModal = ({
             </div>
 
             {complaint.images?.length > 0 ? (
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-
+              <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4">
                 {complaint.images.map(
-                  (image, index) => (
-                    <a
-                      key={
-                        image.public_id ||
-                        image.publicId ||
-                        index
-                      }
-                      href={image.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
-                    >
-                      <img
-                        src={image.url}
-                        alt={`Evidence ${
-                          index + 1
-                        }`}
-                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                      />
+                  (image, index) => {
+                    if (!image?.url) {
+                      return null;
+                    }
 
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/25">
-                        <span className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-800 opacity-0 shadow-sm transition group-hover:opacity-100">
-                          View image
-                        </span>
-                      </div>
-                    </a>
-                  )
+                    return (
+                      <a
+                        key={
+                          image.public_id ||
+                          image.publicId ||
+                          index
+                        }
+                        href={image.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100 sm:rounded-2xl"
+                      >
+                        <img
+                          src={image.url}
+                          alt={`Evidence ${
+                            index + 1
+                          }`}
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        />
+                      </a>
+                    );
+                  }
                 )}
-
               </div>
             ) : (
-              <div className="mt-4 flex items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-8">
+              <div className="mt-4 flex items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 py-8 sm:rounded-2xl">
                 <div className="text-center">
                   <ImageIcon
                     size={28}
@@ -440,24 +529,27 @@ const ComplaintDetailsModal = ({
             )}
           </div>
 
-          {/* ===================================================
-              TIMELINE
-          ==================================================== */}
+          {/* STATUS TIMELINE */}
 
-          <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-5 sm:rounded-3xl sm:p-6">
             <h2 className="font-bold text-slate-900">
               Status Timeline
             </h2>
 
-            {complaint.statusHistory?.length > 0 ? (
+            {complaint.statusHistory?.length >
+            0 ? (
               <div className="relative mt-6 space-y-6">
-
                 {complaint.statusHistory.map(
                   (item, index) => {
+                    if (!item) {
+                      return null;
+                    }
+
                     const isLast =
                       index ===
-                      complaint.statusHistory.length - 1;
+                      complaint.statusHistory
+                        .length -
+                        1;
 
                     const isCurrent =
                       item.status ===
@@ -466,40 +558,53 @@ const ComplaintDetailsModal = ({
                     return (
                       <div
                         key={
-                          item._id ||
-                          index
+                          item._id || index
                         }
-                        className="relative flex gap-4"
+                        className="relative flex gap-3 sm:gap-4"
                       >
-
                         {!isLast && (
                           <div className="absolute left-[11px] top-7 h-[calc(100%+8px)] w-px bg-slate-200" />
                         )}
 
                         <div
-                          className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                            isCurrent
-                              ? "bg-orange-100 ring-4 ring-orange-50"
-                              : "bg-green-100"
-                          }`}
+                          className={`
+                            relative
+                            z-10
+                            flex
+                            h-6
+                            w-6
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-full
+                            ${
+                              isCurrent
+                                ? "bg-orange-100 ring-4 ring-orange-50"
+                                : "bg-green-100"
+                            }
+                          `}
                         >
                           <div
-                            className={`h-2.5 w-2.5 rounded-full ${
-                              isCurrent
-                                ? "bg-orange-500"
-                                : "bg-green-500"
-                            }`}
+                            className={`
+                              h-2.5
+                              w-2.5
+                              rounded-full
+                              ${
+                                isCurrent
+                                  ? "bg-orange-500"
+                                  : "bg-green-500"
+                              }
+                            `}
                           />
                         </div>
 
                         <div className="min-w-0">
-
-                          <p className="font-semibold text-slate-900">
+                          <p className="break-words text-sm font-semibold text-slate-900">
                             {item.message ||
                               `Marked ${item.status}`}
                           </p>
 
-                          <p className="mt-1 text-xs text-slate-400">
+                          <p className="mt-1 text-[11px] text-slate-400 sm:text-xs">
                             {formatDateTime(
                               item.updatedAt
                             )}
@@ -507,45 +612,48 @@ const ComplaintDetailsModal = ({
 
                           {item.status && (
                             <span
-                              className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusClasses(
-                                item.status
-                              )}`}
+                              className={`
+                                mt-2
+                                inline-flex
+                                rounded-full
+                                px-2.5
+                                py-1
+                                text-[11px]
+                                font-semibold
+                                ${getStatusClasses(
+                                  item.status
+                                )}
+                              `}
                             >
                               {item.status}
                             </span>
                           )}
-
                         </div>
                       </div>
                     );
                   }
                 )}
-
               </div>
             ) : (
-              <div className="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">
+              <div className="mt-5 rounded-xl bg-slate-50 p-5 text-sm text-slate-500 sm:rounded-2xl">
                 No timeline updates available yet.
               </div>
             )}
           </div>
 
-          {/* ===================================================
-              ASSIGNED ADMIN
-          ==================================================== */}
+          {/* ASSIGNED ADMIN */}
 
           {assignedAdmin && (
-            <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-5 sm:rounded-3xl sm:p-5">
               <div className="flex items-center gap-3">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600">
                   {getInitial(
                     assignedAdmin.name
                   )}
                 </div>
 
-                <div>
-                  <p className="font-bold text-slate-900">
+                <div className="min-w-0">
+                  <p className="truncate font-bold text-slate-900">
                     {assignedAdmin.name}
                   </p>
 
@@ -554,19 +662,16 @@ const ComplaintDetailsModal = ({
                     Assigned administrator
                   </div>
                 </div>
-
               </div>
             </div>
           )}
 
-          {/* ===================================================
-              CONVERSATION
-          ==================================================== */}
+          {/* ============================= */}
+          {/* CONVERSATION */}
+          {/* ============================= */}
 
-          <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-5 sm:rounded-3xl sm:p-6">
             <div className="flex items-center justify-between gap-3">
-
               <div className="flex items-center gap-2">
                 <MessageSquare
                   size={19}
@@ -581,99 +686,151 @@ const ComplaintDetailsModal = ({
               <span className="hidden text-xs text-green-600 sm:block">
                 ● Live updates
               </span>
-
             </div>
 
-            <div className="mt-6 space-y-4">
+            {/* MESSAGES */}
 
-              {complaint.replies?.length > 0 ? (
-                complaint.replies.map(
+            <div className="mt-5 space-y-4 sm:mt-6">
+              {replies.length > 0 ? (
+                replies.map(
                   (item, index) => {
-                    const isAdmin =
-                      item.sender === "admin";
+                    /*
+                     * Extra safety.
+                     *
+                     * Even if backend sends:
+                     *
+                     * [reply, undefined, reply]
+                     *
+                     * the modal won't crash.
+                     */
+                    if (!item) {
+                      return null;
+                    }
 
+                    const isAdmin =
+                      item.sender ===
+                      "admin";
+
+                    /*
+                     * ADMIN = RIGHT
+                     * USER = LEFT
+                     */
                     return (
                       <div
                         key={
                           item._id ||
-                          index
+                          `reply-${index}`
                         }
-                        className={`flex ${
+                        className={`flex w-full ${
                           isAdmin
                             ? "justify-end"
                             : "justify-start"
                         }`}
                       >
-
                         <div
-                          className={`flex max-w-[90%] gap-3 ${
-                            !isAdmin
-                              ? "flex-row-reverse"
-                              : ""
-                          }`}
+                          className={`
+                            flex
+                            max-w-[95%]
+                            gap-2.5
+                            sm:max-w-[80%]
+                            sm:gap-3
+                            ${
+                              isAdmin
+                                ? "flex-row-reverse"
+                                : "flex-row"
+                            }
+                          `}
                         >
-
-                          {/* Avatar */}
+                          {/* AVATAR */}
 
                           <div
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                              isAdmin
-                                ? "bg-blue-100 text-blue-600"
-                                : "bg-orange-100 text-orange-600"
-                            }`}
+                            className={`
+                              flex
+                              h-8
+                              w-8
+                              shrink-0
+                              items-center
+                              justify-center
+                              rounded-full
+                              text-[10px]
+                              font-bold
+                              sm:h-9
+                              sm:w-9
+                              sm:text-xs
+                              ${
+                                isAdmin
+                                  ? "bg-blue-100 text-blue-600"
+                                  : "bg-orange-100 text-orange-600"
+                              }
+                            `}
                           >
                             {getInitial(
                               isAdmin
-                                ? assignedAdmin?.name ||
+                                ? item.senderName ||
+                                    assignedAdmin?.name ||
                                     "Admin"
                                 : createdByName
                             )}
                           </div>
 
-                          {/* Message */}
+                          {/* MESSAGE */}
 
                           <div className="min-w-0">
-
                             <div
-                              className={`rounded-2xl px-4 py-3 ${
-                                isAdmin
-                                  ? "rounded-tl-md bg-slate-100"
-                                  : "rounded-tr-md bg-orange-100"
-                              }`}
+                              className={`
+                                rounded-2xl
+                                px-3.5
+                                py-3
+                                sm:px-4
+                                ${
+                                  isAdmin
+                                    ? "rounded-tr-md bg-blue-100"
+                                    : "rounded-tl-md bg-orange-100"
+                                }
+                              `}
                             >
-
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-
-                                <span className="text-sm font-bold text-slate-900">
+                              <div
+                                className={`
+                                  flex
+                                  flex-wrap
+                                  items-center
+                                  gap-x-2
+                                  gap-y-1
+                                  ${
+                                    isAdmin
+                                      ? "justify-end"
+                                      : "justify-start"
+                                  }
+                                `}
+                              >
+                                <span className="text-xs font-bold text-slate-900 sm:text-sm">
                                   {isAdmin
-                                    ? assignedAdmin?.name ||
+                                    ? item.senderName ||
+                                      assignedAdmin?.name ||
                                       "Administrator"
                                     : createdByName}
                                 </span>
 
-                                <span className="text-[11px] text-slate-400">
+                                <span className="text-[9px] text-slate-400 sm:text-[11px]">
                                   {formatDateTime(
                                     item.createdAt
                                   )}
                                 </span>
-
                               </div>
 
-                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                                {item.message}
+                              <p className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-slate-700 sm:text-sm sm:leading-6">
+                                {item.message ||
+                                  ""}
                               </p>
-
                             </div>
                           </div>
-
                         </div>
                       </div>
                     );
                   }
                 )
               ) : (
-                <div className="rounded-2xl bg-slate-50 p-6 text-center">
-
+                <div className="rounded-xl bg-slate-50 p-6 text-center sm:rounded-2xl">
                   <MessageSquare
                     size={28}
                     className="mx-auto text-slate-300"
@@ -689,74 +846,117 @@ const ComplaintDetailsModal = ({
                   </p>
                 </div>
               )}
-
             </div>
 
-            {/* Reply */}
+            {/* REPLY INPUT */}
 
-            <div className="mt-6 border-t border-slate-100 pt-5">
+            <div className="mt-5 border-t border-slate-100 pt-5 sm:mt-6">
+              <textarea
+                value={reply}
+                onChange={(e) =>
+                  setReply(e.target.value)
+                }
+                onKeyDown={handleKeyDown}
+                placeholder="Write a reply to the user..."
+                rows={3}
+                disabled={updating}
+                className="
+                  w-full
+                  resize-none
+                  rounded-xl
+                  border
+                  border-slate-300
+                  px-3.5
+                  py-3
+                  text-sm
+                  text-slate-700
+                  outline-none
+                  transition
+                  placeholder:text-slate-400
+                  focus:border-orange-500
+                  focus:ring-4
+                  focus:ring-orange-100
+                  disabled:cursor-not-allowed
+                  disabled:bg-slate-50
+                  sm:px-4
+                "
+              />
 
-              <div className="flex flex-col gap-3">
+              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="hidden text-xs text-slate-400 sm:block">
+                  Press Enter to send • Shift +
+                  Enter for new line
+                </p>
 
-                <textarea
-                  value={reply}
-                  onChange={(e) =>
-                    setReply(e.target.value)
+                <button
+                  type="button"
+                  onClick={handleReply}
+                  disabled={
+                    !reply.trim() ||
+                    updating
                   }
-                  onKeyDown={handleKeyDown}
-                  placeholder="Write a reply to the user..."
-                  rows={3}
-                  disabled={updating}
-                  className="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-50"
-                />
+                  className="
+                    flex
+                    min-h-11
+                    w-full
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    bg-orange-500
+                    px-5
+                    py-2.5
+                    text-sm
+                    font-semibold
+                    text-white
+                    transition
+                    hover:bg-orange-600
+                    disabled:cursor-not-allowed
+                    disabled:opacity-50
+                    sm:w-auto
+                  "
+                >
+                  <Send size={16} />
 
-                <div className="flex items-center justify-between">
-
-                  <p className="text-xs text-slate-400">
-                    Press Enter to send • Shift + Enter for new line
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={handleReply}
-                    disabled={
-                      !reply.trim() ||
-                      updating
-                    }
-                    className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Send size={16} />
-
-                    {updating
-                      ? "Sending..."
-                      : "Send Reply"}
-                  </button>
-
-                </div>
+                  {updating
+                    ? "Sending..."
+                    : "Send Reply"}
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* =====================================================
-            FOOTER
-        ====================================================== */}
+        {/* FOOTER */}
 
-        <div className="shrink-0 border-t border-slate-200 bg-white px-5 py-4 sm:px-6">
-
+        <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6 sm:py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="
+                order-2
+                min-h-11
+                rounded-xl
+                border
+                border-slate-300
+                bg-white
+                px-5
+                py-2.5
+                text-sm
+                font-semibold
+                text-slate-700
+                transition
+                hover:bg-slate-50
+                sm:order-1
+              "
             >
               Close
             </button>
 
-            <div className="flex flex-wrap justify-end gap-2">
-
-              {complaint.status === "Pending" &&
+            <div className="order-1 flex w-full gap-2 sm:order-2 sm:w-auto">
+              {complaint.status ===
+                "Pending" &&
                 statusButton(
                   "In Progress",
                   "Start Working",
@@ -779,11 +979,9 @@ const ComplaintDetailsModal = ({
                   )}
                 </>
               )}
-
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

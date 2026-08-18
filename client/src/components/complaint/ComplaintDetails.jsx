@@ -32,12 +32,6 @@ const ComplaintDetails = ({ complaintId }) => {
 
   const [reply, setReply] = useState("");
 
-  /*
-  |--------------------------------------------------------------------------
-  | SOCKET.IO
-  |--------------------------------------------------------------------------
-  */
-
   useEffect(() => {
     if (!user?._id || !complaintId) {
       return;
@@ -45,46 +39,15 @@ const ComplaintDetails = ({ complaintId }) => {
 
     const complaintRoom = complaintId.toString();
 
-    /*
-     * Join the user room and complaint room.
-     */
     const joinRooms = () => {
-      console.log(
-        `👤 Joining user room: user:${user._id}`
-      );
-
-      console.log(
-        `💬 Joining complaint room: complaint:${complaintRoom}`
-      );
-
       socket.emit("join-user", user._id);
-      socket.emit(
-        "join-complaint",
-        complaintRoom
-      );
+      socket.emit("join-complaint", complaintRoom);
     };
 
-    /*
-     * Receive a new reply from Socket.IO.
-     *
-     * IMPORTANT:
-     * We only ADD the reply here.
-     *
-     * We do NOT add the reply again inside
-     * replyMutation.onSuccess.
-     */
     const handleNewReply = (data) => {
-      console.log(
-        "📨 Socket received complaint reply:",
-        data
-      );
-
       const incomingComplaintId =
         data?.complaintId?.toString();
 
-      /*
-       * Ignore replies belonging to another complaint.
-       */
       if (
         incomingComplaintId &&
         incomingComplaintId !== complaintRoom
@@ -97,15 +60,7 @@ const ComplaintDetails = ({ complaintId }) => {
         data?.data ||
         data;
 
-      /*
-       * Invalid socket payload.
-       */
       if (!incomingReply?._id) {
-        console.warn(
-          "⚠️ Invalid reply received:",
-          data
-        );
-
         return;
       }
 
@@ -122,12 +77,6 @@ const ComplaintDetails = ({ complaintId }) => {
           const currentReplies =
             oldComplaint.replies || [];
 
-          /*
-           * VERY IMPORTANT:
-           *
-           * Prevent the same reply from being
-           * inserted more than once.
-           */
           const alreadyExists =
             currentReplies.some(
               (existingReply) =>
@@ -136,18 +85,8 @@ const ComplaintDetails = ({ complaintId }) => {
             );
 
           if (alreadyExists) {
-            console.log(
-              "⚠️ Duplicate socket reply ignored:",
-              incomingReplyId
-            );
-
             return oldComplaint;
           }
-
-          console.log(
-            "✅ Adding new socket reply:",
-            incomingReplyId
-          );
 
           return {
             ...oldComplaint,
@@ -160,29 +99,20 @@ const ComplaintDetails = ({ complaintId }) => {
       );
     };
 
-    /*
-     * Socket connection error.
-     */
     const handleConnectError = (error) => {
       console.error(
-        "❌ Socket connection error:",
+        "Socket connection error:",
         error
       );
     };
 
-    /*
-     * Socket disconnected.
-     */
     const handleDisconnect = (reason) => {
       console.log(
-        "🔌 Socket disconnected:",
+        "Socket disconnected:",
         reason
       );
     };
 
-    /*
-     * Register listeners ONCE.
-     */
     socket.on(
       "complaint:reply",
       handleNewReply
@@ -198,33 +128,15 @@ const ComplaintDetails = ({ complaintId }) => {
       handleDisconnect
     );
 
-    /*
-     * Connect / join rooms.
-     */
     if (socket.connected) {
       joinRooms();
     } else {
       socket.connect();
     }
 
-    /*
-     * When socket connects/reconnects,
-     * join rooms again.
-     */
     socket.on("connect", joinRooms);
 
-    /*
-     * Cleanup.
-     *
-     * This is VERY important because otherwise
-     * every render/navigation can create another
-     * socket listener.
-     */
     return () => {
-      console.log(
-        `🧹 Cleaning socket listeners for complaint:${complaintRoom}`
-      );
-
       socket.off(
         "connect",
         joinRooms
@@ -258,12 +170,6 @@ const ComplaintDetails = ({ complaintId }) => {
     queryClient,
   ]);
 
-  /*
-  |--------------------------------------------------------------------------
-  | GET COMPLAINT
-  |--------------------------------------------------------------------------
-  */
-
   const {
     data: complaint,
     isLoading,
@@ -286,12 +192,6 @@ const ComplaintDetails = ({ complaintId }) => {
 
     enabled: Boolean(complaintId),
   });
-
-  /*
-  |--------------------------------------------------------------------------
-  | DELETE COMPLAINT
-  |--------------------------------------------------------------------------
-  */
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -330,12 +230,6 @@ const ComplaintDetails = ({ complaintId }) => {
     },
   });
 
-  /*
-  |--------------------------------------------------------------------------
-  | SEND REPLY
-  |--------------------------------------------------------------------------
-  */
-
   const replyMutation = useMutation({
     mutationFn: async (message) => {
       const response = await api.post(
@@ -349,28 +243,8 @@ const ComplaintDetails = ({ complaintId }) => {
     },
 
     onSuccess: () => {
-      /*
-       * IMPORTANT:
-       *
-       * DO NOT manually append the reply here.
-       *
-       * The server emits the Socket.IO event.
-       * handleNewReply() will add it to the cache.
-       *
-       * This prevents:
-       *
-       * API response
-       *      +
-       * Socket.IO response
-       *
-       * from rendering the same reply twice.
-       */
-
       setReply("");
 
-      /*
-       * Refresh complaint list only.
-       */
       queryClient.invalidateQueries({
         queryKey: ["complaints"],
       });
@@ -387,12 +261,6 @@ const ComplaintDetails = ({ complaintId }) => {
       );
     },
   });
-
-  /*
-  |--------------------------------------------------------------------------
-  | HANDLERS
-  |--------------------------------------------------------------------------
-  */
 
   const handleReply = () => {
     const message = reply.trim();
@@ -427,12 +295,6 @@ const ComplaintDetails = ({ complaintId }) => {
 
     deleteMutation.mutate();
   };
-
-  /*
-  |--------------------------------------------------------------------------
-  | HELPERS
-  |--------------------------------------------------------------------------
-  */
 
   const getInitial = (name) => {
     if (!name) {
@@ -483,15 +345,9 @@ const ComplaintDetails = ({ complaintId }) => {
     }
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | LOADING
-  |--------------------------------------------------------------------------
-  */
-
   if (isLoading) {
     return (
-      <div className="flex min-h-100 items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
         <div className="text-center">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-orange-500" />
 
@@ -503,16 +359,10 @@ const ComplaintDetails = ({ complaintId }) => {
     );
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | ERROR
-  |--------------------------------------------------------------------------
-  */
-
   if (isError) {
     return (
-      <div className="rounded-3xl border border-red-200 bg-red-50 p-8 text-center">
-        <h2 className="text-xl font-bold text-red-700">
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center sm:rounded-3xl sm:p-8">
+        <h2 className="text-lg font-bold text-red-700 sm:text-xl">
           Failed to load complaint
         </h2>
 
@@ -521,11 +371,11 @@ const ComplaintDetails = ({ complaintId }) => {
             "Something went wrong while loading this complaint."}
         </p>
 
-        <div className="mt-5 flex justify-center gap-3">
+        <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
           <button
             type="button"
             onClick={() => refetch()}
-            className="rounded-xl bg-red-500 px-5 py-2.5 font-semibold text-white transition hover:bg-red-600"
+            className="rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-600"
           >
             Try again
           </button>
@@ -535,7 +385,7 @@ const ComplaintDetails = ({ complaintId }) => {
             onClick={() =>
               navigate("/complaints")
             }
-            className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Back
           </button>
@@ -544,16 +394,10 @@ const ComplaintDetails = ({ complaintId }) => {
     );
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | NOT FOUND
-  |--------------------------------------------------------------------------
-  */
-
   if (!complaint) {
     return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-        <h2 className="text-xl font-bold text-slate-900">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:rounded-3xl sm:p-10">
+        <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
           Complaint not found
         </h2>
 
@@ -567,7 +411,7 @@ const ComplaintDetails = ({ complaintId }) => {
           onClick={() =>
             navigate("/complaints")
           }
-          className="mt-5 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white transition hover:bg-orange-600"
+          className="mt-5 w-full rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 sm:w-auto"
         >
           Back to complaints
         </button>
@@ -581,48 +425,34 @@ const ComplaintDetails = ({ complaintId }) => {
   const assignedAdmin =
     complaint.assignedTo;
 
-  /*
-  |--------------------------------------------------------------------------
-  | UI
-  |--------------------------------------------------------------------------
-  */
-
   return (
-    <div className="space-y-6">
-
-      {/* BACK */}
+    <div className="w-full min-w-0 space-y-4 sm:space-y-6">
 
       <button
         type="button"
         onClick={() =>
           navigate("/complaints")
         }
-        className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-orange-500"
+        className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-orange-500"
       >
         <ArrowLeft size={17} />
-        Back to my complaints
+        <span>Back to my complaints</span>
       </button>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_320px]">
+      <div className="grid min-w-0 gap-4 sm:gap-6 xl:grid-cols-[minmax(0,2fr)_320px]">
 
-        {/* =========================================================
-            LEFT
-        ========================================================= */}
+        <div className="min-w-0 space-y-4 sm:space-y-6">
 
-        <div className="min-w-0 space-y-6">
-
-          {/* COMPLAINT */}
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+          <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6 lg:p-7">
 
             <div className="flex flex-wrap items-center gap-2">
 
-              <span className="font-semibold text-slate-500">
+              <span className="max-w-full break-all text-sm font-semibold text-slate-500 sm:text-base">
                 #{complaint.complaintId}
               </span>
 
               <span
-                className={`rounded-full px-3 py-1 text-xs font-bold ${getPriorityClasses(
+                className={`rounded-full px-2.5 py-1 text-[11px] font-bold sm:px-3 sm:text-xs ${getPriorityClasses(
                   complaint.priority
                 )}`}
               >
@@ -630,7 +460,7 @@ const ComplaintDetails = ({ complaintId }) => {
               </span>
 
               <span
-                className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusClasses(
+                className={`rounded-full px-2.5 py-1 text-[11px] font-bold sm:px-3 sm:text-xs ${getStatusClasses(
                   complaint.status
                 )}`}
               >
@@ -641,42 +471,40 @@ const ComplaintDetails = ({ complaintId }) => {
                 {complaint.status}
               </span>
 
-              <span className="ml-auto rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-600">
-                <span className="mr-1">
-                  ●
-                </span>
+              <span className="flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-bold text-green-600 sm:ml-auto sm:px-3 sm:text-xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                 Live
               </span>
 
             </div>
 
-            <h1 className="mt-5 text-2xl font-bold leading-tight text-slate-900 sm:text-3xl">
+            <h1 className="mt-4 break-words text-xl font-bold leading-tight text-slate-900 sm:mt-5 sm:text-2xl lg:text-3xl">
               {complaint.title}
             </h1>
 
-            <p className="mt-4 leading-7 text-slate-600">
+            <p className="mt-3 break-words text-sm leading-6 text-slate-600 sm:mt-4 sm:text-base sm:leading-7">
               {complaint.description}
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 border-b border-slate-100 pb-6 text-sm text-slate-500">
+            <div className="mt-5 grid gap-3 border-b border-slate-100 pb-5 sm:mt-6 sm:flex sm:flex-wrap sm:gap-x-6 sm:gap-y-3 sm:pb-6">
 
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-start gap-2 text-sm text-slate-500">
                 <MapPin
                   size={17}
-                  className="text-slate-400"
+                  className="mt-0.5 shrink-0 text-slate-400"
                 />
 
-                <span>
+                <span className="min-w-0 break-words">
                   {complaint.location?.address ||
                     complaint.location?.city ||
                     "Location not provided"}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-sm text-slate-500">
                 <Clock3
                   size={17}
-                  className="text-slate-400"
+                  className="shrink-0 text-slate-400"
                 />
 
                 <span>
@@ -687,27 +515,25 @@ const ComplaintDetails = ({ complaintId }) => {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-sm text-slate-500">
                 <ShieldCheck
                   size={17}
-                  className="text-slate-400"
+                  className="shrink-0 text-slate-400"
                 />
 
-                <span>
+                <span className="break-words">
                   {complaint.category}
                 </span>
               </div>
 
             </div>
 
-            {/* EVIDENCE */}
-
-            <div className="mt-6">
+            <div className="mt-5 sm:mt-6">
 
               <div className="flex items-center gap-2">
                 <ImageIcon
                   size={18}
-                  className="text-slate-500"
+                  className="shrink-0 text-slate-500"
                 />
 
                 <h2 className="text-sm font-bold text-slate-900">
@@ -717,7 +543,7 @@ const ComplaintDetails = ({ complaintId }) => {
 
               {complaint.images?.length > 0 ? (
 
-                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="mt-3 grid grid-cols-2 gap-2.5 sm:mt-4 sm:grid-cols-3 sm:gap-3">
 
                   {complaint.images.map(
                     (image, index) => (
@@ -729,18 +555,19 @@ const ComplaintDetails = ({ complaintId }) => {
                         href={image.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="group relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
+                        className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100 sm:rounded-2xl"
                       >
                         <img
                           src={image.url}
                           alt={`Complaint evidence ${
                             index + 1
                           }`}
+                          loading="lazy"
                           className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                         />
 
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/20">
-                          <span className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-800 opacity-0 shadow-sm transition group-hover:opacity-100">
+                        <div className="absolute inset-0 hidden items-center justify-center bg-black/20 transition group-hover:flex">
+                          <span className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm">
                             View image
                           </span>
                         </div>
@@ -752,9 +579,9 @@ const ComplaintDetails = ({ complaintId }) => {
 
               ) : (
 
-                <div className="mt-4 flex items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-8">
+                <div className="mt-3 flex items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 py-7 sm:mt-4 sm:rounded-2xl sm:py-8">
 
-                  <div className="text-center">
+                  <div className="px-4 text-center">
 
                     <ImageIcon
                       size={28}
@@ -768,24 +595,21 @@ const ComplaintDetails = ({ complaintId }) => {
                   </div>
 
                 </div>
-
               )}
 
             </div>
 
           </div>
 
-          {/* TIMELINE */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6 lg:p-7">
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
               Timeline
             </h2>
 
             {complaint.statusHistory?.length > 0 ? (
 
-              <div className="relative mt-7 space-y-7">
+              <div className="relative mt-6 space-y-6 sm:mt-7 sm:space-y-7">
 
                 {complaint.statusHistory.map(
                   (item, index) => {
@@ -805,22 +629,22 @@ const ComplaintDetails = ({ complaintId }) => {
                           item._id ||
                           index
                         }
-                        className="relative flex gap-4"
+                        className="relative flex gap-3 sm:gap-4"
                       >
 
                         {!isLast && (
-                          <div className="absolute left-2.75 top-7 h-[calc(100%+12px)] w-px bg-slate-200" />
+                          <div className="absolute left-2.5 top-6 h-[calc(100%+12px)] w-px bg-slate-200 sm:left-2.75 sm:top-7" />
                         )}
 
                         <div
-                          className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                          className={`relative z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-full sm:h-6 sm:w-6 ${
                             isCurrent
                               ? "bg-orange-100 ring-4 ring-orange-50"
                               : "bg-green-100"
                           }`}
                         >
                           <div
-                            className={`h-2.5 w-2.5 rounded-full ${
+                            className={`h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5 ${
                               isCurrent
                                 ? "bg-orange-500"
                                 : "bg-green-500"
@@ -828,14 +652,14 @@ const ComplaintDetails = ({ complaintId }) => {
                           />
                         </div>
 
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
 
-                          <p className="font-semibold text-slate-900">
+                          <p className="break-words text-sm font-semibold text-slate-900 sm:text-base">
                             {item.message ||
                               `Marked ${item.status}`}
                           </p>
 
-                          <p className="mt-0.5 text-sm text-slate-500">
+                          <p className="mt-1 break-words text-xs text-slate-500 sm:text-sm">
                             {item.updatedAt
                               ? new Date(
                                   item.updatedAt
@@ -845,7 +669,7 @@ const ComplaintDetails = ({ complaintId }) => {
 
                           {item.status && (
                             <span
-                              className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusClasses(
+                              className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${getStatusClasses(
                                 item.status
                               )}`}
                             >
@@ -864,43 +688,43 @@ const ComplaintDetails = ({ complaintId }) => {
 
             ) : (
 
-              <div className="mt-6 rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">
+              <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-500 sm:mt-6 sm:rounded-2xl sm:p-5">
                 No timeline updates available yet.
               </div>
-
             )}
 
           </div>
 
-          {/* CONVERSATION */}
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+          <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6 lg:p-7">
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
               <div className="flex items-center gap-2">
-
                 <MessageCircle
                   size={20}
-                  className="text-orange-500"
+                  className="shrink-0 text-orange-500"
                 />
 
-                <h2 className="text-xl font-bold text-slate-900">
+                <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
                   Conversation
                 </h2>
-
               </div>
 
               {assignedAdmin && (
-                <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <span className="h-2 w-2 rounded-full bg-green-500" />
-                  {assignedAdmin.name} is assigned
+                <div className="flex max-w-full items-center gap-2 text-xs text-slate-400 sm:text-sm">
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
+
+                  <span className="truncate">
+                    {assignedAdmin.name} is assigned
+                  </span>
                 </div>
               )}
 
             </div>
 
-            <div className="mt-7 space-y-5">
+            {/* MESSAGES */}
+
+            <div className="mt-6 space-y-4 sm:mt-7 sm:space-y-5">
 
               {complaint.replies?.length > 0 ? (
 
@@ -916,7 +740,7 @@ const ComplaintDetails = ({ complaintId }) => {
                           item._id ||
                           index
                         }
-                        className={`flex ${
+                        className={`flex min-w-0 ${
                           isUser
                             ? "justify-end"
                             : "justify-start"
@@ -924,7 +748,7 @@ const ComplaintDetails = ({ complaintId }) => {
                       >
 
                         <div
-                          className={`flex max-w-[90%] gap-3 sm:max-w-[80%] ${
+                          className={`flex min-w-0 max-w-[95%] gap-2.5 sm:max-w-[85%] sm:gap-3 ${
                             isUser
                               ? "flex-row-reverse"
                               : ""
@@ -932,7 +756,7 @@ const ComplaintDetails = ({ complaintId }) => {
                         >
 
                           <div
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold sm:h-9 sm:w-9 ${
                               isUser
                                 ? "bg-orange-100 text-orange-600"
                                 : "bg-blue-100 text-blue-600"
@@ -949,19 +773,19 @@ const ComplaintDetails = ({ complaintId }) => {
                                 )}
                           </div>
 
-                          <div>
+                          <div className="min-w-0 max-w-full">
 
                             <div
-                              className={`rounded-2xl px-4 py-3 ${
+                              className={`min-w-0 rounded-2xl px-3.5 py-3 sm:px-4 ${
                                 isUser
                                   ? "rounded-tr-md bg-orange-100"
                                   : "rounded-tl-md bg-slate-100"
                               }`}
                             >
 
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:gap-x-3">
 
-                                <span className="text-sm font-bold text-slate-900">
+                                <span className="text-xs font-bold text-slate-900 sm:text-sm">
                                   {isUser
                                     ? "You"
                                     : item.senderName ||
@@ -969,7 +793,7 @@ const ComplaintDetails = ({ complaintId }) => {
                                       "Administrator"}
                                 </span>
 
-                                <span className="text-xs text-slate-400">
+                                <span className="text-[10px] text-slate-400 sm:text-xs">
                                   {item.createdAt
                                     ? new Date(
                                         item.createdAt
@@ -979,7 +803,7 @@ const ComplaintDetails = ({ complaintId }) => {
 
                               </div>
 
-                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                              <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
                                 {item.message}
                               </p>
 
@@ -996,7 +820,7 @@ const ComplaintDetails = ({ complaintId }) => {
 
               ) : (
 
-                <div className="rounded-2xl bg-slate-50 p-6 text-center">
+                <div className="rounded-xl bg-slate-50 p-5 text-center sm:rounded-2xl sm:p-6">
 
                   <MessageCircle
                     size={28}
@@ -1013,16 +837,15 @@ const ComplaintDetails = ({ complaintId }) => {
                   </p>
 
                 </div>
-
               )}
 
             </div>
 
             {/* REPLY INPUT */}
 
-            <div className="mt-7 border-t border-slate-100 pt-5">
+            <div className="mt-6 border-t border-slate-100 pt-4 sm:mt-7 sm:pt-5">
 
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-3">
 
                 <input
                   type="text"
@@ -1048,7 +871,7 @@ const ComplaintDetails = ({ complaintId }) => {
                   disabled={
                     replyMutation.isPending
                   }
-                  className="flex-1 rounded-xl border border-slate-300 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-50"
+                  className="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-50"
                 />
 
                 <button
@@ -1058,15 +881,13 @@ const ComplaintDetails = ({ complaintId }) => {
                     replyMutation.isPending ||
                     !reply.trim()
                   }
-                  className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
-
                   <Send size={17} />
 
                   {replyMutation.isPending
                     ? "Sending..."
                     : "Send"}
-
                 </button>
 
               </div>
@@ -1077,23 +898,16 @@ const ComplaintDetails = ({ complaintId }) => {
 
         </div>
 
-        {/* =========================================================
-            RIGHT SIDEBAR
-        ========================================================= */}
-
-        <div className="space-y-6">
-
-          {/* REPORTED BY */}
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="min-w-0 space-y-4 sm:space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
 
             <h3 className="font-bold text-slate-900">
               Reported by
             </h3>
 
-            <div className="mt-5 flex items-center gap-3">
+            <div className="mt-4 flex items-center gap-3 sm:mt-5">
 
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-100 font-bold text-orange-600">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-100 font-bold text-orange-600 sm:h-12 sm:w-12">
                 {getInitial(
                   createdByName
                 )}
@@ -1115,9 +929,7 @@ const ComplaintDetails = ({ complaintId }) => {
 
           </div>
 
-          {/* ADMIN */}
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
 
             <h3 className="font-bold text-slate-900">
               Assigned admin
@@ -1125,9 +937,9 @@ const ComplaintDetails = ({ complaintId }) => {
 
             {assignedAdmin ? (
 
-              <div className="mt-5 flex items-center gap-3">
+              <div className="mt-4 flex items-center gap-3 sm:mt-5">
 
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600 sm:h-12 sm:w-12">
                   {getInitial(
                     assignedAdmin.name
                   )}
@@ -1140,7 +952,7 @@ const ComplaintDetails = ({ complaintId }) => {
                   </p>
 
                   <div className="mt-1 flex items-center gap-1.5 text-xs text-green-600">
-                    <span className="h-2 w-2 rounded-full bg-green-500" />
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
                     Assigned
                   </div>
 
@@ -1150,39 +962,38 @@ const ComplaintDetails = ({ complaintId }) => {
 
             ) : (
 
-              <div className="mt-5 rounded-xl bg-slate-50 p-4">
+              <div className="mt-4 rounded-xl bg-slate-50 p-4 sm:mt-5">
 
-                <p className="text-sm text-slate-500">
+                <p className="text-sm leading-5 text-slate-500">
                   No administrator has been assigned yet.
                 </p>
 
               </div>
-
             )}
 
           </div>
 
           {/* STATUS */}
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
 
             <div className="flex items-center gap-3">
 
               <div
-                className={`rounded-xl p-3 ${getStatusClasses(
+                className={`shrink-0 rounded-xl p-2.5 sm:p-3 ${getStatusClasses(
                   complaint.status
                 )}`}
               >
                 <Clock3 size={20} />
               </div>
 
-              <div>
+              <div className="min-w-0">
 
                 <p className="text-sm text-slate-500">
                   Current status
                 </p>
 
-                <p className="mt-0.5 font-bold text-slate-900">
+                <p className="mt-0.5 truncate font-bold text-slate-900">
                   {complaint.status}
                 </p>
 
@@ -1197,11 +1008,11 @@ const ComplaintDetails = ({ complaintId }) => {
           {complaint.status ===
             "Pending" && (
 
-            <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 sm:rounded-3xl sm:p-6">
 
               <div className="flex items-start gap-3">
 
-                <div className="rounded-xl bg-red-100 p-2.5">
+                <div className="shrink-0 rounded-xl bg-red-100 p-2.5">
 
                   <Trash2
                     size={19}
@@ -1210,7 +1021,7 @@ const ComplaintDetails = ({ complaintId }) => {
 
                 </div>
 
-                <div>
+                <div className="min-w-0">
 
                   <h3 className="font-bold text-red-700">
                     Delete complaint
@@ -1231,15 +1042,13 @@ const ComplaintDetails = ({ complaintId }) => {
                   deleteMutation.isPending
                 }
                 onClick={handleDelete}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-3 font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60 sm:mt-5"
               >
-
                 <Trash2 size={17} />
 
                 {deleteMutation.isPending
                   ? "Deleting..."
                   : "Delete complaint"}
-
               </button>
 
             </div>
@@ -1247,11 +1056,11 @@ const ComplaintDetails = ({ complaintId }) => {
 
           {/* TRACKING */}
 
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:rounded-3xl sm:p-6">
 
             <div className="flex items-start gap-3">
 
-              <div className="rounded-xl bg-white p-2.5 shadow-sm">
+              <div className="shrink-0 rounded-xl bg-white p-2.5 shadow-sm">
 
                 <ShieldCheck
                   size={19}
@@ -1260,7 +1069,7 @@ const ComplaintDetails = ({ complaintId }) => {
 
               </div>
 
-              <div>
+              <div className="min-w-0">
 
                 <h3 className="font-semibold text-slate-800">
                   Complaint tracking
@@ -1281,7 +1090,6 @@ const ComplaintDetails = ({ complaintId }) => {
         </div>
 
       </div>
-
     </div>
   );
 };

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import {
   User,
   Mail,
@@ -9,7 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -21,30 +22,78 @@ import api from "../../lib/axios";
 const ProfilePage = () => {
   const navigate = useNavigate();
 
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   const [name, setName] = useState(user?.name || "");
   const [email] = useState(user?.email || "");
 
-  const [isSaving, setIsSaving] = useState(false);
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    setName(user?.name || "");
+  }, [user?.name]);
 
-    setIsSaving(true);
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updatedData) => {
+      const response = await api.patch(
+        "/auth/profile",
+        updatedData
+      );
 
-    // API will be connected here later
-    console.log({
-      name,
-      email,
-    });
+      return response.data;
+    },
 
-    setTimeout(() => {
-      setIsSaving(false);
+    onSuccess: (response) => {
+      const updatedUser =
+        response?.user || response?.data?.user;
+
+      if (updatedUser) {
+        
+        setUser(updatedUser);
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(updatedUser)
+        );
+
+        setName(updatedUser.name || "");
+      }
 
       toast.success(
-        "Profile updated successfully"
+        response?.message ||
+          "Profile updated successfully"
       );
-    }, 800);
+    },
+
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update profile"
+      );
+    },
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      toast.error("Name cannot be empty");
+      return;
+    }
+
+    if (trimmedName.length < 2) {
+      toast.error("Name must contain at least 2 characters");
+      return;
+    }
+
+    if (trimmedName === user?.name) {
+      toast.success("No changes to save");
+      return;
+    }
+
+    updateProfileMutation.mutate({
+      name: trimmedName,
+    });
   };
 
   const deleteAccountMutation = useMutation({
@@ -57,15 +106,18 @@ const ProfilePage = () => {
     },
 
     onSuccess: (response) => {
-      // Clear authentication data
+    
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
+
+      setUser(null);
 
       toast.success(
         response?.message ||
           "Account deleted successfully"
       );
+
       navigate("/login");
     },
 
@@ -94,19 +146,35 @@ const ProfilePage = () => {
       return "U";
     }
 
-    return name
-      .charAt(0)
-      .toUpperCase();
+    return name.charAt(0).toUpperCase();
   };
+
+  const formatMemberSince = () => {
+    if (!user?.createdAt) {
+      return "—";
+    }
+
+    const date = new Date(user.createdAt);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleDateString("en-IN", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const complaintsSubmitted =
+    user?.complaintsCount ??
+    user?.complaintCount ??
+    user?.totalComplaints ??
+    "—";
 
   return (
     <DashboardLayout>
-
       <div className="space-y-6">
-
-        {/* =====================================================
-            HEADER
-        ====================================================== */}
 
         <div>
           <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
@@ -119,17 +187,7 @@ const ProfilePage = () => {
           </p>
         </div>
 
-
-        {/* =====================================================
-            MAIN GRID
-        ====================================================== */}
-
         <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-
-
-          {/* ===================================================
-              PROFILE INFORMATION
-          ==================================================== */}
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
 
@@ -143,11 +201,6 @@ const ProfilePage = () => {
               </p>
             </div>
 
-
-            {/* =================================================
-                PROFILE HEADER
-            ================================================== */}
-
             <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:items-center">
 
               {/* Avatar */}
@@ -156,11 +209,9 @@ const ProfilePage = () => {
                 {getInitial()}
               </div>
 
-
               {/* User info */}
 
               <div>
-
                 <h3 className="text-lg font-bold text-slate-900">
                   {name || "User"}
                 </h3>
@@ -170,21 +221,11 @@ const ProfilePage = () => {
                 </p>
 
                 <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600">
-
                   <span className="h-2 w-2 rounded-full bg-green-500" />
-
                   Active account
-
                 </div>
-
               </div>
-
             </div>
-
-
-            {/* =================================================
-                FORM
-            ================================================== */}
 
             <form
               onSubmit={handleSubmit}
@@ -194,13 +235,11 @@ const ProfilePage = () => {
               {/* Full name */}
 
               <div>
-
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Full name
                 </label>
 
                 <div className="relative">
-
                   <User
                     size={18}
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -213,6 +252,9 @@ const ProfilePage = () => {
                       setName(e.target.value)
                     }
                     placeholder="Enter your full name"
+                    disabled={
+                      updateProfileMutation.isPending
+                    }
                     className="
                       w-full
                       rounded-xl
@@ -226,20 +268,21 @@ const ProfilePage = () => {
                       focus:border-orange-500
                       focus:ring-4
                       focus:ring-orange-100
+                      disabled:cursor-not-allowed
+                      disabled:bg-slate-50
                     "
                   />
-
                 </div>
-
               </div>
-              <div>
 
+              {/* Email */}
+
+              <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Email address
                 </label>
 
                 <div className="relative">
-
                   <Mail
                     size={18}
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -263,22 +306,21 @@ const ProfilePage = () => {
                       outline-none
                     "
                   />
-
                 </div>
 
                 <p className="mt-2 text-xs text-slate-400">
                   Email address cannot be changed here.
                 </p>
-
               </div>
-              <div>
 
+              {/* Account role */}
+
+              <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Account role
                 </label>
 
                 <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5">
-
                   <ShieldCheck
                     size={18}
                     className="text-orange-500"
@@ -287,15 +329,17 @@ const ProfilePage = () => {
                   <span className="text-sm font-medium capitalize text-slate-700">
                     {user?.role || "Citizen"}
                   </span>
-
                 </div>
-
               </div>
-              <div className="flex justify-end pt-3">
 
+              {/* Save button */}
+
+              <div className="flex justify-end pt-3">
                 <button
                   type="submit"
-                  disabled={isSaving}
+                  disabled={
+                    updateProfileMutation.isPending
+                  }
                   className="
                     inline-flex
                     items-center
@@ -314,20 +358,16 @@ const ProfilePage = () => {
                     disabled:opacity-60
                   "
                 >
-
                   <Save size={17} />
 
-                  {isSaving
+                  {updateProfileMutation.isPending
                     ? "Saving..."
                     : "Save Changes"}
-
                 </button>
-
               </div>
-
             </form>
-
           </div>
+
           <div className="space-y-6">
 
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -338,21 +378,19 @@ const ProfilePage = () => {
 
               <div className="mt-6 divide-y divide-slate-100">
 
-                <div className="py-4 first:pt-0">
+                {/* Account role */}
 
+                <div className="py-4 first:pt-0">
                   <div className="flex items-center gap-3">
 
                     <div className="rounded-xl bg-orange-100 p-2.5">
-
                       <ShieldCheck
                         size={18}
                         className="text-orange-500"
                       />
-
                     </div>
 
                     <div>
-
                       <p className="text-xs text-slate-400">
                         Account role
                       </p>
@@ -360,27 +398,23 @@ const ProfilePage = () => {
                       <p className="mt-0.5 font-semibold capitalize text-slate-900">
                         {user?.role || "Citizen"}
                       </p>
-
                     </div>
-
                   </div>
-
                 </div>
-                <div className="py-4">
 
+                {/* Account status */}
+
+                <div className="py-4">
                   <div className="flex items-center gap-3">
 
                     <div className="rounded-xl bg-green-100 p-2.5">
-
                       <CheckCircle2
                         size={18}
                         className="text-green-600"
                       />
-
                     </div>
 
                     <div>
-
                       <p className="text-xs text-slate-400">
                         Account status
                       </p>
@@ -388,73 +422,59 @@ const ProfilePage = () => {
                       <p className="mt-0.5 font-semibold text-green-600">
                         Active
                       </p>
-
                     </div>
-
                   </div>
-
                 </div>
 
-                <div className="py-4">
+                {/* Complaints */}
 
+                <div className="py-4">
                   <div className="flex items-center gap-3">
 
                     <div className="rounded-xl bg-blue-100 p-2.5">
-
                       <FileText
                         size={18}
                         className="text-blue-600"
                       />
-
                     </div>
 
                     <div>
-
                       <p className="text-xs text-slate-400">
                         Complaints submitted
                       </p>
 
                       <p className="mt-0.5 font-semibold text-slate-900">
-                        —
+                        {complaintsSubmitted}
                       </p>
-
                     </div>
-
                   </div>
-
                 </div>
 
-                <div className="py-4 last:pb-0">
+                {/* Member since */}
 
+                <div className="py-4 last:pb-0">
                   <div className="flex items-center gap-3">
 
                     <div className="rounded-xl bg-purple-100 p-2.5">
-
                       <CalendarDays
                         size={18}
                         className="text-purple-600"
                       />
-
                     </div>
 
                     <div>
-
                       <p className="text-xs text-slate-400">
                         Member since
                       </p>
 
                       <p className="mt-0.5 font-semibold text-slate-900">
-                        —
+                        {formatMemberSince()}
                       </p>
-
                     </div>
-
                   </div>
-
                 </div>
 
               </div>
-
             </div>
 
             <div className="rounded-3xl border border-orange-200 bg-orange-50 p-6">
@@ -462,16 +482,13 @@ const ProfilePage = () => {
               <div className="flex items-start gap-3">
 
                 <div className="rounded-xl bg-orange-100 p-2.5">
-
                   <ShieldCheck
                     size={20}
                     className="text-orange-500"
                   />
-
                 </div>
 
                 <div>
-
                   <h3 className="font-bold text-orange-700">
                     Keep your account secure
                   </h3>
@@ -481,11 +498,9 @@ const ProfilePage = () => {
                     authentication information with
                     anyone.
                   </p>
-
                 </div>
 
               </div>
-
             </div>
 
             <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
@@ -493,12 +508,10 @@ const ProfilePage = () => {
               <div className="flex items-start gap-3">
 
                 <div className="rounded-xl bg-red-100 p-2.5">
-
                   <Trash2
                     size={20}
                     className="text-red-600"
                   />
-
                 </div>
 
                 <div className="flex-1">
@@ -541,29 +554,23 @@ const ProfilePage = () => {
                       disabled:opacity-60
                     "
                   >
-
                     <Trash2 size={17} />
 
                     {deleteAccountMutation.isPending
                       ? "Deleting account..."
                       : "Delete account"}
-
                   </button>
 
                 </div>
-
               </div>
-
             </div>
 
           </div>
-
         </div>
-
       </div>
-
     </DashboardLayout>
   );
 };
 
 export default ProfilePage;
+

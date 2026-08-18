@@ -51,6 +51,9 @@ const ComplaintForm = () => {
     setImages((prev) =>
       [...prev, ...validFiles].slice(0, 5)
     );
+
+    // Allow selecting the same file again
+    e.target.value = "";
   };
 
   const removeImage = (index) => {
@@ -58,6 +61,7 @@ const ComplaintForm = () => {
       prev.filter((_, i) => i !== index)
     );
   };
+
   const createMutation = useMutation({
     mutationFn: createComplaint,
 
@@ -77,6 +81,7 @@ const ComplaintForm = () => {
       );
     },
   });
+
   const submitHandler = (e) => {
     e.preventDefault();
 
@@ -108,12 +113,19 @@ const ComplaintForm = () => {
     const formData = new FormData();
 
     formData.append("title", title.trim());
-    formData.append("description", description.trim());
+    formData.append(
+      "description",
+      description.trim()
+    );
     formData.append("category", category);
     formData.append("priority", priority);
-    formData.append("location", JSON.stringify({
-      address: location.trim(),
-    }));
+
+    formData.append(
+      "location",
+      JSON.stringify({
+        address: location.trim(),
+      })
+    );
 
     images.forEach((image) => {
       formData.append("images", image);
@@ -125,23 +137,28 @@ const ComplaintForm = () => {
   const loading = createMutation.isPending;
 
   return (
-    <form onSubmit={submitHandler}>
-      <div>
-        <h1 className="text-4xl font-bold text-slate-900">
+    <form
+      onSubmit={submitHandler}
+      className="w-full"
+    >
+     
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl lg:text-4xl">
           Create complaint
         </h1>
 
-        <p className="mt-2 text-lg text-slate-500">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base sm:leading-7 lg:text-lg">
           Give us the details — the more specific,
           the faster it gets resolved.
         </p>
       </div>
-
-      <div className="mt-8 grid gap-6 xl:grid-cols-[2.3fr_1fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="grid gap-5 lg:gap-6 xl:grid-cols-[minmax(0,2.3fr)_minmax(280px,1fr)]">
+       
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6 lg:p-8">
+          {/* TITLE */}
 
           <div>
-            <label className="mb-2 block font-semibold text-slate-800">
+            <label className="mb-2 block text-sm font-semibold text-slate-800 sm:text-base">
               Complaint title
             </label>
 
@@ -153,12 +170,11 @@ const ComplaintForm = () => {
                 setTitle(e.target.value)
               }
               placeholder="e.g. Leaking pipe near main entrance"
-              className="w-full rounded-xl border border-slate-300 px-5 py-4 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100 sm:px-5 sm:py-4 sm:text-base"
             />
           </div>
-
-          <div className="mt-6">
-            <label className="mb-2 block font-semibold text-slate-800">
+          <div className="mt-5 sm:mt-6">
+            <label className="mb-2 block text-sm font-semibold text-slate-800 sm:text-base">
               Description
             </label>
 
@@ -170,14 +186,14 @@ const ComplaintForm = () => {
                 setDescription(e.target.value)
               }
               placeholder="Describe what happened, where, and when..."
-              className="w-full resize-none rounded-xl border border-slate-300 p-5 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
+              className="w-full resize-none rounded-xl border border-slate-300 p-4 text-sm leading-6 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100 sm:p-5 sm:text-base"
             />
           </div>
 
-          <div className="mt-6 grid gap-5 md:grid-cols-2">
-
-            <div>
-              <label className="mb-2 block font-semibold">
+          <div className="mt-5 grid gap-5 sm:mt-6 md:grid-cols-2">
+            
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-semibold text-slate-800 sm:text-base">
                 Category
               </label>
 
@@ -187,7 +203,7 @@ const ComplaintForm = () => {
                 onChange={(e) =>
                   setCategory(e.target.value)
                 }
-                className="w-full rounded-xl border border-slate-300 px-5 py-4 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100 sm:px-5 sm:py-4 sm:text-base"
               >
                 <option value="">
                   Select category
@@ -235,8 +251,8 @@ const ComplaintForm = () => {
               </select>
             </div>
 
-            <div>
-              <label className="mb-2 block font-semibold">
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-semibold text-slate-800 sm:text-base">
                 Priority
               </label>
 
@@ -246,7 +262,7 @@ const ComplaintForm = () => {
                 onChange={(e) =>
                   setPriority(e.target.value)
                 }
-                className="w-full rounded-xl border border-slate-300 px-5 py-4 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100 sm:px-5 sm:py-4 sm:text-base"
               >
                 <option value="">
                   Select priority
@@ -269,16 +285,14 @@ const ComplaintForm = () => {
                 </option>
               </select>
             </div>
-
           </div>
-          <div className="mt-6">
 
-            <label className="mb-2 block font-semibold">
+          <div className="mt-5 sm:mt-6">
+            <label className="mb-2 block text-sm font-semibold text-slate-800 sm:text-base">
               Location
             </label>
 
-            <div className="flex items-center rounded-xl border border-slate-300 px-4 transition-all duration-200 focus-within:border-orange-500 focus-within:ring-4 focus-within:ring-orange-100">
-
+            <div className="flex min-w-0 items-center rounded-xl border border-slate-300 px-3 transition-all duration-200 focus-within:border-orange-500 focus-within:ring-4 focus-within:ring-orange-100 sm:px-4">
               <MapPin
                 size={18}
                 className="shrink-0 text-slate-400"
@@ -292,16 +306,13 @@ const ComplaintForm = () => {
                 }
                 type="text"
                 placeholder="Block, floor, or landmark"
-                className="w-full bg-transparent px-3 py-4 outline-none disabled:bg-transparent"
+                className="min-w-0 w-full bg-transparent px-3 py-3 text-sm outline-none disabled:bg-transparent sm:py-4 sm:text-base"
               />
-
             </div>
-
           </div>
 
-          <div className="mt-6">
-
-            <label className="mb-2 block font-semibold">
+          <div className="mt-5 sm:mt-6">
+            <label className="mb-2 block text-sm font-semibold text-slate-800 sm:text-base">
               Evidence photos
             </label>
 
@@ -311,45 +322,50 @@ const ComplaintForm = () => {
               accept=".jpg,.jpeg,.png,.webp"
               multiple
               onChange={handleImageUpload}
+              disabled={loading}
               className="hidden"
             />
 
             <label
               htmlFor="file-upload"
-              className="flex h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 transition-all duration-300 hover:border-orange-500 hover:bg-orange-50"
+              className="flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 px-4 py-8 text-center transition-all duration-300 hover:border-orange-500 hover:bg-orange-50 sm:min-h-56 sm:px-6 sm:py-10 lg:h-64"
             >
               <Upload
-                size={42}
-                className="text-orange-500"
+                size={34}
+                className="text-orange-500 sm:size-10"
               />
 
-              <p className="mt-5 text-lg font-semibold">
+              <p className="mt-4 text-sm font-semibold text-slate-800 sm:mt-5 sm:text-lg">
                 Drag and drop images here
               </p>
 
-              <p className="text-slate-500">
-                or
-
-                <span className="ml-1 font-semibold text-orange-500">
+              <p className="mt-1 text-sm text-slate-500">
+                or{" "}
+                <span className="font-semibold text-orange-500">
                   browse
                 </span>
               </p>
 
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-xs text-slate-400 sm:text-sm">
                 JPG, PNG, WEBP up to 10MB each
+              </p>
+
+              <p className="mt-1 text-xs text-slate-400">
+                Maximum 5 images
               </p>
             </label>
 
             {images.length > 0 && (
-              <div className="mt-5 flex flex-wrap gap-3">
-
+              <div className="mt-4 grid grid-cols-3 gap-3 sm:flex sm:flex-wrap">
                 {images.map((image, index) => (
                   <div
                     key={`${image.name}-${index}`}
-                    className="relative h-20 w-20 overflow-hidden rounded-xl bg-slate-100"
+                    className="relative aspect-square w-full overflow-hidden rounded-xl bg-slate-100 sm:h-20 sm:w-20"
                   >
                     <img
-                      src={URL.createObjectURL(image)}
+                      src={URL.createObjectURL(
+                        image
+                      )}
                       alt={image.name}
                       className="h-full w-full object-cover"
                     />
@@ -359,39 +375,35 @@ const ComplaintForm = () => {
                       onClick={() =>
                         removeImage(index)
                       }
-                      className="absolute right-1 top-1 rounded-full bg-slate-700 p-1 text-white transition hover:bg-red-500"
+                      disabled={loading}
+                      className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white transition hover:bg-red-500 disabled:cursor-not-allowed"
                     >
-                      <X size={14} />
+                      <X size={13} />
                     </button>
                   </div>
                 ))}
-
               </div>
             )}
-
           </div>
 
-          <div className="mt-8 flex items-center gap-3 rounded-2xl bg-slate-100 p-5">
-
+          <div className="mt-6 flex items-start gap-3 rounded-2xl bg-slate-100 p-4 sm:mt-8 sm:p-5">
             <Shield
-              size={22}
-              className="shrink-0 text-slate-500"
+              size={21}
+              className="mt-0.5 shrink-0 text-slate-500"
             />
 
-            <p className="text-sm text-slate-600">
+            <p className="text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
               Your name and contact details are only
               visible to admins handling this complaint —
               never shown to other users.
             </p>
-
           </div>
 
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-
+          <div className="mt-6 grid gap-3 sm:mt-8 sm:flex sm:flex-row">
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-orange-500 px-8 py-4 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+              className="w-full rounded-xl bg-orange-500 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300 sm:w-auto sm:px-8 sm:py-4 sm:text-base"
             >
               {loading
                 ? "Submitting..."
@@ -401,110 +413,105 @@ const ComplaintForm = () => {
             <button
               type="button"
               disabled={loading}
-              className="rounded-xl border border-slate-300 px-8 py-4 font-semibold transition hover:border-orange-400 hover:bg-orange-50"
+              className="w-full rounded-xl border border-slate-300 px-6 py-3.5 text-sm font-semibold transition hover:border-orange-400 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-8 sm:py-4 sm:text-base"
             >
               Save as draft
             </button>
-
           </div>
-
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-5 lg:space-y-6">
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
-            <h3 className="mb-5 text-2xl font-bold">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:rounded-3xl sm:p-6">
+            <h3 className="mb-4 text-xl font-bold text-slate-900 sm:mb-5 sm:text-2xl">
               Complaint guidelines
             </h3>
 
             <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <CircleCheck
+                  size={20}
+                  className="mt-0.5 shrink-0 text-green-500"
+                />
 
-              <div className="flex gap-3">
-                <CircleCheck className="shrink-0 text-green-500" />
-
-                <p>
+                <p className="text-sm leading-6 text-slate-600">
                   Be specific about location and time
                 </p>
               </div>
 
-              <div className="flex gap-3">
-                <CircleCheck className="shrink-0 text-green-500" />
+              <div className="flex items-start gap-3">
+                <CircleCheck
+                  size={20}
+                  className="mt-0.5 shrink-0 text-green-500"
+                />
 
-                <p>
+                <p className="text-sm leading-6 text-slate-600">
                   Attach clear photos where possible
                 </p>
               </div>
 
-              <div className="flex gap-3">
-                <CircleCheck className="shrink-0 text-green-500" />
+              <div className="flex items-start gap-3">
+                <CircleCheck
+                  size={20}
+                  className="mt-0.5 shrink-0 text-green-500"
+                />
 
-                <p>
+                <p className="text-sm leading-6 text-slate-600">
                   Avoid duplicate submissions
                 </p>
               </div>
-
             </div>
-
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          {/* SUPPORTED FILE TYPES */}
 
-            <h3 className="mb-5 text-2xl font-bold">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:rounded-3xl sm:p-6">
+            <h3 className="mb-4 text-xl font-bold text-slate-900 sm:mb-5 sm:text-2xl">
               Supported file types
             </h3>
 
-            <div className="flex gap-3">
-
+            <div className="flex flex-wrap gap-2">
               {["JPG", "PNG", "WEBP"].map(
                 (type) => (
                   <span
                     key={type}
-                    className="rounded-lg bg-slate-100 px-4 py-2 text-sm"
+                    className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 sm:px-4 sm:text-sm"
                   >
                     {type}
                   </span>
                 )
               )}
-
             </div>
 
-            <p className="mt-5 text-lg">
+            <p className="mt-4 text-sm text-slate-500 sm:mt-5 sm:text-base">
               Max 5 files, 10MB each
             </p>
-
           </div>
 
-          <div className="rounded-3xl border border-orange-200 bg-orange-50 p-6">
-
+          <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5 sm:rounded-3xl sm:p-6">
             <div className="flex items-start gap-3">
+              <Clock3
+                size={20}
+                className="mt-0.5 shrink-0 text-orange-500"
+              />
 
-              <Clock3 className="mt-1 shrink-0 text-orange-500" />
-
-              <div>
-
+              <div className="min-w-0">
                 <h3 className="font-bold text-orange-600">
                   Expected resolution time
                 </h3>
 
-                <p className="mt-3 text-slate-700">
+                <p className="mt-2 text-sm leading-6 text-slate-700 sm:mt-3 sm:text-base">
                   Medium-priority complaints are
                   typically resolved within{" "}
-
                   <span className="font-semibold">
                     48–72 hours
                   </span>
                   .
                 </p>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
     </form>
   );

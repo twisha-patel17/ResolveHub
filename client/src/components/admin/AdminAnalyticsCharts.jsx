@@ -59,29 +59,39 @@ const StatCard = ({
   accent,
 }) => {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className={`absolute left-0 top-0 h-full w-1 ${accent}`} />
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      
+      <div
+        className={`absolute left-0 top-0 h-full w-1 ${accent}`}
+      />
 
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-500">
+      <div className="flex items-start justify-between gap-3">
+
+        <div className="min-w-0">
+
+          <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">
             {title}
           </p>
 
-          <h3 className="mt-2 text-3xl font-bold text-slate-900">
+          <h3 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
             {value}
           </h3>
 
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-[11px] leading-4 text-slate-400 sm:text-xs">
             {subtitle}
           </p>
+
         </div>
 
         <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconBg}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11 ${iconBg}`}
         >
-          <Icon size={21} className={iconColor} />
+          <Icon
+            size={19}
+            className={iconColor}
+          />
         </div>
+
       </div>
     </div>
   );
@@ -93,18 +103,22 @@ const ChartCard = ({
   children,
 }) => {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="mb-6">
-        <h2 className="text-lg font-bold text-slate-900">
+    <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+
+      <div className="mb-5 sm:mb-6">
+
+        <h2 className="text-base font-bold text-slate-900 sm:text-lg">
           {title}
         </h2>
 
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
           {description}
         </p>
+
       </div>
 
       {children}
+
     </div>
   );
 };
@@ -112,6 +126,7 @@ const ChartCard = ({
 const AdminAnalyticsCharts = ({
   analytics = {},
 }) => {
+
   const data = {
     ...DEFAULT_DATA,
     ...analytics,
@@ -129,11 +144,8 @@ const AdminAnalyticsCharts = ({
   } = data;
 
   return (
-    <div className="space-y-6">
-
-      {/* STAT CARDS */}
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="min-w-0 space-y-5 sm:space-y-6">
+      <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 xl:grid-cols-4">
 
         <StatCard
           title="Total Complaints"
@@ -177,23 +189,32 @@ const AdminAnalyticsCharts = ({
 
       </div>
 
-
-      {/* COMPLAINT TREND + STATUS */}
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-6">
 
         <ChartCard
           title="Complaint Trend"
           description="Number of complaints submitted each month."
         >
-          <div className="h-72">
+
+          <div className="h-64 w-full min-w-0 sm:h-72">
+
             <ResponsiveContainer
               width="100%"
               height="100%"
             >
-              <AreaChart data={complaintTrend}>
+
+              <AreaChart
+                data={complaintTrend}
+                margin={{
+                  top: 5,
+                  right: 5,
+                  left: -15,
+                  bottom: 0,
+                }}
+              >
 
                 <defs>
+
                   <linearGradient
                     id="complaintGradient"
                     x1="0"
@@ -201,6 +222,7 @@ const AdminAnalyticsCharts = ({
                     x2="0"
                     y2="1"
                   >
+
                     <stop
                       offset="0%"
                       stopColor="#f97316"
@@ -212,7 +234,9 @@ const AdminAnalyticsCharts = ({
                       stopColor="#f97316"
                       stopOpacity={0}
                     />
+
                   </linearGradient>
+
                 </defs>
 
                 <CartesianGrid
@@ -225,12 +249,22 @@ const AdminAnalyticsCharts = ({
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#64748b",
+                  }}
+                  interval="preserveStartEnd"
                 />
 
                 <YAxis
                   allowDecimals={false}
                   axisLine={false}
                   tickLine={false}
+                  width={35}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#64748b",
+                  }}
                 />
 
                 <Tooltip
@@ -241,25 +275,30 @@ const AdminAnalyticsCharts = ({
                   type="monotone"
                   dataKey="complaints"
                   stroke="#f97316"
-                  strokeWidth={3}
+                  strokeWidth={2.5}
                   fill="url(#complaintGradient)"
                 />
 
               </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartCard>
 
+            </ResponsiveContainer>
+
+          </div>
+
+        </ChartCard>
 
         <ChartCard
           title="Complaint Status"
           description="Current status of all complaints."
         >
-          <div className="h-72">
+
+          <div className="h-64 w-full min-w-0 sm:h-72">
+
             <ResponsiveContainer
               width="100%"
               height="100%"
             >
+
               <PieChart>
 
                 <Pie
@@ -267,11 +306,12 @@ const AdminAnalyticsCharts = ({
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
-                  cy="45%"
-                  innerRadius={60}
-                  outerRadius={95}
+                  cy="42%"
+                  innerRadius="25%"
+                  outerRadius="58%"
                   paddingAngle={3}
                 >
+
                   {statusDistribution.map(
                     (entry, index) => (
                       <Cell
@@ -284,6 +324,7 @@ const AdminAnalyticsCharts = ({
                       />
                     )
                   )}
+
                 </Pie>
 
                 <Tooltip
@@ -292,36 +333,46 @@ const AdminAnalyticsCharts = ({
 
                 <Legend
                   verticalAlign="bottom"
+                  align="center"
                   iconType="circle"
+                  wrapperStyle={{
+                    fontSize: "12px",
+                    paddingTop: "8px",
+                  }}
                 />
 
               </PieChart>
+
             </ResponsiveContainer>
+
           </div>
+
         </ChartCard>
 
       </div>
 
-
-      {/* CATEGORY + PRIORITY */}
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-6">
 
         <ChartCard
           title="Complaints by Category"
           description="Number of complaints in each category."
         >
-          <div className="h-80">
+
+          <div className="h-72 w-full min-w-0 sm:h-80">
+
             <ResponsiveContainer
               width="100%"
               height="100%"
             >
+
               <BarChart
                 data={categoryDistribution}
                 layout="vertical"
                 margin={{
-                  left: 20,
-                  right: 20,
+                  top: 5,
+                  right: 10,
+                  left: 0,
+                  bottom: 5,
                 }}
               >
 
@@ -336,14 +387,22 @@ const AdminAnalyticsCharts = ({
                   allowDecimals={false}
                   axisLine={false}
                   tickLine={false}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#64748b",
+                  }}
                 />
 
                 <YAxis
                   type="category"
                   dataKey="name"
-                  width={100}
+                  width={75}
                   axisLine={false}
                   tickLine={false}
+                  tick={{
+                    fontSize: 10,
+                    fill: "#64748b",
+                  }}
                 />
 
                 <Tooltip
@@ -354,29 +413,35 @@ const AdminAnalyticsCharts = ({
                   dataKey="value"
                   fill="#f97316"
                   radius={[0, 7, 7, 0]}
-                  barSize={22}
+                  barSize={20}
                 />
 
               </BarChart>
+
             </ResponsiveContainer>
+
           </div>
+
         </ChartCard>
-
-
         <ChartCard
           title="Complaints by Priority"
           description="Number of complaints by priority level."
         >
-          <div className="h-80">
+
+          <div className="h-72 w-full min-w-0 sm:h-80">
+
             <ResponsiveContainer
               width="100%"
               height="100%"
             >
+
               <BarChart
                 data={priorityDistribution}
                 margin={{
+                  top: 5,
+                  right: 5,
                   left: -20,
-                  right: 10,
+                  bottom: 5,
                 }}
               >
 
@@ -390,12 +455,21 @@ const AdminAnalyticsCharts = ({
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#64748b",
+                  }}
                 />
 
                 <YAxis
                   allowDecimals={false}
                   axisLine={false}
                   tickLine={false}
+                  width={40}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#64748b",
+                  }}
                 />
 
                 <Tooltip
@@ -405,8 +479,9 @@ const AdminAnalyticsCharts = ({
                 <Bar
                   dataKey="value"
                   radius={[7, 7, 0, 0]}
-                  barSize={40}
+                  barSize={32}
                 >
+
                   {priorityDistribution.map(
                     (entry, index) => (
                       <Cell
@@ -419,11 +494,15 @@ const AdminAnalyticsCharts = ({
                       />
                     )
                   )}
+
                 </Bar>
 
               </BarChart>
+
             </ResponsiveContainer>
+
           </div>
+
         </ChartCard>
 
       </div>

@@ -5,6 +5,7 @@ import {
   UserX,
   FileText,
   Eye,
+  RotateCcw,
 } from "lucide-react";
 
 const UserManagement = ({
@@ -23,64 +24,137 @@ const UserManagement = ({
   const totalUsers = pagination?.totalUsers || 0;
   const totalPages = pagination?.totalPages || 1;
 
-  const activeUsers = users.filter((u) => u.status === "Active").length;
-  const inactiveUsers = users.filter((u) => u.status === "Inactive").length;
+  const activeUsers = users.filter(
+    (u) => u.status === "Active"
+  ).length;
+
+  const inactiveUsers = users.filter(
+    (u) => u.status === "Inactive"
+  ).length;
+
   const totalComplaints = users.reduce(
-    (sum, user) => sum + user.complaints,
+    (sum, user) => sum + (user.complaints || 0),
     0
   );
 
   const stats = [
-    ["Total Users", totalUsers, "Registered users", Users, "orange"],
-    ["Active Users", activeUsers, "Currently active", UserCheck, "green"],
-    ["Inactive Users", inactiveUsers, "Currently inactive", UserX, "red"],
-    ["Total Complaints", totalComplaints, "Submitted by users", FileText, "blue"],
+    {
+      title: "Total Users",
+      value: totalUsers,
+      text: "Registered users",
+      Icon: Users,
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-500",
+    },
+    {
+      title: "Active Users",
+      value: activeUsers,
+      text: "Currently active",
+      Icon: UserCheck,
+      iconBg: "bg-green-100",
+      iconColor: "text-green-500",
+    },
+    {
+      title: "Inactive Users",
+      value: inactiveUsers,
+      text: "Currently inactive",
+      Icon: UserX,
+      iconBg: "bg-red-100",
+      iconColor: "text-red-500",
+    },
+    {
+      title: "Total Complaints",
+      value: totalComplaints,
+      text: "Submitted by users",
+      Icon: FileText,
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-500",
+    },
   ];
 
   return (
-    <>
-      <div className="mb-6">
+    <div className="w-full min-w-0">
+      <div className="mb-5 sm:mb-6">
         <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
           User Management
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+
+        <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 sm:text-sm">
           View and manage users registered on ResolveHub.
         </p>
       </div>
 
-      {/* Stats */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map(([title, value, text, Icon, color]) => (
-          <div
-            key={title}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">{title}</p>
-                <h3 className="mt-2 text-2xl font-bold text-slate-900">
-                  {value}
-                </h3>
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:mb-6 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+        {stats.map(
+          ({
+            title,
+            value,
+            text,
+            Icon,
+            iconBg,
+            iconColor,
+          }) => (
+            <div
+              key={title}
+              className="
+                min-w-0
+                rounded-2xl
+                border
+                border-slate-200
+                bg-white
+                p-4
+                shadow-sm
+                sm:p-5
+              "
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">
+                    {title}
+                  </p>
+
+                  <h3 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+                    {value}
+                  </h3>
+                </div>
+
+                <div
+                  className={`
+                    flex
+                    h-10
+                    w-10
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-xl
+                    sm:h-11
+                    sm:w-11
+                    ${iconBg}
+                  `}
+                >
+                  <Icon
+                    size={20}
+                    className={iconColor}
+                  />
+                </div>
               </div>
 
-              <div
-                className={`flex h-11 w-11 items-center justify-center rounded-xl bg-${color}-100`}
-              >
-                <Icon size={21} className={`text-${color}-500`} />
-              </div>
+              <p className="mt-3 truncate text-[11px] text-slate-400 sm:text-xs">
+                {text}
+              </p>
             </div>
-
-            <p className="mt-3 text-xs text-slate-400">{text}</p>
-          </div>
-        ))}
+          )
+        )}
       </div>
 
-      {/* Filters */}
-      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="mb-5 flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold text-slate-900">Users</h2>
-            <p className="text-xs text-slate-400">
+      <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-6 sm:p-5">
+        <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="font-semibold text-slate-900">
+              Users
+            </h2>
+
+            <p className="mt-0.5 text-xs text-slate-400">
               Search and filter registered users
             </p>
           </div>
@@ -88,35 +162,91 @@ const UserManagement = ({
           <button
             type="button"
             onClick={clearFilters}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100"
+            className="
+              inline-flex
+              w-fit
+              items-center
+              gap-2
+              rounded-lg
+              px-3
+              py-2
+              text-xs
+              font-medium
+              text-slate-500
+              transition
+              hover:bg-slate-100
+              hover:text-slate-800
+              sm:text-sm
+            "
           >
+            <RotateCcw size={14} />
             Clear Filters
           </button>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="relative">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          {/* Search */}
+          <div className="relative min-w-0">
             <Search
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              className="
+                absolute
+                left-3
+                top-1/2
+                -translate-y-1/2
+                text-slate-400
+              "
             />
 
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onSearch()}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              onKeyDown={(e) =>
+                e.key === "Enter" && onSearch()
+              }
               placeholder="Search by name or email..."
-              className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+              className="
+                w-full
+                rounded-xl
+                border
+                border-slate-300
+                py-3
+                pl-10
+                pr-4
+                text-sm
+                outline-none
+                transition
+                focus:border-orange-500
+                focus:ring-2
+                focus:ring-orange-100
+              "
             />
           </div>
 
+          {/* Status */}
           <select
             value={status}
             onChange={(e) => {
               setStatus(e.target.value);
               onSearch(e.target.value);
             }}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+            className="
+              w-full
+              rounded-xl
+              border
+              border-slate-300
+              bg-white
+              px-4
+              py-3
+              text-sm
+              outline-none
+              transition
+              focus:border-orange-500
+              focus:ring-2
+              focus:ring-orange-100
+            "
           >
             <option value="All">All Status</option>
             <option value="Active">Active</option>
@@ -125,77 +255,141 @@ const UserManagement = ({
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {/* Mobile hint */}
+        {users.length > 0 && (
+          <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5 text-[11px] text-slate-400 sm:hidden">
+            <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
+            Swipe horizontally to view all columns
+          </div>
+        )}
+
         <div className="overflow-x-auto">
-          <table className="w-full min-w-212.5">
+          <table className="w-full min-w-[850px]">
             <thead>
-              <tr className="border-b bg-slate-50">
-                {["User", "User ID", "Status", "Complaints", "Joined", "Action"].map(
-                  (heading) => (
-                    <th
-                      key={heading}
-                      className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-                    >
-                      {heading}
-                    </th>
-                  )
-                )}
+              <tr className="border-b border-slate-100 bg-slate-50">
+                {[
+                  "User",
+                  "User ID",
+                  "Status",
+                  "Complaints",
+                  "Joined",
+                  "Action",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className="
+                      whitespace-nowrap
+                      px-4
+                      py-3.5
+                      text-left
+                      text-[10px]
+                      font-semibold
+                      uppercase
+                      tracking-wide
+                      text-slate-500
+                      sm:px-5
+                      sm:py-4
+                      sm:text-xs
+                    "
+                  >
+                    {heading}
+                  </th>
+                ))}
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-100">
               {users.length ? (
                 users.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 font-semibold text-orange-600">
-                          {user.name.charAt(0).toUpperCase()}
+                  <tr
+                    key={user.id}
+                    className="transition hover:bg-slate-50"
+                  >
+                    {/* User */}
+                    <td className="px-4 py-3.5 sm:px-5 sm:py-4">
+                      <div className="flex min-w-[220px] items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600 sm:h-10 sm:w-10">
+                          {user.name
+                            ?.charAt(0)
+                            .toUpperCase() || "U"}
                         </div>
 
-                        <div>
-                          <p className="font-semibold text-slate-800">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-800">
                             {user.name}
                           </p>
-                          <p className="text-xs text-slate-400">
+
+                          <p className="max-w-[200px] truncate text-xs text-slate-400">
                             {user.email}
                           </p>
                         </div>
                       </div>
                     </td>
 
-                    <td className="px-5 py-4 text-sm text-slate-600">
+                    {/* User ID */}
+                    <td className="whitespace-nowrap px-4 py-3.5 text-sm text-slate-600 sm:px-5 sm:py-4">
                       {user.id}
                     </td>
 
-                    <td className="px-5 py-4">
+                    {/* Status */}
+                    <td className="whitespace-nowrap px-4 py-3.5 sm:px-5 sm:py-4">
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          user.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
+                        className={`
+                          inline-flex
+                          rounded-full
+                          px-3
+                          py-1
+                          text-[11px]
+                          font-semibold
+                          ${
+                            user.status === "Active"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }
+                        `}
                       >
                         {user.status}
                       </span>
                     </td>
 
-                    <td className="px-5 py-4 font-semibold text-slate-700">
-                      {user.complaints}
+                    {/* Complaints */}
+                    <td className="whitespace-nowrap px-4 py-3.5 font-semibold text-slate-700 sm:px-5 sm:py-4">
+                      {user.complaints || 0}
                     </td>
 
-                    <td className="px-5 py-4 text-sm text-slate-500">
-                      {user.joined}
+                    {/* Joined */}
+                    <td className="whitespace-nowrap px-4 py-3.5 text-sm text-slate-500 sm:px-5 sm:py-4">
+                      {user.joined || "—"}
                     </td>
 
-                    <td className="px-5 py-4 text-right">
+                    {/* Action */}
+                    <td className="whitespace-nowrap px-4 py-3.5 text-right sm:px-5 sm:py-4">
                       <button
                         type="button"
-                        onClick={() => setSelectedUser(user)}
-                        className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium text-slate-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                        onClick={() =>
+                          setSelectedUser(user)
+                        }
+                        className="
+                          inline-flex
+                          items-center
+                          gap-2
+                          rounded-lg
+                          border
+                          border-slate-200
+                          px-3
+                          py-2
+                          text-xs
+                          font-medium
+                          text-slate-600
+                          transition
+                          hover:border-orange-200
+                          hover:bg-orange-50
+                          hover:text-orange-600
+                          sm:text-sm
+                        "
                       >
-                        <Eye size={16} />
+                        <Eye size={15} />
                         View
                       </button>
                     </td>
@@ -203,10 +397,23 @@ const UserManagement = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center">
-                    <Users size={35} className="mx-auto text-slate-300" />
+                  <td
+                    colSpan={6}
+                    className="px-5 py-14 text-center"
+                  >
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                      <Users
+                        size={25}
+                        className="text-slate-300"
+                      />
+                    </div>
+
                     <p className="mt-3 font-semibold text-slate-600">
                       No users found
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      Try changing your search or filters.
                     </p>
                   </td>
                 </tr>
@@ -215,46 +422,94 @@ const UserManagement = ({
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex flex-col gap-3 border-t bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-slate-500">
-            Showing{" "}
-            <span className="font-semibold text-slate-700">
-              {users.length}
-            </span>{" "}
-            of{" "}
-            <span className="font-semibold text-slate-700">
-              {totalUsers}
-            </span>{" "}
-            users
-          </p>
+        <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 sm:px-5 sm:py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {/* Count */}
+            <p className="text-xs text-slate-500 sm:text-sm">
+              Showing{" "}
+              <span className="font-semibold text-slate-700">
+                {users.length}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-slate-700">
+                {totalUsers}
+              </span>{" "}
+              users
+            </p>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={page === 1}
-              onClick={() => setPage((p) => p - 1)}
-              className="rounded-lg border bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Previous
-            </button>
+            {/* Controls */}
+            <div className="flex items-center justify-between gap-2 sm:justify-end">
+              <button
+                type="button"
+                disabled={page === 1}
+                onClick={() =>
+                  setPage((p) => p - 1)
+                }
+                className="
+                  flex-1
+                  rounded-lg
+                  border
+                  border-slate-200
+                  bg-white
+                  px-3
+                  py-2
+                  text-xs
+                  font-medium
+                  text-slate-600
+                  transition
+                  hover:bg-slate-100
+                  disabled:cursor-not-allowed
+                  disabled:opacity-40
+                  sm:flex-none
+                  sm:text-sm
+                "
+              >
+                Previous
+              </button>
 
-            <span className="px-2 text-sm text-slate-600">
-              Page {page} of {totalPages}
-            </span>
+              <span className="whitespace-nowrap px-1 text-xs text-slate-600 sm:px-2 sm:text-sm">
+                Page{" "}
+                <span className="font-semibold">
+                  {page}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold">
+                  {totalPages}
+                </span>
+              </span>
 
-            <button
-              type="button"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              className="rounded-lg border bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Next
-            </button>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() =>
+                  setPage((p) => p + 1)
+                }
+                className="
+                  flex-1
+                  rounded-lg
+                  border
+                  border-slate-200
+                  bg-white
+                  px-3
+                  py-2
+                  text-xs
+                  font-medium
+                  text-slate-600
+                  transition
+                  hover:bg-slate-100
+                  disabled:cursor-not-allowed
+                  disabled:opacity-40
+                  sm:flex-none
+                  sm:text-sm
+                "
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

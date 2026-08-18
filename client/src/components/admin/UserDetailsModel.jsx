@@ -14,200 +14,379 @@ import axios from "axios";
 const UserDetailsModal = ({ user, onClose }) => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-user", user?.id],
+
     queryFn: async () => {
       const res = await axios.get(
         `http://localhost:5000/api/admin/users/${user.id}`,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+        }
       );
+
       return res.data.data;
     },
+
     enabled: !!user?.id,
   });
 
   if (!user) return null;
 
   const userData = data || user;
+
   const resolutionRate = userData.complaints
-    ? Math.round((userData.resolved / userData.complaints) * 100)
+    ? Math.round(
+        (userData.resolved / userData.complaints) * 100
+      )
     : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div
+      className="
+        fixed inset-0 z-50
+        flex items-center justify-center
+        bg-slate-900/50
+        p-0
+        sm:p-4
+        backdrop-blur-sm
+      "
+    >
+      <div
+        className="
+          flex
+          h-full
+          w-full
+          flex-col
+          overflow-hidden
+          bg-white
+          shadow-2xl
+
+          sm:h-auto
+          sm:max-h-[92vh]
+          sm:max-w-2xl
+          sm:rounded-2xl
+        "
+      >
         
-        {/* Header */}
-        <div className="flex items-center justify-between border-b px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-100 text-lg font-bold text-orange-600">
-              {userData.name?.charAt(0).toUpperCase()}
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-5 sm:py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            {/* Avatar */}
+            <div
+              className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                bg-orange-100
+                text-base
+                font-bold
+                text-orange-600
+
+                sm:h-11
+                sm:w-11
+                sm:text-lg
+              "
+            >
+              {userData.name?.charAt(0).toUpperCase() || "U"}
             </div>
 
-            <div>
-              <h2 className="font-bold text-slate-900">User Details</h2>
-              <p className="text-xs text-slate-400">{userData.id}</p>
+            {/* Title */}
+            <div className="min-w-0">
+              <h2 className="truncate text-sm font-bold text-slate-900 sm:text-base">
+                User Details
+              </h2>
+
+              <p className="mt-0.5 truncate text-[11px] text-slate-400 sm:text-xs">
+                {userData.id}
+              </p>
             </div>
           </div>
 
+          {/* Close */}
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="
+              ml-3
+              shrink-0
+              rounded-lg
+              p-2
+              text-slate-400
+              transition
+              hover:bg-slate-100
+              hover:text-slate-700
+            "
+            aria-label="Close"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="overflow-y-auto p-5 sm:p-6">
-          {isLoading ? (
-            <div className="py-12 text-center text-sm text-slate-500">
-              Loading user details...
-            </div>
-          ) : isError ? (
-            <div className="py-12 text-center text-sm text-red-500">
-              Failed to load user details.
-            </div>
-          ) : (
-            <>
-              {/* Profile */}
-              <div className="rounded-2xl border bg-slate-50 p-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-2xl font-bold text-orange-600">
-                    {userData.name?.charAt(0).toUpperCase()}
-                  </div>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-5 lg:p-6">
+            {isLoading ? (
+              <div className="flex min-h-[280px] items-center justify-center">
+                <div className="text-center">
+                  <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-orange-500" />
 
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-slate-900">
-                      {userData.name}
-                    </h3>
-
-                    <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-                      <Mail size={15} />
-                      {userData.email}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        userData.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {userData.status}
-                    </span>
-
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        userData.role === "Admin"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-slate-200 text-slate-600"
-                      }`}
-                    >
-                      {userData.role}
-                    </span>
-                  </div>
+                  <p className="mt-4 text-sm text-slate-500">
+                    Loading user details...
+                  </p>
                 </div>
               </div>
+            ) : isError ? (
+              <div className="flex min-h-[280px] items-center justify-center">
+                <div className="rounded-xl bg-red-50 px-5 py-4 text-center">
+                  <p className="text-sm font-medium text-red-600">
+                    Failed to load user details.
+                  </p>
 
-              {/* Basic Information */}
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <Info icon={<User size={16} />} label="User ID" value={userData.id} />
-                <Info
-                  icon={<CalendarDays size={16} />}
-                  label="Joined"
-                  value={userData.joinedAt}
-                />
-              </div>
-
-              {/* Complaint Activity */}
-              <div className="mt-5">
-                <h4 className="mb-3 font-semibold text-slate-800">
-                  Complaint Activity
-                </h4>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <Stat
-                    icon={<FileText size={17} />}
-                    label="Complaints"
-                    value={userData.complaints}
-                  />
-
-                  <Stat
-                    icon={<CheckCircle2 size={17} />}
-                    label="Resolved"
-                    value={userData.resolved}
-                    className="text-green-600"
-                  />
-
-                  <Stat
-                    icon={<Activity size={17} />}
-                    label="Resolution Rate"
-                    value={`${resolutionRate}%`}
-                    className="text-orange-500"
-                  />
+                  <p className="mt-1 text-xs text-red-400">
+                    Please try again later.
+                  </p>
                 </div>
               </div>
+            ) : (
+              <>
+                
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                  <div className="flex flex-col gap-4">
+                    {/* User */}
+                    <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                      <div
+                        className="
+                          flex
+                          h-14
+                          w-14
+                          shrink-0
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-orange-100
+                          text-xl
+                          font-bold
+                          text-orange-600
 
-              {/* Role */}
-              <div className="mt-5 rounded-xl border p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                    <ShieldCheck size={19} className="text-blue-600" />
-                  </div>
+                          sm:h-16
+                          sm:w-16
+                          sm:text-2xl
+                        "
+                      >
+                        {userData.name
+                          ?.charAt(0)
+                          .toUpperCase() || "U"}
+                      </div>
 
-                  <div>
-                    <p className="font-semibold text-slate-800">
-                      Account Role
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      This account is registered as{" "}
-                      <span className="font-semibold text-slate-700">
-                        {userData.role}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-lg font-bold text-slate-900 sm:text-xl">
+                          {userData.name || "Unknown User"}
+                        </h3>
+
+                        <p className="mt-1 flex min-w-0 items-center gap-2 text-xs text-slate-500 sm:text-sm">
+                          <Mail
+                            size={14}
+                            className="shrink-0"
+                          />
+
+                          <span className="truncate">
+                            {userData.email || "No email available"}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Status + Role */}
+                    <div className="flex flex-wrap gap-2 sm:pl-20">
+                      <span
+                        className={`
+                          rounded-full
+                          px-3
+                          py-1.5
+                          text-[11px]
+                          font-semibold
+
+                          ${
+                            userData.status === "Active"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }
+                        `}
+                      >
+                        {userData.status || "Unknown"}
                       </span>
-                      .
-                    </p>
+
+                      <span
+                        className={`
+                          rounded-full
+                          px-3
+                          py-1.5
+                          text-[11px]
+                          font-semibold
+
+                          ${
+                            userData.role === "Admin"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-slate-200 text-slate-600"
+                          }
+                        `}
+                      >
+                        {userData.role || "User"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </>
-          )}
+
+                <div className="mt-5">
+                  <h4 className="mb-3 text-sm font-semibold text-slate-800">
+                    Basic Information
+                  </h4>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                    <Info
+                      icon={<User size={16} />}
+                      label="User ID"
+                      value={userData.id || "—"}
+                    />
+
+                    <Info
+                      icon={<CalendarDays size={16} />}
+                      label="Joined"
+                      value={userData.joinedAt || "—"}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-5">
+                  <h4 className="mb-3 text-sm font-semibold text-slate-800">
+                    Complaint Activity
+                  </h4>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+                    <Stat
+                      icon={<FileText size={17} />}
+                      label="Complaints"
+                      value={userData.complaints ?? 0}
+                    />
+
+                    <Stat
+                      icon={<CheckCircle2 size={17} />}
+                      label="Resolved"
+                      value={userData.resolved ?? 0}
+                      className="text-green-600"
+                    />
+
+                    <Stat
+                      icon={<Activity size={17} />}
+                      label="Resolution Rate"
+                      value={`${resolutionRate}%`}
+                      className="text-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                      <ShieldCheck
+                        size={19}
+                        className="text-blue-600"
+                      />
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="font-semibold text-slate-800">
+                        Account Role
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
+                        This account is registered as{" "}
+                        <span className="font-semibold text-slate-700">
+                          {userData.role || "User"}
+                        </span>
+                        .
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t bg-slate-50 px-5 py-4 text-right">
-          <button
-            onClick={onClose}
-            className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-          >
-            Close
-          </button>
+        <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:px-5 sm:py-4">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="
+                w-full
+                rounded-xl
+                border
+                border-slate-300
+                bg-white
+                px-5
+                py-2.5
+                text-sm
+                font-semibold
+                text-slate-700
+                transition
+                hover:bg-slate-100
+
+                sm:w-auto
+              "
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-const Info = ({ icon, label, value }) => (
-  <div className="rounded-xl border p-4">
-    <div className="flex items-center gap-2 text-slate-400">
-      {icon}
-      <span className="text-xs font-medium uppercase tracking-wide">
-        {label}
-      </span>
-    </div>
-    <p className="mt-2 break-all font-semibold text-slate-800">{value}</p>
-  </div>
-);
+const Info = ({ icon, label, value }) => {
+  return (
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex items-center gap-2 text-slate-400">
+        {icon}
 
-const Stat = ({ icon, label, value, className = "text-slate-900" }) => (
-  <div className="rounded-xl border p-4">
-    <div className="flex items-center gap-2 text-slate-400">
-      {icon}
-      <span className="text-xs uppercase tracking-wide">{label}</span>
+        <span className="text-[10px] font-medium uppercase tracking-wide sm:text-xs">
+          {label}
+        </span>
+      </div>
+
+      <p className="mt-2 break-all text-sm font-semibold text-slate-800">
+        {value}
+      </p>
     </div>
-    <p className={`mt-2 text-2xl font-bold ${className}`}>{value}</p>
-  </div>
-);
+  );
+};
+
+const Stat = ({
+  icon,
+  label,
+  value,
+  className = "text-slate-900",
+}) => {
+  return (
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex items-center gap-2 text-slate-400">
+        {icon}
+
+        <span className="text-[10px] uppercase tracking-wide sm:text-xs">
+          {label}
+        </span>
+      </div>
+
+      <p
+        className={`mt-2 text-xl font-bold sm:text-2xl ${className}`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+};
 
 export default UserDetailsModal;

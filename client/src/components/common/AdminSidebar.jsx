@@ -12,7 +12,7 @@ import {
 
 import { NavLink, useNavigate } from "react-router-dom";
 
-const AdminSidebar = () => {
+const AdminSidebar = ({ onNavigate }) => {
   const navigate = useNavigate();
 
   const mainLinks = [
@@ -53,6 +53,7 @@ const AdminSidebar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
 
     navigate("/admin/login");
@@ -66,6 +67,7 @@ const AdminSidebar = () => {
         <NavLink
           key={link.label}
           to={link.path}
+          onClick={onNavigate}
           className={({ isActive }) =>
             `group flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-200 ${
               isActive
@@ -99,8 +101,9 @@ const AdminSidebar = () => {
   return (
     <aside className="flex h-screen w-72 flex-col border-r border-slate-800 bg-slate-900">
 
-      <div className="flex h-20 items-center gap-3 border-b border-slate-800 px-6">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500 text-white shadow-sm">
+      <div className="flex h-20 shrink-0 items-center gap-3 border-b border-slate-800 px-6">
+
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white shadow-sm">
           <ShieldCheck size={23} />
         </div>
 
@@ -113,9 +116,11 @@ const AdminSidebar = () => {
             ADMIN PANEL
           </p>
         </div>
+
       </div>
 
       <nav className="flex-1 overflow-y-auto px-4 py-6">
+
         <div>
           <p className="mb-3 px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">
             Overview
@@ -125,7 +130,6 @@ const AdminSidebar = () => {
             {renderLinks(mainLinks)}
           </div>
         </div>
-
         <div className="mt-8">
           <p className="mb-3 px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">
             System
@@ -138,9 +142,10 @@ const AdminSidebar = () => {
 
       </nav>
 
-      <div className="border-t border-slate-800 p-4">
+      <div className="shrink-0 border-t border-slate-800 p-4">
 
         <div className="mb-3 flex items-center gap-3 rounded-xl bg-slate-800 p-3">
+
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 font-bold text-orange-600">
             A
           </div>
@@ -150,24 +155,43 @@ const AdminSidebar = () => {
               Administrator
             </p>
 
-            <p className="text-xs text-slate-400">
+            <p className="truncate text-xs text-slate-400">
               System Administrator
             </p>
           </div>
+
         </div>
 
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-red-500/10 hover:text-red-400"
+          className="
+            flex
+            w-full
+            items-center
+            gap-3
+            rounded-xl
+            px-4
+            py-3
+            text-sm
+            font-semibold
+            text-slate-300
+            transition
+            hover:bg-red-500/10
+            hover:text-red-400
+          "
         >
           <LogOut size={19} />
           Logout
         </button>
 
       </div>
+
     </aside>
   );
 };
 
 export default AdminSidebar;
+
+
+

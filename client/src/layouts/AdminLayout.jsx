@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 import AdminSidebar from "../components/common/AdminSidebar";
@@ -9,35 +10,38 @@ const AdminLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-slate-50">
 
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:block">
-        <AdminSidebar />
-      </div>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 lg:block">
+        <AdminSidebar
+          onNavigate={() => setIsSidebarOpen(false)}
+        />
+      </aside>
 
-      {/* Mobile Sidebar */}
       {isSidebarOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        >
+          
+          <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px]" />
 
-          <div className="fixed inset-y-0 left-0 z-50 lg:hidden">
-            <AdminSidebar />
+          <div
+            className="relative h-full w-72 max-w-[85vw]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <AdminSidebar
+              onNavigate={() => setIsSidebarOpen(false)}
+            />
           </div>
-        </>
+        </div>
       )}
 
-      {/* Main Area */}
-      <div className="lg:pl-72">
+      <div className="min-h-screen lg:pl-72">
 
-        {/* Topbar */}
         <AdminTopbar
           onMenuClick={() => setIsSidebarOpen(true)}
         />
 
-        {/* Page Content */}
-        <main className="p-5 sm:p-6 lg:p-8">
+        <main className="min-w-0 p-4 sm:p-6 lg:p-8">
           {children}
         </main>
 
@@ -47,3 +51,6 @@ const AdminLayout = ({ children }) => {
 };
 
 export default AdminLayout;
+
+
+
