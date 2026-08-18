@@ -4,9 +4,8 @@ import {
   Users,
   BarChart3,
   Bell,
-  Settings,
   LogOut,
-  ShieldCheck,
+  Shield,
   ChevronRight,
 } from "lucide-react";
 
@@ -43,11 +42,6 @@ const AdminSidebar = ({ onNavigate }) => {
       label: "Notifications",
       icon: Bell,
       path: "/admin/notifications",
-    },
-    {
-      label: "Settings",
-      icon: Settings,
-      path: "/admin/settings",
     },
   ];
 
@@ -104,7 +98,7 @@ const AdminSidebar = ({ onNavigate }) => {
       <div className="flex h-20 shrink-0 items-center gap-3 border-b border-slate-800 px-6">
 
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white shadow-sm">
-          <ShieldCheck size={23} />
+          <Shield size={23} />
         </div>
 
         <div>

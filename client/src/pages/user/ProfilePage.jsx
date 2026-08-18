@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
+import { useEffect, useState } from "react";
 import {
   User,
   Mail,
@@ -10,7 +11,6 @@ import {
   Trash2,
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -27,10 +27,41 @@ const ProfilePage = () => {
   const [name, setName] = useState(user?.name || "");
   const [email] = useState(user?.email || "");
 
+  const [complaintsCount, setComplaintsCount] = useState(0);
+  const [complaintsLoading, setComplaintsLoading] = useState(true);
+
   useEffect(() => {
     setName(user?.name || "");
   }, [user?.name]);
 
+  useEffect(() => {
+    const fetchComplaintsCount = async () => {
+      try {
+        setComplaintsLoading(true);
+
+        const response = await api.get("/complaints/my", {
+          params: {
+            limit: 1,
+          },
+        });
+
+        const data = response.data.data;
+
+        setComplaintsCount(data?.total ?? 0);
+      } catch (error) {
+        console.error(
+          "Failed to fetch complaint count:",
+          error
+        );
+
+        setComplaintsCount(0);
+      } finally {
+        setComplaintsLoading(false);
+      }
+    };
+
+    fetchComplaintsCount();
+  }, []);
   const updateProfileMutation = useMutation({
     mutationFn: async (updatedData) => {
       const response = await api.patch(
@@ -46,7 +77,6 @@ const ProfilePage = () => {
         response?.user || response?.data?.user;
 
       if (updatedUser) {
-        
         setUser(updatedUser);
 
         localStorage.setItem(
@@ -70,7 +100,6 @@ const ProfilePage = () => {
       );
     },
   });
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -82,7 +111,9 @@ const ProfilePage = () => {
     }
 
     if (trimmedName.length < 2) {
-      toast.error("Name must contain at least 2 characters");
+      toast.error(
+        "Name must contain at least 2 characters"
+      );
       return;
     }
 
@@ -95,7 +126,6 @@ const ProfilePage = () => {
       name: trimmedName,
     });
   };
-
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
       const response = await api.delete(
@@ -106,7 +136,6 @@ const ProfilePage = () => {
     },
 
     onSuccess: (response) => {
-    
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
@@ -130,17 +159,57 @@ const ProfilePage = () => {
   });
 
   const handleDeleteAccount = () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete your account? This action cannot be undone."
-    );
+  toast(
+    (t) => (
+      <div className="w-[320px]">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+            <Trash2 size={18} className="text-red-600" />
+          </div>
 
-    if (!confirmed) {
-      return;
+          <div className="flex-1">
+            <p className="font-semibold text-slate-900">
+              Delete your account?
+            </p>
+
+            <p className="mt-1 text-sm leading-5 text-slate-500">
+              This action is permanent and cannot be undone.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => toast.dismiss(t.id)}
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              toast.dismiss(t.id);
+              deleteAccountMutation.mutate();
+            }}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ),
+    {
+      duration: Infinity,
+      position: "top-center",
+      style: {
+        padding: "16px",
+        borderRadius: "16px",
+      },
     }
-
-    deleteAccountMutation.mutate();
-  };
-
+  );
+};
   const getInitial = () => {
     if (!name) {
       return "U";
@@ -148,7 +217,6 @@ const ProfilePage = () => {
 
     return name.charAt(0).toUpperCase();
   };
-
   const formatMemberSince = () => {
     if (!user?.createdAt) {
       return "—";
@@ -165,12 +233,6 @@ const ProfilePage = () => {
       year: "numeric",
     });
   };
-
-  const complaintsSubmitted =
-    user?.complaintsCount ??
-    user?.complaintCount ??
-    user?.totalComplaints ??
-    "—";
 
   return (
     <DashboardLayout>
@@ -203,13 +265,9 @@ const ProfilePage = () => {
 
             <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:items-center">
 
-              {/* Avatar */}
-
               <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-orange-500 text-2xl font-bold text-white shadow-sm">
                 {getInitial()}
               </div>
-
-              {/* User info */}
 
               <div>
                 <h3 className="text-lg font-bold text-slate-900">
@@ -226,13 +284,10 @@ const ProfilePage = () => {
                 </div>
               </div>
             </div>
-
             <form
               onSubmit={handleSubmit}
               className="mt-8 space-y-5"
             >
-
-              {/* Full name */}
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -275,7 +330,6 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              {/* Email */}
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -313,8 +367,6 @@ const ProfilePage = () => {
                 </p>
               </div>
 
-              {/* Account role */}
-
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Account role
@@ -331,9 +383,6 @@ const ProfilePage = () => {
                   </span>
                 </div>
               </div>
-
-              {/* Save button */}
-
               <div className="flex justify-end pt-3">
                 <button
                   type="submit"
@@ -369,7 +418,6 @@ const ProfilePage = () => {
           </div>
 
           <div className="space-y-6">
-
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
               <h2 className="text-xl font-bold text-slate-900">
@@ -377,8 +425,6 @@ const ProfilePage = () => {
               </h2>
 
               <div className="mt-6 divide-y divide-slate-100">
-
-                {/* Account role */}
 
                 <div className="py-4 first:pt-0">
                   <div className="flex items-center gap-3">
@@ -399,11 +445,9 @@ const ProfilePage = () => {
                         {user?.role || "Citizen"}
                       </p>
                     </div>
+
                   </div>
                 </div>
-
-                {/* Account status */}
-
                 <div className="py-4">
                   <div className="flex items-center gap-3">
 
@@ -423,10 +467,9 @@ const ProfilePage = () => {
                         Active
                       </p>
                     </div>
+
                   </div>
                 </div>
-
-                {/* Complaints */}
 
                 <div className="py-4">
                   <div className="flex items-center gap-3">
@@ -444,13 +487,14 @@ const ProfilePage = () => {
                       </p>
 
                       <p className="mt-0.5 font-semibold text-slate-900">
-                        {complaintsSubmitted}
+                        {complaintsLoading
+                          ? "..."
+                          : complaintsCount}
                       </p>
                     </div>
+
                   </div>
                 </div>
-
-                {/* Member since */}
 
                 <div className="py-4 last:pb-0">
                   <div className="flex items-center gap-3">
@@ -471,6 +515,7 @@ const ProfilePage = () => {
                         {formatMemberSince()}
                       </p>
                     </div>
+
                   </div>
                 </div>
 

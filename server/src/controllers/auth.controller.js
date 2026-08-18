@@ -181,3 +181,20 @@ export const loginAdmin = asyncHandler(async (req, res) => {
     .cookie("refreshToken", refreshToken, cookieOptions)
     .json(new ApiResponse(200, { user: loggedInUser, accessToken }, "Admin logged in successfully"));
 })
+export const deleteAccount = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  await user.deleteOne();
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      null,
+      "Account deleted successfully"
+    )
+  );
+});

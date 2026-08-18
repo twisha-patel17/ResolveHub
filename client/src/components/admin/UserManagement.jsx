@@ -13,9 +13,9 @@ import SkeletonTable from "../../components/ui/SkeletonTable";
 const UserManagement = ({
   users = [],
   pagination,
-  search,
+  search = "",
   setSearch,
-  status,
+  status = "All",
   setStatus,
   onSearch,
   clearFilters,
@@ -24,21 +24,23 @@ const UserManagement = ({
   setSelectedUser,
   loading = false,
 }) => {
-  const totalUsers = pagination?.totalUsers || 0;
-  const totalPages = pagination?.totalPages || 1;
+  const totalUsers = pagination?.totalUsers ?? 0;
+  const totalPages = pagination?.totalPages ?? 1;
 
-  const activeUsers = users.filter(
-    (u) => u.status === "Active"
-  ).length;
+  const activeUsers =
+    pagination?.activeUsers ??
+    users.filter((user) => user.status === "Active").length;
 
-  const inactiveUsers = users.filter(
-    (u) => u.status === "Inactive"
-  ).length;
+  const inactiveUsers =
+    pagination?.inactiveUsers ??
+    users.filter((user) => user.status === "Inactive").length;
 
-  const totalComplaints = users.reduce(
-    (sum, user) => sum + (user.complaints || 0),
-    0
-  );
+  const totalComplaints =
+    pagination?.totalComplaints ??
+    users.reduce(
+      (sum, user) => sum + Number(user.complaints || 0),
+      0
+    );
 
   const stats = [
     {
@@ -109,7 +111,6 @@ const UserManagement = ({
               <div className="flex items-start justify-between gap-3">
                 <div className="w-full">
                   <div className="h-4 w-24 rounded bg-slate-200" />
-
                   <div className="mt-3 h-8 w-16 rounded bg-slate-200" />
                 </div>
 
@@ -185,7 +186,6 @@ const UserManagement = ({
         </div>
       )}
 
-      {/* FILTERS */}
       <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-6 sm:p-5">
         <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
@@ -224,7 +224,7 @@ const UserManagement = ({
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-          {/* SEARCH */}
+        
           <div className="relative min-w-0">
             <Search
               size={18}
@@ -240,11 +240,13 @@ const UserManagement = ({
             <input
               value={search}
               onChange={(e) =>
-                setSearch(e.target.value)
+                setSearch?.(e.target.value)
               }
-              onKeyDown={(e) =>
-                e.key === "Enter" && onSearch()
-              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  onSearch?.();
+                }
+              }}
               placeholder="Search by name or email..."
               className="
                 w-full
@@ -264,12 +266,13 @@ const UserManagement = ({
             />
           </div>
 
-          {/* STATUS */}
           <select
             value={status}
             onChange={(e) => {
-              setStatus(e.target.value);
-              onSearch(e.target.value);
+              const selectedStatus = e.target.value;
+
+              setStatus?.(selectedStatus);
+              onSearch?.(selectedStatus);
             }}
             className="
               w-full
@@ -294,22 +297,18 @@ const UserManagement = ({
         </div>
       </div>
 
-      {/* USERS TABLE */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         {loading ? (
           <SkeletonTable />
         ) : (
           <>
-            {/* MOBILE HINT */}
             {users.length > 0 && (
               <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5 text-[11px] text-slate-400 sm:hidden">
                 <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
-
                 Swipe horizontally to view all columns
               </div>
             )}
 
-            {/* TABLE */}
             <div className="overflow-x-auto">
               <table className="w-full min-w-[850px]">
                 <thead>
@@ -346,103 +345,115 @@ const UserManagement = ({
                 </thead>
 
                 <tbody className="divide-y divide-slate-100">
-                  {users.length ? (
-                    users.map((user) => (
-                      <tr
-                        key={user.id}
-                        className="transition hover:bg-slate-50"
-                      >
-                        {/* USER */}
-                        <td className="px-4 py-3.5 sm:px-5 sm:py-4">
-                          <div className="flex min-w-[220px] items-center gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600 sm:h-10 sm:w-10">
-                              {user.name
-                                ?.charAt(0)
-                                .toUpperCase() ||
-                                "U"}
+                  {users.length > 0 ? (
+                    users.map((user) => {
+                      const userId =
+                        user.id || user._id;
+
+                      return (
+                        <tr
+                          key={userId}
+                          className="transition hover:bg-slate-50"
+                        >
+                     
+                          <td className="px-4 py-3.5 sm:px-5 sm:py-4">
+                            <div className="flex min-w-[220px] items-center gap-3">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600 sm:h-10 sm:w-10">
+                                {user.name
+                                  ?.charAt(0)
+                                  .toUpperCase() ||
+                                  "U"}
+                              </div>
+
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-slate-800">
+                                  {user.name ||
+                                    "Unknown User"}
+                                </p>
+
+                                <p className="max-w-[200px] truncate text-xs text-slate-400">
+                                  {user.email ||
+                                    "No email"}
+                                </p>
+                              </div>
                             </div>
+                          </td>
 
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold text-slate-800">
-                                {user.name}
-                              </p>
+                          <td className="whitespace-nowrap px-4 py-3.5 text-sm text-slate-600 sm:px-5 sm:py-4">
+                            {userId || "—"}
+                          </td>
 
-                              <p className="max-w-[200px] truncate text-xs text-slate-400">
-                                {user.email}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
+                          <td className="whitespace-nowrap px-4 py-3.5 sm:px-5 sm:py-4">
+                            <span
+                              className={`
+                                inline-flex
+                                rounded-full
+                                px-3
+                                py-1
+                                text-[11px]
+                                font-semibold
+                                ${
+                                  user.status ===
+                                  "Active"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
+                                }
+                              `}
+                            >
+                              {user.status ||
+                                "Unknown"}
+                            </span>
+                          </td>
 
-                        {/* USER ID */}
-                        <td className="whitespace-nowrap px-4 py-3.5 text-sm text-slate-600 sm:px-5 sm:py-4">
-                          {user.id}
-                        </td>
+                          <td className="whitespace-nowrap px-4 py-3.5 font-semibold text-slate-700 sm:px-5 sm:py-4">
+                            {Number(
+                              user.complaints || 0
+                            )}
+                          </td>
 
-                        {/* STATUS */}
-                        <td className="whitespace-nowrap px-4 py-3.5 sm:px-5 sm:py-4">
-                          <span
-                            className={`
-                              inline-flex
-                              rounded-full
-                              px-3
-                              py-1
-                              text-[11px]
-                              font-semibold
-                              ${
-                                user.status ===
-                                "Active"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
-                              }
-                            `}
-                          >
-                            {user.status}
-                          </span>
-                        </td>
+                          <td className="whitespace-nowrap px-4 py-3.5 text-sm text-slate-500 sm:px-5 sm:py-4">
+                            {user.joined ||
+                              user.joinedAt ||
+                              "—"}
+                          </td>
 
-                        {/* COMPLAINTS */}
-                        <td className="whitespace-nowrap px-4 py-3.5 font-semibold text-slate-700 sm:px-5 sm:py-4">
-                          {user.complaints || 0}
-                        </td>
+                          <td className="whitespace-nowrap px-4 py-3.5 text-right sm:px-5 sm:py-4">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!userId) return;
 
-                        {/* JOINED */}
-                        <td className="whitespace-nowrap px-4 py-3.5 text-sm text-slate-500 sm:px-5 sm:py-4">
-                          {user.joined || "—"}
-                        </td>
-
-                        {/* ACTION */}
-                        <td className="whitespace-nowrap px-4 py-3.5 text-right sm:px-5 sm:py-4">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedUser(user)
-                            }
-                            className="
-                              inline-flex
-                              items-center
-                              gap-2
-                              rounded-lg
-                              border
-                              border-slate-200
-                              px-3
-                              py-2
-                              text-xs
-                              font-medium
-                              text-slate-600
-                              transition
-                              hover:border-orange-200
-                              hover:bg-orange-50
-                              hover:text-orange-600
-                              sm:text-sm
-                            "
-                          >
-                            <Eye size={15} />
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                                setSelectedUser({
+                                  ...user,
+                                  id: userId,
+                                });
+                              }}
+                              className="
+                                inline-flex
+                                items-center
+                                gap-2
+                                rounded-lg
+                                border
+                                border-slate-200
+                                px-3
+                                py-2
+                                text-xs
+                                font-medium
+                                text-slate-600
+                                transition
+                                hover:border-orange-200
+                                hover:bg-orange-50
+                                hover:text-orange-600
+                                sm:text-sm
+                              "
+                            >
+                              <Eye size={15} />
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
                       <td
@@ -471,10 +482,8 @@ const UserManagement = ({
               </table>
             </div>
 
-            {/* PAGINATION */}
             <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 sm:px-5 sm:py-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                {/* COUNT */}
                 <p className="text-xs text-slate-500 sm:text-sm">
                   Showing{" "}
                   <span className="font-semibold text-slate-700">
@@ -487,13 +496,17 @@ const UserManagement = ({
                   users
                 </p>
 
-                {/* CONTROLS */}
                 <div className="flex items-center justify-between gap-2 sm:justify-end">
                   <button
                     type="button"
-                    disabled={page === 1}
+                    disabled={page <= 1}
                     onClick={() =>
-                      setPage((p) => p - 1)
+                      setPage((currentPage) =>
+                        Math.max(
+                          currentPage - 1,
+                          1
+                        )
+                      )
                     }
                     className="
                       flex-1
@@ -532,7 +545,12 @@ const UserManagement = ({
                     type="button"
                     disabled={page >= totalPages}
                     onClick={() =>
-                      setPage((p) => p + 1)
+                      setPage((currentPage) =>
+                        Math.min(
+                          currentPage + 1,
+                          totalPages
+                        )
+                      )
                     }
                     className="
                       flex-1

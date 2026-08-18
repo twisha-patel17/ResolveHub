@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+
 import AdminLayout from "../../layouts/AdminLayout";
 import UserManagement from "../../components/admin/UserManagement";
+import UserDetailsModal from "../../components/admin/UserDetailsModel";
 import api from "../../lib/axios";
 
 const AdminUsersPage = () => {
@@ -12,6 +14,7 @@ const AdminUsersPage = () => {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-users", page],
+
     queryFn: async () => {
       const res = await api.get(
         `/admin/users?page=${page}&limit=${limit}`
@@ -19,6 +22,7 @@ const AdminUsersPage = () => {
 
       return res.data.data;
     },
+
     placeholderData: (previousData) => previousData,
   });
 
@@ -50,9 +54,15 @@ const AdminUsersPage = () => {
           pagination={data?.pagination}
           page={page}
           setPage={setPage}
-          selectedUser={selectedUser}
           setSelectedUser={setSelectedUser}
         />
+
+        {selectedUser && (
+          <UserDetailsModal
+            user={selectedUser}
+            onClose={() => setSelectedUser(null)}
+          />
+        )}
       </div>
     </AdminLayout>
   );

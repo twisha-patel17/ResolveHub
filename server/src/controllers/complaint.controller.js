@@ -77,9 +77,6 @@ export const createComplaint = asyncHandler(async (req, res) => {
     ],
   });
 
-  /*
-   * Notify all admins
-   */
   const admins = await User.find({
     role: "admin",
   }).select("_id");

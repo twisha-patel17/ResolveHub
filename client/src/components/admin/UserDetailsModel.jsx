@@ -8,46 +8,61 @@ import {
   CheckCircle2,
   Activity,
 } from "lucide-react";
+
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+
+import api from "../../lib/axios";
 
 const UserDetailsModal = ({ user, onClose }) => {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin-user", user?.id],
+  const userId = user?.id || user?._id;
+
+  const {
+    data,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["admin-user", userId],
 
     queryFn: async () => {
-      const res = await axios.get(
-        `http://localhost:5000/api/admin/users/${user.id}`,
-        {
-          withCredentials: true,
-        }
+      const res = await api.get(
+        `/admin/users/${userId}`
       );
 
       return res.data.data;
     },
 
-    enabled: !!user?.id,
+    enabled: Boolean(userId),
   });
 
   if (!user) return null;
 
   const userData = data || user;
 
-  const resolutionRate = userData.complaints
-    ? Math.round(
-        (userData.resolved / userData.complaints) * 100
-      )
+  const complaints = Number(
+    userData.complaints || 0
+  );
+
+  const resolved = Number(
+    userData.resolved || 0
+  );
+
+  const resolutionRate = complaints
+    ? Math.round((resolved / complaints) * 100)
     : 0;
 
   return (
     <div
       className="
-        fixed inset-0 z-50
-        flex items-center justify-center
+        fixed
+        inset-0
+        z-50
+        flex
+        items-center
+        justify-center
         bg-slate-900/50
         p-0
-        sm:p-4
         backdrop-blur-sm
+        sm:p-4
       "
     >
       <div
@@ -59,17 +74,28 @@ const UserDetailsModal = ({ user, onClose }) => {
           overflow-hidden
           bg-white
           shadow-2xl
-
           sm:h-auto
           sm:max-h-[92vh]
           sm:max-w-2xl
           sm:rounded-2xl
         "
       >
-        
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-5 sm:py-4">
+       
+        <div
+          className="
+            flex
+            shrink-0
+            items-center
+            justify-between
+            border-b
+            border-slate-200
+            px-4
+            py-3
+            sm:px-5
+            sm:py-4
+          "
+        >
           <div className="flex min-w-0 items-center gap-3">
-            {/* Avatar */}
             <div
               className="
                 flex
@@ -83,28 +109,27 @@ const UserDetailsModal = ({ user, onClose }) => {
                 text-base
                 font-bold
                 text-orange-600
-
                 sm:h-11
                 sm:w-11
                 sm:text-lg
               "
             >
-              {userData.name?.charAt(0).toUpperCase() || "U"}
+              {userData.name
+                ?.charAt(0)
+                .toUpperCase() || "U"}
             </div>
 
-            {/* Title */}
             <div className="min-w-0">
               <h2 className="truncate text-sm font-bold text-slate-900 sm:text-base">
                 User Details
               </h2>
 
               <p className="mt-0.5 truncate text-[11px] text-slate-400 sm:text-xs">
-                {userData.id}
+                {userData.id || userId}
               </p>
             </div>
           </div>
 
-          {/* Close */}
           <button
             type="button"
             onClick={onClose}
@@ -129,7 +154,18 @@ const UserDetailsModal = ({ user, onClose }) => {
             {isLoading ? (
               <div className="flex min-h-[280px] items-center justify-center">
                 <div className="text-center">
-                  <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-orange-500" />
+                  <div
+                    className="
+                      mx-auto
+                      h-8
+                      w-8
+                      animate-spin
+                      rounded-full
+                      border-2
+                      border-slate-200
+                      border-t-orange-500
+                    "
+                  />
 
                   <p className="mt-4 text-sm text-slate-500">
                     Loading user details...
@@ -150,10 +186,9 @@ const UserDetailsModal = ({ user, onClose }) => {
               </div>
             ) : (
               <>
-                
+               
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
                   <div className="flex flex-col gap-4">
-                    {/* User */}
                     <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                       <div
                         className="
@@ -168,7 +203,6 @@ const UserDetailsModal = ({ user, onClose }) => {
                           text-xl
                           font-bold
                           text-orange-600
-
                           sm:h-16
                           sm:w-16
                           sm:text-2xl
@@ -181,7 +215,8 @@ const UserDetailsModal = ({ user, onClose }) => {
 
                       <div className="min-w-0 flex-1">
                         <h3 className="truncate text-lg font-bold text-slate-900 sm:text-xl">
-                          {userData.name || "Unknown User"}
+                          {userData.name ||
+                            "Unknown User"}
                         </h3>
 
                         <p className="mt-1 flex min-w-0 items-center gap-2 text-xs text-slate-500 sm:text-sm">
@@ -191,13 +226,14 @@ const UserDetailsModal = ({ user, onClose }) => {
                           />
 
                           <span className="truncate">
-                            {userData.email || "No email available"}
+                            {userData.email ||
+                              "No email available"}
                           </span>
                         </p>
                       </div>
                     </div>
 
-                    {/* Status + Role */}
+                    {/* STATUS + ROLE */}
                     <div className="flex flex-wrap gap-2 sm:pl-20">
                       <span
                         className={`
@@ -206,15 +242,16 @@ const UserDetailsModal = ({ user, onClose }) => {
                           py-1.5
                           text-[11px]
                           font-semibold
-
                           ${
-                            userData.status === "Active"
+                            userData.status ===
+                            "Active"
                               ? "bg-green-100 text-green-700"
                               : "bg-red-100 text-red-700"
                           }
                         `}
                       >
-                        {userData.status || "Unknown"}
+                        {userData.status ||
+                          "Unknown"}
                       </span>
 
                       <span
@@ -224,9 +261,9 @@ const UserDetailsModal = ({ user, onClose }) => {
                           py-1.5
                           text-[11px]
                           font-semibold
-
                           ${
-                            userData.role === "Admin"
+                            userData.role ===
+                            "Admin"
                               ? "bg-blue-100 text-blue-700"
                               : "bg-slate-200 text-slate-600"
                           }
@@ -251,9 +288,25 @@ const UserDetailsModal = ({ user, onClose }) => {
                     />
 
                     <Info
-                      icon={<CalendarDays size={16} />}
+                      icon={
+                        <CalendarDays size={16} />
+                      }
                       label="Joined"
-                      value={userData.joinedAt || "—"}
+                      value={
+                        userData.joined ||
+                        (userData.joinedAt
+                          ? new Date(
+                              userData.joinedAt
+                            ).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              }
+                            )
+                          : "—")
+                      }
                     />
                   </div>
                 </div>
@@ -267,13 +320,15 @@ const UserDetailsModal = ({ user, onClose }) => {
                     <Stat
                       icon={<FileText size={17} />}
                       label="Complaints"
-                      value={userData.complaints ?? 0}
+                      value={complaints}
                     />
 
                     <Stat
-                      icon={<CheckCircle2 size={17} />}
+                      icon={
+                        <CheckCircle2 size={17} />
+                      }
                       label="Resolved"
-                      value={userData.resolved ?? 0}
+                      value={resolved}
                       className="text-green-600"
                     />
 
@@ -303,7 +358,8 @@ const UserDetailsModal = ({ user, onClose }) => {
                       <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
                         This account is registered as{" "}
                         <span className="font-semibold text-slate-700">
-                          {userData.role || "User"}
+                          {userData.role ||
+                            "User"}
                         </span>
                         .
                       </p>
@@ -333,7 +389,6 @@ const UserDetailsModal = ({ user, onClose }) => {
                 text-slate-700
                 transition
                 hover:bg-slate-100
-
                 sm:w-auto
               "
             >
