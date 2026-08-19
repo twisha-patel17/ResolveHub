@@ -119,17 +119,17 @@ const AdminLoginForm = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-md mx-auto px-4 sm:px-0">
       {/* Brand */}
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500">
+      <div className="mb-5 sm:mb-6 flex items-center gap-3">
+        <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500">
           <ShieldCheck
-            size={21}
-            className="text-white"
+            size={20}
+            className="text-white sm:w-[21px] sm:h-[21px]"
           />
         </div>
 
-        <div className="text-lg font-semibold">
+        <div className="text-base sm:text-lg font-semibold">
           <span className="text-slate-900">
             ResolveHub
           </span>
@@ -141,12 +141,12 @@ const AdminLoginForm = () => {
       </div>
 
       {/* Heading */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+      <div className="mb-6 sm:mb-7">
+        <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-slate-900">
           Admin sign in
         </h1>
 
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-500">
           Restricted access. Authorized staff only.
         </p>
       </div>
@@ -157,14 +157,14 @@ const AdminLoginForm = () => {
       >
         {/* Email */}
         <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-800">
+          <label className="mb-2 block text-xs sm:text-sm font-semibold text-slate-800">
             Admin email
           </label>
 
           <div className="relative">
             <Mail
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              size={17}
+              className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400"
             />
 
             <input
@@ -175,7 +175,7 @@ const AdminLoginForm = () => {
               placeholder="admin@resolvehub.io"
               value={formData.email}
               onChange={handleChange}
-              className={`w-full rounded-xl border bg-white py-3 pl-11 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 ${
+              className={`w-full rounded-xl border bg-white py-3 sm:py-3.5 pl-10 sm:pl-11 pr-4 text-sm text-slate-800 outline-none transition ${
                 errors.email
                   ? "border-red-500 focus:ring-2 focus:ring-red-100"
                   : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -184,7 +184,7 @@ const AdminLoginForm = () => {
           </div>
 
           {errors.email && (
-            <p className="mt-2 text-xs text-red-500">
+            <p className="mt-2 text-[11px] sm:text-xs leading-relaxed text-red-500">
               {errors.email}
             </p>
           )}
@@ -192,14 +192,14 @@ const AdminLoginForm = () => {
 
         {/* Password */}
         <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-800">
+          <label className="mb-2 block text-xs sm:text-sm font-semibold text-slate-800">
             Password
           </label>
 
           <div className="relative">
             <LockKeyhole
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              size={17}
+              className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400"
             />
 
             <input
@@ -210,7 +210,7 @@ const AdminLoginForm = () => {
               placeholder="••••••••"
               value={formData.password}
               onChange={handleChange}
-              className={`w-full rounded-xl border bg-white py-3 pl-11 pr-12 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 ${
+              className={`w-full rounded-xl border bg-white py-3 sm:py-3.5 pl-10 sm:pl-11 pr-12 text-sm text-slate-800 outline-none transition ${
                 errors.password
                   ? "border-red-500 focus:ring-2 focus:ring-red-100"
                   : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -223,7 +223,7 @@ const AdminLoginForm = () => {
               onClick={() =>
                 setShowPassword((prev) => !prev)
               }
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600 disabled:cursor-not-allowed"
+              className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 transition hover:text-slate-600 disabled:cursor-not-allowed"
             >
               {showPassword ? (
                 <EyeOff size={18} />
@@ -234,28 +234,26 @@ const AdminLoginForm = () => {
           </div>
 
           {errors.password && (
-            <p className="mt-2 text-xs text-red-500">
+            <p className="mt-2 text-[11px] sm:text-xs leading-relaxed text-red-500">
               {errors.password}
             </p>
           )}
         </div>
 
-        {/* Login Button */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-blue-300"
+          className="w-full rounded-xl bg-blue-600 py-3 sm:py-3.5 text-sm font-semibold text-white transition duration-200 hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-blue-300"
         >
           {loading
             ? "Signing in..."
             : "Sign in to admin console"}
         </button>
 
-        {/* Back */}
         <div className="pt-1 text-center">
           <Link
             to="/login"
-            className="text-sm text-slate-500 transition hover:text-blue-600"
+            className="inline-block px-2 py-1 text-xs sm:text-sm text-slate-500 transition hover:text-blue-600"
           >
             ← Back to regular login
           </Link>

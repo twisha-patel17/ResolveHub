@@ -30,13 +30,20 @@ const LoginForm = () => {
     onSuccess: (response) => {
       login(response.data.user);
 
-      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem(
+        "accessToken",
+        response.data.accessToken
+      );
 
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem(
+        "user",
+        JSON.stringify(response.data.user)
+      );
 
       toast.success(
         response.message || "Login Successful 🎉"
       );
+
       navigate("/dashboard");
     },
 
@@ -107,22 +114,25 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <h1 className="text-5xl font-bold text-slate-900">
-        Welcome Back
-      </h1>
+    <div className="w-full max-w-md px-1 sm:px-0">
+      {/* Heading */}
+      <div>
+        <h1 className="text-3xl font-bold leading-tight text-slate-900 sm:text-4xl md:text-5xl">
+          Welcome Back
+        </h1>
 
-      <p className="mt-3 text-slate-500">
-        Login to continue managing your complaints.
-      </p>
+        <p className="mt-2 text-sm leading-relaxed text-slate-500 sm:mt-3 sm:text-base">
+          Login to continue managing your complaints.
+        </p>
+      </div>
 
       <form
         onSubmit={handleSubmit}
-        className="mt-10 space-y-6"
+        className="mt-7 space-y-5 sm:mt-10 sm:space-y-6"
       >
-        
+        {/* Email */}
         <div>
-          <label className="mb-2 block font-medium">
+          <label className="mb-2 block text-sm font-medium text-slate-800 sm:text-base">
             Email Address
           </label>
 
@@ -134,7 +144,7 @@ const LoginForm = () => {
             placeholder="you@example.com"
             value={formData.email}
             onChange={handleChange}
-            className={`w-full rounded-xl px-5 py-3 outline-none transition ${
+            className={`w-full rounded-xl px-4 py-3 text-sm outline-none transition sm:px-5 sm:py-3.5 sm:text-base ${
               errors.email
                 ? "border border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
                 : "border border-slate-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
@@ -142,14 +152,15 @@ const LoginForm = () => {
           />
 
           {errors.email && (
-            <p className="mt-2 text-sm text-red-500">
+            <p className="mt-2 text-xs leading-relaxed text-red-500 sm:text-sm">
               {errors.email}
             </p>
           )}
         </div>
 
+        {/* Password */}
         <div>
-          <label className="mb-2 block font-medium">
+          <label className="mb-2 block text-sm font-medium text-slate-800 sm:text-base">
             Password
           </label>
 
@@ -162,7 +173,7 @@ const LoginForm = () => {
               placeholder="••••••••"
               value={formData.password}
               onChange={handleChange}
-              className={`w-full rounded-xl px-5 py-3 pr-12 outline-none transition ${
+              className={`w-full rounded-xl px-4 py-3 pr-12 text-sm outline-none transition sm:px-5 sm:py-3.5 sm:text-base ${
                 errors.password
                   ? "border border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
                   : "border border-slate-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
@@ -172,27 +183,31 @@ const LoginForm = () => {
             <button
               type="button"
               disabled={loading}
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-700 disabled:cursor-not-allowed"
+              onClick={() =>
+                setShowPassword((prev) => !prev)
+              }
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 transition hover:text-slate-700 disabled:cursor-not-allowed sm:right-4"
             >
               {showPassword ? (
-                <EyeOff size={20} />
+                <EyeOff size={19} />
               ) : (
-                <Eye size={20} />
+                <Eye size={19} />
               )}
             </button>
           </div>
 
           {errors.password && (
-            <p className="mt-2 text-sm text-red-500">
+            <p className="mt-2 text-xs leading-relaxed text-red-500 sm:text-sm">
               {errors.password}
             </p>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-4">
+
+        {/* Buttons */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <Link
             to="/"
-            className="rounded-xl border border-slate-300 py-3 text-center font-semibold text-slate-700 transition hover:bg-slate-100"
+            className="rounded-xl border border-slate-300 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100 sm:py-3.5 sm:text-base"
           >
             Cancel
           </Link>
@@ -200,13 +215,13 @@ const LoginForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="rounded-xl bg-orange-500 py-3 font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:bg-orange-600 active:scale-95 disabled:cursor-not-allowed disabled:bg-orange-300"
+            className="rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:bg-orange-600 active:scale-95 disabled:cursor-not-allowed disabled:bg-orange-300 sm:py-3.5 sm:text-base"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
         </div>
 
-        <p className="text-center text-slate-500">
+        <p className="text-center text-xs leading-relaxed text-slate-500 sm:text-sm">
           Don't have an account?{" "}
           <Link
             to="/register"
