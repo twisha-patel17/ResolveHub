@@ -3,225 +3,252 @@
 ### Smart Complaint Management System
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white" />
-  <img src="https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/Express.js-4-000000?style=for-the-badge&logo=express&logoColor=white" />
-  <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white" />
-  <img src="https://img.shields.io/badge/Socket.IO-4-010101?style=for-the-badge&logo=socket.io&logoColor=white" />
-  <img src="https://img.shields.io/badge/TanStack_Query-FF4154?style=for-the-badge&logo=reactquery&logoColor=white" />
-  <img src="https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-2026-blue?logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/Node.js-Backend-green?logo=node.js" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express.js-REST%20API-black?logo=express" alt="Express.js" />
+  <img src="https://img.shields.io/badge/MongoDB-Database-brightgreen?logo=mongodb" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/Socket.IO-Realtime-black?logo=socket.io" alt="Socket.IO" />
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-Styling-06B6D4?logo=tailwindcss" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Vite-Frontend-646CFF?logo=vite" alt="Vite" />
+  <img src="https://img.shields.io/badge/JWT-Authentication-purple?logo=jsonwebtokens" alt="JWT" />
+  <img src="https://img.shields.io/badge/Cloudinary-Image%20Storage-blue?logo=cloudinary" alt="Cloudinary" />
 </p>
 
 <p align="center">
-  <b>A full-stack complaint management platform for submitting, tracking, managing, and resolving complaints efficiently.</b>
-</p>
-
-<p align="center">
-  <a href="https://resolve-hub-sooty.vercel.app/">
-    <img src="https://img.shields.io/badge/🌐_Live_Demo-Visit_App-black?style=for-the-badge" />
-  </a>
-  &nbsp;
-  <a href="https://github.com/twisha-patel17/ResolveHub">
-    <img src="https://img.shields.io/badge/💻_GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white" />
-  </a>
+  A full-stack complaint management platform designed to make complaint submission, tracking, communication, and resolution more structured, transparent, and efficient.
 </p>
 
 ---
 
 ## 📌 Overview
 
-**ResolveHub** is a full-stack complaint management system designed to provide a structured and transparent platform where users can submit complaints and administrators can efficiently manage, track, respond to, and resolve them.
+**ResolveHub** is a full-stack complaint management system built using the MERN stack with real-time communication capabilities.
 
-The application provides a centralized workflow for complaint submission and resolution while giving users visibility into the progress of their complaints.
+The platform provides a centralized workflow where users can submit complaints, attach supporting images, monitor complaint progress, and communicate with administrators. Administrators receive a dedicated dashboard for reviewing complaints, updating priorities and statuses, responding to users, and managing platform activity.
 
-### Core Capabilities
+The project was designed around a realistic organizational problem: **complaints often become difficult to track when information is scattered across messages, forms, or manual processes.**
 
-* 🔐 Secure authentication
-* 👥 Role-based access control
-* 📝 Complaint creation and management
-* ⚡ Real-time updates using Socket.IO
-* 📊 Complaint status and priority tracking
-* 💬 Admin replies and complaint communication
-* 🛠️ Admin dashboard and user management
-* 🔎 Search, filtering, and pagination
-* 👤 Profile management
-* 🖼️ Image uploads using Cloudinary
-* 📱 Responsive user interface
-* ☁️ Separate frontend and backend deployment
+ResolveHub addresses this by introducing a structured digital workflow where every complaint has a clear lifecycle, associated metadata, communication history, and current status.
+
+### What the system provides
+
+* Secure authentication and authorization
+* Role-based user and administrator access
+* Complaint creation and lifecycle management
+* Complaint priority and status tracking
+* Real-time updates using Socket.IO
+* Admin-to-user communication
+* Complaint image attachments
+* Search, filtering, and pagination
+* Server-state management with TanStack Query
+* User profile management
+* Dedicated administrative dashboard
+* Responsive and mobile-friendly interface
+* Cloud-based deployment
 
 ---
 
-## ✨ Features
+# ✨ Key Highlights
 
-### 🔐 Authentication & Authorization
+### Real-Time Complaint Updates
 
-* User registration and login
-* JWT-based authentication
-* Password hashing using bcrypt
-* Role-based access control
-* Protected routes
-* Separate user and administrator capabilities
+ResolveHub uses **Socket.IO** to provide real-time communication between the backend and connected clients.
 
-### 📝 Complaint Management
+When an administrator changes relevant complaint information, connected users can receive the update without relying entirely on manual refreshes.
 
-* Create new complaints
-* View complaint details
-* Track complaint status
-* Set and manage complaint priority
+This makes the complaint tracking experience more responsive and demonstrates practical usage of event-driven communication in a full-stack application.
+
+### Role-Based Architecture
+
+The application separates capabilities based on user roles.
+
+**Users** can:
+
+* Create complaints
+* View their complaints
+* Track complaint progress
+* Reply to complaints
+* Upload supporting images
+* Manage their profile
+
+**Administrators** can:
+
+* View and manage complaints
 * Update complaint status
-* Add replies to complaints
-* View complaint history
-* Upload complaint-related images
+* Change complaint priority
+* Respond to users
+* Manage users
+* Search and filter records
+* Monitor complaint activity
 
-### ⚡ Real-Time Communication
+This ensures that sensitive administrative operations are protected from unauthorized users.
 
-ResolveHub uses **Socket.IO** to provide real-time complaint updates.
+### Structured Complaint Lifecycle
 
-When relevant complaint data changes, connected clients can receive updates without requiring a manual page refresh.
+Every complaint follows a defined workflow:
 
 ```text
-Admin updates complaint
-        │
-        ▼
-Backend processes update
-        │
-        ▼
-Socket.IO emits event
-        │
-        ▼
-Connected client receives event
-        │
-        ▼
-UI updates automatically
+Pending
+   │
+   ▼
+In Progress
+   │
+   ▼
+Resolved
 ```
 
-This provides a more responsive complaint tracking and administration experience.
+A complaint can also be marked as:
 
-### 🛠️ Admin Dashboard
+```text
+Rejected
+```
+
+This gives users a clear understanding of where their complaint currently stands instead of treating every complaint as an unstructured support request.
+
+---
+
+# 🧩 Core Features
+
+## 🔐 Authentication & Authorization
+
+ResolveHub implements JWT-based authentication with password hashing and protected backend routes.
+
+Features include:
+
+* User registration
+* User login
+* JWT authentication
+* Password hashing using bcrypt
+* Protected routes
+* Role-based authorization
+* Separate user and administrator capabilities
+
+Authentication is enforced at the backend level so that access restrictions are not dependent only on frontend UI visibility.
+
+---
+
+## 📝 Complaint Management
+
+Users can create and track complaints through a structured complaint workflow.
+
+Each complaint can contain information such as:
+
+* Title
+* Description
+* Category/details
+* Priority
+* Status
+* Attached images
+* Replies
+* Timestamps
+* Associated user information
+
+Administrators can update complaint information as the complaint moves through the resolution process.
+
+---
+
+## ⚡ Real-Time Communication
+
+Socket.IO is used for real-time communication between the server and connected clients.
+
+A simplified update flow looks like this:
+
+```text
+Administrator
+      │
+      │ Updates complaint
+      ▼
+Backend API
+      │
+      │ Processes change
+      ▼
+Socket.IO Event
+      │
+      ▼
+Connected Client
+      │
+      ▼
+UI reflects update
+```
+
+This reduces the dependency on constant manual refreshing and demonstrates how WebSockets can complement traditional REST APIs.
+
+---
+
+## 🛠️ Admin Dashboard
+
+The administrator dashboard provides a centralized interface for managing the complaint ecosystem.
 
 Administrators can:
 
 * View complaints
-* Manage complaint statuses
-* Update priorities
-* Reply to complaints
+* Inspect complaint details
+* Update status
+* Update priority
+* Reply to users
 * Manage users
-* Monitor complaint activity
-* Search and filter records
-* Access complaint details
+* Search records
+* Filter complaints
+* Navigate through paginated data
 
-### 🔎 Search, Filtering & Pagination
-
-* Search complaints and users
-* Filter complaints based on relevant properties
-* Paginate large datasets
-* Efficiently retrieve server-side data
-
-### 👤 User Profile
-
-* View profile information
-* Update profile details
-* Manage account information
-
-### 🎨 UI & User Experience
-
-* Responsive design
-* Mobile-friendly interface
-* Skeleton loading states
-* Loading indicators
-* Error handling
-* Status badges
-* Priority indicators
-* Clean dashboard interface
-
-### 🖼️ Image Uploads
-
-Complaint images are uploaded and stored using **Cloudinary**, allowing users to attach relevant visual information to their complaints.
+The dashboard is designed around the workflow of an administrator rather than simply exposing raw database records.
 
 ---
 
-# 🛠️ Tech Stack
+## 🔎 Search, Filtering & Pagination
 
-## Frontend
+ResolveHub supports server-side data operations for working with larger collections of complaints and users.
 
-<p>
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=white" />
-  <img src="https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/Axios-5A29E4?style=flat-square&logo=axios&logoColor=white" />
-  <img src="https://img.shields.io/badge/TanStack_Query-FF4154?style=flat-square&logo=reactquery&logoColor=white" />
-  <img src="https://img.shields.io/badge/React_Router-CA4245?style=flat-square&logo=reactrouter&logoColor=white" />
-</p>
+The application provides:
 
-* React
-* Vite
-* Tailwind CSS
-* Axios
-* TanStack Query
-* React Router
-* Lucide React
+* Search
+* Filtering
+* Pagination
+* Server-side data retrieval
+* Query-based data fetching
 
-## Backend
+These features make the application more scalable than loading every record into the browser at once.
 
-<p>
-  <img src="https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/Express.js-4-000000?style=flat-square&logo=express&logoColor=white" />
-  <img src="https://img.shields.io/badge/Socket.IO-4-010101?style=flat-square&logo=socket.io&logoColor=white" />
-</p>
+---
 
-* Node.js
-* Express.js
-* REST APIs
-* Socket.IO
+## 🖼️ Image Uploads
 
-## Database
+Users can attach images to complaints when visual information is useful for explaining an issue.
 
-<p>
-  <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white" />
-  <img src="https://img.shields.io/badge/Mongoose-880000?style=flat-square&logo=mongoose&logoColor=white" />
-</p>
+Images are uploaded and managed through **Cloudinary**, while the relevant image reference is associated with the complaint.
 
-* MongoDB
-* Mongoose
-* MongoDB Atlas
+This separates application data from file storage and avoids unnecessarily storing image binaries directly inside MongoDB.
 
-## Authentication & Security
+---
 
-<p>
-  <img src="https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white" />
-  <img src="https://img.shields.io/badge/bcrypt-338?style=flat-square" />
-</p>
+## 👤 User Profile
 
-* JWT
-* bcrypt
-* Protected routes
-* Role-based authorization
+Users can manage their account information through their profile.
 
-## File Storage
+The profile functionality includes:
 
-* Cloudinary
+* Viewing account information
+* Updating profile details
+* Managing account-related information
 
-## Deployment
+---
 
-<p>
-  <img src="https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white" />
-  <img src="https://img.shields.io/badge/Render-46E3B7?style=flat-square&logo=render&logoColor=black" />
-  <img src="https://img.shields.io/badge/MongoDB_Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white" />
-</p>
+## 🎨 User Experience
 
-* Vercel — Frontend
-* Render — Backend
-* MongoDB Atlas — Database
-* Cloudinary — Image Storage
+The frontend focuses on providing clear feedback throughout the application.
 
-## Development Tools
+UI features include:
 
-* Git
-* GitHub
-* Postman
-* VS Code
+* Responsive layouts
+* Mobile-friendly design
+* Loading indicators
+* Skeleton loading states
+* Error handling
+* Status badges
+* Priority indicators
+* Dashboard views
+* Empty states
+* Clean navigation
 
 ---
 
@@ -240,41 +267,57 @@ Complaint images are uploaded and stored using **Cloudinary**, allowing users to
                          │    Tailwind CSS      │
                          └──────────┬───────────┘
                                     │
-                     ┌──────────────┴──────────────┐
-                     │                             │
-                     ▼                             ▼
-            ┌─────────────────┐          ┌─────────────────┐
-            │    REST APIs    │          │    Socket.IO    │
-            │     Axios       │          │ Real-time Events│
-            └────────┬────────┘          └────────┬────────┘
-                     │                            │
-                     └──────────────┬─────────────┘
+                    ┌───────────────┴───────────────┐
+                    │                               │
+                    ▼                               ▼
+           ┌─────────────────┐             ┌─────────────────┐
+           │    REST APIs    │             │    Socket.IO    │
+           │     Axios       │             │ Real-Time Events│
+           └────────┬────────┘             └────────┬────────┘
+                    │                               │
+                    └───────────────┬───────────────┘
                                     ▼
                          ┌──────────────────────┐
                          │   NODE.JS +          │
                          │   EXPRESS.JS         │
                          └──────────┬───────────┘
                                     │
-                     ┌──────────────┴──────────────┐
-                     │                             │
-                     ▼                             ▼
-            ┌─────────────────┐          ┌─────────────────┐
-            │     MONGODB     │          │    CLOUDINARY   │
-            │     Database    │          │  Image Storage  │
-            └─────────────────┘          └─────────────────┘
+                    ┌───────────────┴───────────────┐
+                    │                               │
+                    ▼                               ▼
+           ┌─────────────────┐             ┌─────────────────┐
+           │     MONGODB     │             │    CLOUDINARY   │
+           │     Database    │             │  Image Storage  │
+           └─────────────────┘             └─────────────────┘
 ```
+
+### Architecture Approach
+
+The application separates responsibilities across the frontend, backend, database, and external file storage.
+
+**Frontend** handles presentation, user interaction, routing, and server-state consumption.
+
+**Backend** manages authentication, authorization, business logic, API endpoints, validation, and real-time events.
+
+**MongoDB** stores application data such as users and complaints.
+
+**Cloudinary** handles image storage and delivery.
+
+**Socket.IO** provides event-driven communication for real-time updates.
+
+This separation keeps the application modular and makes individual components easier to maintain and extend.
 
 ---
 
-# 🔄 Application Flow
+# 🔄 Application Workflow
 
-## 👤 User Flow
+## User Workflow
 
 ```text
 Register / Login
        │
        ▼
-   Dashboard
+    Dashboard
        │
        ▼
 Create Complaint
@@ -283,16 +326,16 @@ Create Complaint
 Complaint Submitted
        │
        ▼
-Track Complaint Status
+Administrator Reviews
        │
        ▼
-Receive Updates / Replies
+Track Status & Replies
        │
        ▼
 Complaint Resolved
 ```
 
-## 👨‍💼 Admin Flow
+## Administrator Workflow
 
 ```text
 Admin Login
@@ -320,84 +363,63 @@ Update Status   Update Priority
 
 ---
 
-# 📊 Complaint Lifecycle
+# ⚡ Real-Time Architecture
 
-ResolveHub uses a structured complaint status workflow:
+ResolveHub combines **REST APIs and Socket.IO** instead of attempting to use one communication mechanism for everything.
 
-```text
-┌─────────┐
-│ Pending │
-└────┬────┘
-     │
-     ▼
-┌──────────────┐
-│ In Progress  │
-└──────┬───────┘
-       │
-       ▼
-┌──────────┐
-│ Resolved │
-└──────────┘
-```
+REST APIs are used for standard request-response operations such as:
 
-A complaint may also be marked as:
+* Authentication
+* Creating complaints
+* Fetching complaints
+* Updating complaint information
+* Managing users
+
+Socket.IO is used where real-time communication improves the experience.
 
 ```text
-Rejected
+             Client
+                │
+       ┌────────┴────────┐
+       │                 │
+       ▼                 ▼
+   REST API          Socket.IO
+       │                 │
+       ▼                 ▼
+   Request/Response   Events
+       │                 │
+       └────────┬────────┘
+                ▼
+             Server
 ```
 
-This allows users to clearly understand the current state of their complaint.
+This hybrid approach allows the application to use conventional HTTP APIs for persistent operations while using real-time events for time-sensitive UI updates.
 
 ---
 
-# ⚡ Real-Time Updates with Socket.IO
+# 🔄 Server-State Management
 
-One of the key technical features of ResolveHub is real-time communication.
+ResolveHub uses **TanStack Query** to manage server-side data.
 
-Instead of relying entirely on repeated API requests or manual page refreshes, Socket.IO is used to communicate relevant updates between the server and connected clients.
+Instead of manually maintaining API loading, error, caching, and synchronization logic throughout individual components, TanStack Query provides a centralized approach to server-state management.
 
-### Example
+It is used for:
 
-```text
-Admin changes complaint
-          │
-          ▼
-Backend processes update
-          │
-          ▼
-Socket.IO emits event
-          │
-          ▼
-Connected client receives event
-          │
-          ▼
-UI updates automatically
-```
-
-This provides a more responsive complaint management experience.
-
----
-
-# 🔄 Server State Management
-
-ResolveHub uses **TanStack Query** for managing server-side data.
-
-It handles:
-
-* API data fetching
+* Data fetching
 * Caching
 * Loading states
 * Error states
 * Query invalidation
+* Refetching
 * Server-state synchronization
 
-This helps keep server-state logic separate from local UI state and makes API-driven components easier to manage.
+This improves the separation between **server state** and **local UI state** and makes data-driven React components easier to maintain.
 
 ---
 
-# 🔐 Authentication
+# 🔐 Security & Authentication
 
-Authentication is implemented using **JWT-based authentication**.
+Authentication is implemented using **JSON Web Tokens (JWT)**.
 
 ### Authentication Flow
 
@@ -414,21 +436,26 @@ JWT Generated
 Token Stored on Client
     │
     ▼
-Authenticated API Requests
+Authenticated Request
     │
     ▼
-Protected Backend Routes
+Backend Authentication Middleware
+    │
+    ▼
+Protected Resource
 ```
 
-Passwords are securely hashed using **bcrypt** before being stored in the database.
+Passwords are hashed using **bcrypt** before being stored.
 
-Protected routes ensure that users can only access resources permitted by their role.
+Backend middleware is responsible for validating authentication and enforcing role-based permissions.
+
+Environment variables are used for sensitive configuration such as database credentials, JWT secrets, and Cloudinary credentials.
 
 ---
 
-# 🌐 API Architecture
+# 🌐 REST API Architecture
 
-The backend follows a RESTful API architecture.
+The backend follows a REST-oriented API structure.
 
 ### Main API Groups
 
@@ -438,9 +465,9 @@ The backend follows a RESTful API architecture.
 /api/complaints
 ```
 
-### Example Operations
+### Representative Operations
 
-```http
+```text
 POST    /api/auth/register
 POST    /api/auth/login
 
@@ -451,7 +478,32 @@ PATCH   /api/complaints/:id
 DELETE  /api/complaints/:id
 ```
 
-> **Note:** Exact routes may vary depending on the current backend implementation.
+> Routes may vary depending on the current implementation.
+
+The API layer separates HTTP request handling from business logic through controllers, middleware, services, and data models.
+
+---
+
+# 🛠️ Tech Stack
+
+| Category            | Technologies              |
+| ------------------- | ------------------------- |
+| Frontend            | React, Vite, Tailwind CSS |
+| State Management    | TanStack Query            |
+| Routing             | React Router              |
+| HTTP Client         | Axios                     |
+| UI Icons            | Lucide React              |
+| Backend             | Node.js, Express.js       |
+| Real-Time           | Socket.IO                 |
+| Database            | MongoDB, Mongoose         |
+| Database Hosting    | MongoDB Atlas             |
+| Authentication      | JWT, bcrypt               |
+| File Storage        | Cloudinary                |
+| Frontend Deployment | Vercel                    |
+| Backend Deployment  | Render                    |
+| API Testing         | Postman                   |
+| Version Control     | Git, GitHub               |
+| Development         | VS Code                   |
 
 ---
 
@@ -494,6 +546,8 @@ server/
 └── package.json
 ```
 
+The project structure follows a modular approach where routing, controllers, models, middleware, services, and real-time functionality have separate responsibilities.
+
 ---
 
 # ⚙️ Environment Variables
@@ -515,14 +569,15 @@ PORT=5000
 
 MONGO_URI=your_mongodb_connection_string
 
-JWT_SECRET=your_jwt_secret
+ACCESS_TOKEN_SECRET=your_access_token_secret
+REFRESH_TOKEN_SECRET=your_refresh_token_secret
 
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
 
-> ⚠️ **Never commit `.env` files or expose secret credentials in the repository.**
+> **Security:** Never commit `.env` files, API keys, database credentials, JWT secrets, or other sensitive configuration to GitHub.
 
 ---
 
@@ -553,7 +608,9 @@ npm install
 
 ## 4. Configure Environment Variables
 
-Create the required `.env` files in the frontend and backend directories.
+Create the required `.env` files for the frontend and backend.
+
+Make sure the frontend API URL points to the backend server.
 
 ## 5. Start the Backend
 
@@ -567,13 +624,13 @@ npm run dev
 npm run dev
 ```
 
-The application should now be available locally.
+The frontend and backend will run independently during local development.
 
 ---
 
 # ☁️ Deployment
 
-ResolveHub uses separate deployment services for the frontend and backend.
+ResolveHub uses separate services for different application layers.
 
 | Layer        | Technology        | Deployment    |
 | ------------ | ----------------- | ------------- |
@@ -582,51 +639,67 @@ ResolveHub uses separate deployment services for the frontend and backend.
 | Database     | MongoDB           | MongoDB Atlas |
 | File Storage | Cloudinary        | Cloudinary    |
 
+This deployment structure keeps the frontend, backend, database, and file storage independently managed.
+
 ---
 
-# 📚 Key Learning Outcomes
+# 📚 What I Learned
 
-Through ResolveHub, I gained practical experience with:
+Building ResolveHub provided practical experience across the complete full-stack development lifecycle.
 
-* Building a complete MERN application
-* Designing RESTful APIs
-* Implementing JWT authentication
-* Role-based authorization
+### Backend Development
+
+* Designing REST APIs
+* Structuring Express applications
+* Creating controllers and middleware
 * MongoDB schema design with Mongoose
-* Real-time communication using Socket.IO
-* Server-state management with TanStack Query
-* API integration using Axios
-* Cloudinary image uploads
-* Search, filtering and pagination
-* Loading and error states
-* Frontend/backend integration
-* Production deployment
-* Environment variable management
-* Debugging full-stack applications
+* Authentication and authorization
+* API validation and error handling
+
+### Frontend Development
+
+* Building reusable React components
+* Managing server state with TanStack Query
+* Implementing protected routes
+* Handling asynchronous API operations
+* Designing responsive interfaces
+* Managing loading and error states
+
+### Real-Time Systems
+
+* Understanding WebSocket-based communication
+* Implementing Socket.IO events
+* Synchronizing backend changes with connected clients
+* Combining REST APIs with real-time events
+
+### Deployment & Production Concepts
+
+* Deploying frontend applications
+* Deploying backend APIs
+* Connecting cloud-hosted databases
+* Managing environment variables
+* Integrating external cloud services
+* Debugging deployed applications
 
 ---
 
-# 🎯 Project Goals
+# 🎯 Project Objectives
 
-The primary goals of ResolveHub were to:
+ResolveHub was built with the following objectives:
 
-1. Build a practical full-stack application.
+1. Build a complete full-stack application around a realistic problem.
 2. Strengthen MERN stack development skills.
-3. Learn real-time communication using Socket.IO.
-4. Improve understanding of authentication and authorization.
-5. Practice server-state management with TanStack Query.
-6. Gain experience deploying a production-style application.
-7. Build a project around a realistic problem.
+3. Implement secure authentication and role-based authorization.
+4. Understand real-time communication using Socket.IO.
+5. Practice effective server-state management.
+6. Work with cloud-based database and file-storage services.
+7. Gain experience integrating frontend and backend systems.
+8. Deploy a complete application using modern cloud platforms.
+9. Improve understanding of production-oriented application architecture.
 
 ---
 
 # 🌐 Live Demo
-
-<p align="center">
-  <a href="https://resolve-hub-sooty.vercel.app/">
-    <img src="https://img.shields.io/badge/🚀_Live_Demo-Open_ResolveHub-000000?style=for-the-badge" />
-  </a>
-</p>
 
 **Live Application:**
 https://resolve-hub-sooty.vercel.app/
@@ -635,13 +708,7 @@ https://resolve-hub-sooty.vercel.app/
 
 # 💻 GitHub Repository
 
-<p align="center">
-  <a href="https://github.com/twisha-patel17/ResolveHub">
-    <img src="https://img.shields.io/badge/⭐_GitHub-View_Repository-181717?style=for-the-badge&logo=github&logoColor=white" />
-  </a>
-</p>
-
-**Repository:**
+**Source Code:**
 https://github.com/twisha-patel17/ResolveHub
 
 ---
@@ -650,29 +717,16 @@ https://github.com/twisha-patel17/ResolveHub
 
 ## Twisha Patel
 
-**B.Tech Computer Engineering Student | Full-Stack Developer**
+**Computer Engineering Student | Full-Stack Developer**
 
-Passionate about building full-stack applications, learning modern web technologies, and solving real-world problems through software.
+I enjoy building practical software applications, exploring modern web technologies, and turning real-world problems into usable digital solutions.
 
-<p align="center">
-  <a href="https://github.com/twisha-patel17">
-    <img src="https://img.shields.io/badge/GitHub-twisha--patel17-181717?style=for-the-badge&logo=github&logoColor=white" />
-  </a>
-</p>
+### Connect
+
+* GitHub: https://github.com/twisha-patel17
 
 ---
 
 # 📄 License
 
 This project was created for educational and portfolio purposes.
-
----
-
-<p align="center">
-  ⭐ <b>If you found ResolveHub interesting, consider giving the repository a star!</b>
-</p>
-
-<p align="center">
-  <b>Built with ❤️ by Twisha Patel</b>
-</p>
-```
