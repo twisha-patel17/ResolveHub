@@ -69,26 +69,11 @@ const AdminComplaintsPage = () => {
     queryFn: () => getAdminComplaints(filters),
     placeholderData: (previousData) => previousData,
   });
-
-  /*
-   * STATUS UPDATE
-   */
   const updateStatusMutation = useMutation({
     mutationFn: updateComplaintStatus,
 
     onSuccess: (response) => {
-      /*
-       * IMPORTANT:
-       * Do not blindly replace selectedComplaint with
-       * whatever the backend returns.
-       *
-       * Some APIs return:
-       * { message, complaint }
-       *
-       * while others return:
-       * complaint
-       */
-
+      
       const updatedComplaint =
         response?.complaint ||
         response?.data ||
@@ -107,9 +92,6 @@ const AdminComplaintsPage = () => {
             ...previous,
             ...updatedComplaint,
 
-            /*
-             * Preserve replies if backend doesn't return them.
-             */
             replies:
               updatedComplaint.replies ??
               previous.replies ??
@@ -135,26 +117,17 @@ const AdminComplaintsPage = () => {
     },
   });
 
-  /*
-   * REPLY
-   */
   const replyMutation = useMutation({
     mutationFn: addComplaintReply,
 
     onSuccess: (response, variables) => {
       const message = variables?.message?.trim();
 
-      /*
-       * Try to find the complaint returned by backend.
-       */
       const returnedComplaint =
         response?.complaint ||
         response?.data ||
         response;
 
-      /*
-       * Try to find the newly created reply.
-       */
       const returnedReply =
         response?.reply ||
         response?.data?.reply ||
@@ -171,10 +144,6 @@ const AdminComplaintsPage = () => {
           ? previous.replies.filter(Boolean)
           : [];
 
-        /*
-         * If backend returned the complete complaint,
-         * use its replies.
-         */
         if (
           returnedComplaint &&
           returnedComplaint._id &&
@@ -188,10 +157,6 @@ const AdminComplaintsPage = () => {
           };
         }
 
-        /*
-         * If backend returned the new reply,
-         * append it to the existing conversation.
-         */
         if (returnedReply) {
           return {
             ...previous,
@@ -202,11 +167,6 @@ const AdminComplaintsPage = () => {
           };
         }
 
-        /*
-         * Fallback:
-         * create a local reply so the message immediately
-         * appears in the conversation.
-         */
         const localReply = {
           _id: `local-${Date.now()}`,
           sender: "admin",
@@ -226,10 +186,6 @@ const AdminComplaintsPage = () => {
         };
       });
 
-      /*
-       * Refresh table data in background.
-       * This does NOT close or replace the modal.
-       */
       queryClient.invalidateQueries({
         queryKey: ["admin-complaints"],
       });

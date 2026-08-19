@@ -120,7 +120,7 @@ const LoginForm = () => {
         onSubmit={handleSubmit}
         className="mt-10 space-y-6"
       >
-        {/* Email */}
+        
         <div>
           <label className="mb-2 block font-medium">
             Email Address
@@ -148,7 +148,6 @@ const LoginForm = () => {
           )}
         </div>
 
-        {/* Password */}
         <div>
           <label className="mb-2 block font-medium">
             Password
@@ -190,27 +189,6 @@ const LoginForm = () => {
             </p>
           )}
         </div>
-
-        {/* Remember Me */}
-        <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              disabled={loading}
-              className="accent-orange-500"
-            />
-            Remember me
-          </label>
-
-          <Link
-            to="/forgot-password"
-            className="font-medium text-orange-500 hover:underline"
-          >
-            Forgot Password?
-          </Link>
-        </div>
-
-        {/* Buttons */}
         <div className="grid grid-cols-2 gap-4">
           <Link
             to="/"

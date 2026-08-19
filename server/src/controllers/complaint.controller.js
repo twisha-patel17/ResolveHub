@@ -457,7 +457,6 @@ export const getAllComplaints = asyncHandler(async (req, res) => {
     )
   );
 });
-
 export const updateComplaintStatus = asyncHandler(
   async (req, res) => {
     if (req.user.role !== "admin") {
@@ -496,6 +495,8 @@ export const updateComplaintStatus = asyncHandler(
 
     complaint.status = status;
 
+    complaint.assignedTo = req.user._id;
+
     const statusMessage =
       message?.trim() ||
       `Complaint status changed to ${status}`;
@@ -508,20 +509,36 @@ export const updateComplaintStatus = asyncHandler(
 
     await complaint.save();
 
+    await complaint.populate([
+      {
+        path: "createdBy",
+        select: "name email",
+      },
+      {
+        path: "assignedTo",
+        select: "name email",
+      },
+      {
+        path: "statusHistory.updatedBy",
+        select: "name",
+      },
+    ]);
     const notification = await createNotification({
-      recipient: complaint.createdBy,
+      recipient: complaint.createdBy._id,
       complaint: complaint._id,
       title: "Complaint Status Updated",
       message: `Your complaint "${complaint.title}" is now ${status}.`,
       type: "status",
     });
-
     try {
       const io = getIO();
 
       io.to(
-        `user:${complaint.createdBy.toString()}`
-      ).emit("notification:new", notification);
+        `user:${complaint.createdBy._id.toString()}`
+      ).emit(
+        "notification:new",
+        notification
+      );
     } catch (socketError) {
       console.error(
         "Socket notification error:",
@@ -629,6 +646,10 @@ export const addReply = asyncHandler(async (req, res) => {
       "Access denied"
     );
   }
+  if (isAdmin) {
+    complaint.assignedTo = req.user._id;
+  }
+
   const reply = {
     sender: isAdmin
       ? "admin"
@@ -637,8 +658,10 @@ export const addReply = asyncHandler(async (req, res) => {
     senderId: req.user._id,
 
     senderName:
-      req.user.name || 
-      (isAdmin ? "Administrator" : "User"),
+      req.user.name ||
+      (isAdmin
+        ? "Administrator"
+        : "User"),
 
     message: message.trim(),
 
@@ -701,7 +724,6 @@ export const addReply = asyncHandler(async (req, res) => {
           type: "reply",
         });
 
-
       if (io) {
         io.to(
           `user:${admin._id.toString()}`
@@ -712,6 +734,7 @@ export const addReply = asyncHandler(async (req, res) => {
       }
     }
   }
+
   if (isAdmin) {
     const notification =
       await createNotification({

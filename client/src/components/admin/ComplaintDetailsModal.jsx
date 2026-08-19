@@ -103,12 +103,6 @@ const ComplaintDetailsModal = ({
       return;
     }
 
-    /*
-     * Parent handles the API request.
-     *
-     * We clear ONLY the input.
-     * The modal itself stays mounted.
-     */
     onReply(message);
 
     setReply("");
@@ -175,16 +169,6 @@ const ComplaintDetailsModal = ({
     complaint.location?.city ||
     "Location not provided";
 
-  /*
-   * VERY IMPORTANT
-   *
-   * Never directly use:
-   *
-   * complaint.replies.map((item) => item.sender)
-   *
-   * because an invalid/undefined item can crash
-   * the entire modal.
-   */
   const replies = Array.isArray(
     complaint.replies
   )
@@ -398,8 +382,6 @@ const ComplaintDetailsModal = ({
             </div>
           </div>
 
-          {/* INFO CARDS */}
-
           <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-5 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-5">
               <div className="flex items-center gap-2 text-slate-400">
@@ -466,9 +448,6 @@ const ComplaintDetailsModal = ({
               </div>
             </div>
           </div>
-
-          {/* EVIDENCE */}
-
           <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-5 sm:rounded-3xl sm:p-6">
             <div className="flex items-center gap-2">
               <ImageIcon
@@ -528,8 +507,6 @@ const ComplaintDetailsModal = ({
               </div>
             )}
           </div>
-
-          {/* STATUS TIMELINE */}
 
           <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-5 sm:rounded-3xl sm:p-6">
             <h2 className="font-bold text-slate-900">
@@ -641,8 +618,6 @@ const ComplaintDetailsModal = ({
             )}
           </div>
 
-          {/* ASSIGNED ADMIN */}
-
           {assignedAdmin && (
             <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-5 sm:rounded-3xl sm:p-5">
               <div className="flex items-center gap-3">
@@ -666,10 +641,6 @@ const ComplaintDetailsModal = ({
             </div>
           )}
 
-          {/* ============================= */}
-          {/* CONVERSATION */}
-          {/* ============================= */}
-
           <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-5 sm:rounded-3xl sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -688,21 +659,11 @@ const ComplaintDetailsModal = ({
               </span>
             </div>
 
-            {/* MESSAGES */}
-
             <div className="mt-5 space-y-4 sm:mt-6">
               {replies.length > 0 ? (
                 replies.map(
                   (item, index) => {
-                    /*
-                     * Extra safety.
-                     *
-                     * Even if backend sends:
-                     *
-                     * [reply, undefined, reply]
-                     *
-                     * the modal won't crash.
-                     */
+                   
                     if (!item) {
                       return null;
                     }
@@ -711,10 +672,6 @@ const ComplaintDetailsModal = ({
                       item.sender ===
                       "admin";
 
-                    /*
-                     * ADMIN = RIGHT
-                     * USER = LEFT
-                     */
                     return (
                       <div
                         key={
@@ -847,8 +804,6 @@ const ComplaintDetailsModal = ({
                 </div>
               )}
             </div>
-
-            {/* REPLY INPUT */}
 
             <div className="mt-5 border-t border-slate-100 pt-5 sm:mt-6">
               <textarea

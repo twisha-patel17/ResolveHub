@@ -53,13 +53,10 @@ const AdminComplaintTable = ({
 
   return (
     <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
+      {/* HEADER */}
       <div className="border-b border-slate-100 px-4 py-4 sm:px-6 sm:py-5">
-
         <div className="flex items-center justify-between gap-4">
-
           <div className="min-w-0">
-
             <h2 className="text-lg font-bold text-slate-900">
               All Complaints
             </h2>
@@ -67,7 +64,6 @@ const AdminComplaintTable = ({
             <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
               Review and manage complaints submitted by users.
             </p>
-
           </div>
 
           <span className="shrink-0 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600 sm:px-3">
@@ -78,36 +74,28 @@ const AdminComplaintTable = ({
               complaints
             </span>
           </span>
-
         </div>
-
       </div>
 
+      {/* LOADING */}
       {loading ? (
         <SkeletonTable />
       ) : complaints.length === 0 ? (
-
+        /* EMPTY STATE */
         <div className="p-4 sm:p-6">
-
           <EmptyState
             icon={FileText}
             title="No complaints found"
             description="Try changing your search or filter options."
           />
-
         </div>
-
       ) : (
-
         <>
+          {/* DESKTOP TABLE */}
           <div className="hidden overflow-x-auto lg:block">
-
             <table className="w-full">
-
               <thead>
-
                 <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-
                   <th className="whitespace-nowrap px-5 py-4">
                     ID
                   </th>
@@ -131,232 +119,232 @@ const AdminComplaintTable = ({
                   <th className="px-5 py-4 text-right">
                     Action
                   </th>
-
                 </tr>
-
               </thead>
 
               <tbody>
+                {complaints.map((complaint) => {
+                  const isDeletedUser = !complaint.createdBy;
 
-                {complaints.map((complaint) => (
+                  return (
+                    <tr
+                      key={complaint._id}
+                      className="border-b border-slate-100 transition last:border-0 hover:bg-slate-50"
+                    >
+                      {/* ID */}
+                      <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-600">
+                        {complaint.complaintId}
+                      </td>
 
-                  <tr
-                    key={complaint._id}
-                    className="border-b border-slate-100 transition last:border-0 hover:bg-slate-50"
-                  >
+                      {/* COMPLAINT */}
+                      <td className="max-w-70 px-5 py-4">
+                        <p className="truncate text-sm font-semibold text-slate-900">
+                          {complaint.title}
+                        </p>
 
-                    <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-600">
-                      {complaint.complaintId}
-                    </td>
+                        <p className="mt-1 truncate text-xs text-slate-400">
+                          {complaint.category}
+                        </p>
+                      </td>
 
-                    <td className="max-w-70 px-5 py-4">
+                      {/* USER */}
+                      <td className="max-w-55 px-5 py-4">
+                        <p
+                          className={`truncate text-sm font-medium ${
+                            isDeletedUser
+                              ? "text-slate-500"
+                              : "text-slate-700"
+                          }`}
+                        >
+                          {isDeletedUser
+                            ? "Deleted User"
+                            : complaint.createdBy.name}
+                        </p>
 
-                      <p className="truncate text-sm font-semibold text-slate-900">
-                        {complaint.title}
-                      </p>
+                        <p className="truncate text-xs text-slate-400">
+                          {isDeletedUser
+                            ? "Account no longer exists"
+                            : complaint.createdBy.email}
+                        </p>
+                      </td>
 
-                      <p className="mt-1 truncate text-xs text-slate-400">
-                        {complaint.category}
-                      </p>
+                      {/* PRIORITY */}
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getPriorityStyle(
+                            complaint.priority
+                          )}`}
+                        >
+                          {complaint.priority}
+                        </span>
+                      </td>
 
-                    </td>
+                      {/* STATUS */}
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyle(
+                            complaint.status
+                          )}`}
+                        >
+                          {complaint.status}
+                        </span>
+                      </td>
 
-                    <td className="max-w-55 px-5 py-4">
-
-                      <p className="truncate text-sm font-medium text-slate-700">
-                        {complaint.createdBy?.name ||
-                          "Unknown"}
-                      </p>
-
-                      <p className="truncate text-xs text-slate-400">
-                        {complaint.createdBy?.email || ""}
-                      </p>
-
-                    </td>
-
-                    <td className="whitespace-nowrap px-5 py-4">
-
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getPriorityStyle(
-                          complaint.priority
-                        )}`}
-                      >
-                        {complaint.priority}
-                      </span>
-
-                    </td>
-
-                    <td className="whitespace-nowrap px-5 py-4">
-
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyle(
-                          complaint.status
-                        )}`}
-                      >
-                        {complaint.status}
-                      </span>
-
-                    </td>
-
-                    <td className="whitespace-nowrap px-5 py-4 text-right">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onViewComplaint?.(complaint)
-                        }
-                        className="
-                          inline-flex
-                          items-center
-                          gap-2
-                          rounded-lg
-                          border
-                          border-slate-200
-                          px-3
-                          py-2
-                          text-xs
-                          font-semibold
-                          text-slate-600
-                          transition
-                          hover:border-orange-200
-                          hover:bg-orange-50
-                          hover:text-orange-600
-                        "
-                      >
-                        <Eye size={15} />
-                        View
-                      </button>
-
-                    </td>
-
-                  </tr>
-
-                ))}
-
+                      {/* ACTION */}
+                      <td className="whitespace-nowrap px-5 py-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onViewComplaint?.(complaint)
+                          }
+                          className="
+                            inline-flex
+                            items-center
+                            gap-2
+                            rounded-lg
+                            border
+                            border-slate-200
+                            px-3
+                            py-2
+                            text-xs
+                            font-semibold
+                            text-slate-600
+                            transition
+                            hover:border-orange-200
+                            hover:bg-orange-50
+                            hover:text-orange-600
+                          "
+                        >
+                          <Eye size={15} />
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
-
             </table>
-
           </div>
 
           <div className="divide-y divide-slate-100 lg:hidden">
+            {complaints.map((complaint) => {
+              const isDeletedUser = !complaint.createdBy;
 
-            {complaints.map((complaint) => (
+              return (
+                <div
+                  key={complaint._id}
+                  className="p-4 transition hover:bg-slate-50 sm:p-5"
+                >
+                  
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-400">
+                          {complaint.complaintId}
+                        </span>
 
-              <div
-                key={complaint._id}
-                className="p-4 transition hover:bg-slate-50 sm:p-5"
-              >
+                        <span className="text-slate-300">
+                          •
+                        </span>
 
-                <div className="flex items-start justify-between gap-3">
+                        <span className="text-xs font-medium text-slate-400">
+                          {complaint.category}
+                        </span>
+                      </div>
 
-                  <div className="min-w-0 flex-1">
+                      <h3 className="mt-2 wrap-break-word text-sm font-bold leading-5 text-slate-900 sm:text-base">
+                        {complaint.title}
+                      </h3>
+                    </div>
+                  </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
-
-                      <span className="text-xs font-semibold text-slate-400">
-                        {complaint.complaintId}
-                      </span>
-
-                      <span className="text-slate-300">
-                        •
-                      </span>
-
-                      <span className="text-xs font-medium text-slate-400">
-                        {complaint.category}
-                      </span>
-
+                  {/* USER */}
+                  <div className="mt-4 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
+                    <div
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                        isDeletedUser
+                          ? "bg-slate-200 text-slate-500"
+                          : "bg-orange-100 text-orange-500"
+                      }`}
+                    >
+                      <User size={17} />
                     </div>
 
-                    <h3 className="mt-2 wrap-break-word text-sm font-bold leading-5 text-slate-900 sm:text-base">
-                      {complaint.title}
-                    </h3>
+                    <div className="min-w-0">
+                      <p
+                        className={`truncate text-xs font-semibold sm:text-sm ${
+                          isDeletedUser
+                            ? "text-slate-500"
+                            : "text-slate-700"
+                        }`}
+                      >
+                        {isDeletedUser
+                          ? "Deleted User"
+                          : complaint.createdBy.name}
+                      </p>
 
+                      <p className="truncate text-[11px] text-slate-400 sm:text-xs">
+                        {isDeletedUser
+                          ? "Account no longer exists"
+                          : complaint.createdBy.email}
+                      </p>
+                    </div>
                   </div>
 
-                </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${getPriorityStyle(
+                        complaint.priority
+                      )}`}
+                    >
+                      {complaint.priority}
+                    </span>
 
-                <div className="mt-4 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
-
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-500">
-                    <User size={17} />
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${getStatusStyle(
+                        complaint.status
+                      )}`}
+                    >
+                      {complaint.status}
+                    </span>
                   </div>
 
-                  <div className="min-w-0">
-
-                    <p className="truncate text-xs font-semibold text-slate-700 sm:text-sm">
-                      {complaint.createdBy?.name ||
-                        "Unknown"}
-                    </p>
-
-                    <p className="truncate text-[11px] text-slate-400 sm:text-xs">
-                      {complaint.createdBy?.email || ""}
-                    </p>
-
-                  </div>
-
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${getPriorityStyle(
-                      complaint.priority
-                    )}`}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onViewComplaint?.(complaint)
+                    }
+                    className="
+                      mt-4
+                      flex
+                      w-full
+                      items-center
+                      justify-center
+                      gap-2
+                      rounded-xl
+                      border
+                      border-slate-200
+                      px-4
+                      py-2.5
+                      text-xs
+                      font-semibold
+                      text-slate-600
+                      transition
+                      hover:border-orange-200
+                      hover:bg-orange-50
+                      hover:text-orange-600
+                      sm:text-sm
+                    "
                   >
-                    {complaint.priority}
-                  </span>
-
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${getStatusStyle(
-                      complaint.status
-                    )}`}
-                  >
-                    {complaint.status}
-                  </span>
-
+                    <Eye size={16} />
+                    View Complaint
+                  </button>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    onViewComplaint?.(complaint)
-                  }
-                  className="
-                    mt-4
-                    flex
-                    w-full
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-xl
-                    border
-                    border-slate-200
-                    px-4
-                    py-2.5
-                    text-xs
-                    font-semibold
-                    text-slate-600
-                    transition
-                    hover:border-orange-200
-                    hover:bg-orange-50
-                    hover:text-orange-600
-                    sm:text-sm
-                  "
-                >
-                  <Eye size={16} />
-                  View Complaint
-                </button>
-
-              </div>
-
-            ))}
-
+              );
+            })}
           </div>
         </>
-
       )}
-
     </div>
   );
 };
